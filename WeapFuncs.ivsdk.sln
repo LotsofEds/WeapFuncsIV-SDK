@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.10.35027.167
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WeapFuncs.ivsdk", "WeapFuncs.ivsdk\WeapFuncs.ivsdk.csproj", "{C0DFAA18-64B9-4021-9DB4-F60F9F9061DD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C0DFAA18-64B9-4021-9DB4-F60F9F9061DD}.Debug|Any CPU.ActiveCfg = Release|Any CPU
+		{C0DFAA18-64B9-4021-9DB4-F60F9F9061DD}.Debug|Any CPU.Build.0 = Release|Any CPU
+		{C0DFAA18-64B9-4021-9DB4-F60F9F9061DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C0DFAA18-64B9-4021-9DB4-F60F9F9061DD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {54470B30-1FAE-46FB-9DBD-DEC7CE62B06A}
+	EndGlobalSection
+EndGlobal
