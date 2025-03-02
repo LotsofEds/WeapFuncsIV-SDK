@@ -158,7 +158,7 @@ namespace WeapFuncs.ivsdk
                                 {
                                     GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_high_corner", "pistol_blindfire", out AnimPointer);
                                     if (AnimPointer > 0.15 && AnimPointer < 0.44)
-                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_high_corner", "pistol_blindfire", 0.76f);
+                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_high_corner", "pistol_blindfire", 0.75f);
                                 }
                                 if (Main.pAmmo < 1 || !NativeControls.IsGameKeyPressed(0, GameKey.Attack) || !IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_r_high_corner", "pistol_blindfire"))
                                 {
