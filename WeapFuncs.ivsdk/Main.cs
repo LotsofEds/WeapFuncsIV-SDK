@@ -27,6 +27,8 @@ namespace WeapFuncs.ivsdk
         public static bool PressToFire;
         public static bool LoseAmmoInMag;
         public static int ShotsPerBurst;
+        public static GameKey SelectFireCtrl;
+
         public static int gunModel;
         public static int Boolet;
         public static uint CurrEp;
@@ -730,6 +732,7 @@ namespace WeapFuncs.ivsdk
             SwitchWeaponNoReload = settings.GetBoolean("WEAPFUNCS", "SwitchWeaponNoReload", false);
             PressToFire = settings.GetBoolean("WEAPFUNCS", "PressToFire", false);
             LoseAmmoInMag = settings.GetBoolean("WEAPFUNCS", "LoseAmmoInMag", false);
+            SelectFireCtrl = (GameKey)settings.GetInteger("WEAPFUNCS", "SelectFireControl", 23);
 
             PistolAnim = settings.GetValue("GLOCK", "NormalAnim", "");
             SilencedAnim = settings.GetValue("SILENCED", "NormalAnim", "");
