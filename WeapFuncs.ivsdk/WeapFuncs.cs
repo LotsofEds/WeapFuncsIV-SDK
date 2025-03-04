@@ -67,7 +67,7 @@ namespace WeapFuncs.ivsdk
             {
                 if (Main.ReloadInVehicles)
                 {
-                    if (((FiringWeapon(Main.PlayerPed) && !NativeControls.IsGameKeyPressed(0, GameKey.Reload)) || (!FiringWeapon(Main.PlayerPed) && NativeControls.IsGameKeyPressed(0, GameKey.Reload))) && IS_CHAR_SITTING_IN_ANY_CAR(Main.PlayerHandle) && Main.aAmmo > 0 && Main.pAmmo == 0 && Main.currWeap != 56 && Main.currWeap != 46)
+                    if ((FiringWeapon(Main.PlayerPed) || (!FiringWeapon(Main.PlayerPed) && (NativeControls.IsGameKeyPressed(0, GameKey.Reload) || NativeControls.IsGameKeyPressed(2, GameKey.Reload)))) && IS_CHAR_SITTING_IN_ANY_CAR(Main.PlayerHandle) && Main.aAmmo > 0 && Main.pAmmo == 0 && Main.currWeap != 56 && Main.currWeap != 46)
                     {
                         if (!IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, pWeapAnim, "reload"))
                         {
@@ -100,7 +100,7 @@ namespace WeapFuncs.ivsdk
                 {
                     if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.SawnOffAnim, "fire"))
                     {
-                        if (Main.pAmmo > 0 && NativeControls.IsGameKeyPressed(0, GameKey.Attack) && !NativeControls.IsGameKeyPressed(0, GameKey.Aim))
+                        if (Main.pAmmo > 0 && (NativeControls.IsGameKeyPressed(0, GameKey.Attack) || NativeControls.IsGameKeyPressed(2, GameKey.Attack)) && !NativeControls.IsGameKeyPressed(0, GameKey.Aim) && !NativeControls.IsGameKeyPressed(2, GameKey.Aim))
                         {
                             GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, Main.SawnOffAnim, "fire", out AnimPointer);
                             if (AnimPointer > 0.72 && AnimPointer < 0.88)
@@ -109,7 +109,7 @@ namespace WeapFuncs.ivsdk
                     }
                     else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.SawnOffAnim, "fire_crouch"))
                     {
-                        if (Main.pAmmo > 0 && NativeControls.IsGameKeyPressed(0, GameKey.Attack) && !NativeControls.IsGameKeyPressed(0, GameKey.Aim))
+                        if (Main.pAmmo > 0 && (NativeControls.IsGameKeyPressed(0, GameKey.Attack) || NativeControls.IsGameKeyPressed(2, GameKey.Attack)) && !NativeControls.IsGameKeyPressed(0, GameKey.Aim) && !NativeControls.IsGameKeyPressed(2, GameKey.Aim))
                         {
                             GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, Main.SawnOffAnim, "fire_crouch", out AnimPointer);
                             if (AnimPointer > 0.675 && AnimPointer < 0.88)
@@ -118,7 +118,7 @@ namespace WeapFuncs.ivsdk
                     }
                 }
 
-                if ((Main.pAmmo < 1 || !NativeControls.IsGameKeyPressed(0, GameKey.Attack)))
+                if (Main.pAmmo < 1 || (!NativeControls.IsGameKeyPressed(0, GameKey.Attack) && !NativeControls.IsGameKeyPressed(2, GameKey.Attack)))
                 {
                     if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_l_high_corner", "shotgun_blindfire"))
                     {
@@ -153,7 +153,7 @@ namespace WeapFuncs.ivsdk
                         if (Main.currWeap == (int)weaponType)
                         {
                             GET_MAX_AMMO_IN_CLIP(Main.PlayerHandle, Main.currWeap, out int pMaxAmmo);
-                            if (NativeControls.IsGameKeyPressed(0, GameKey.Aim) && NativeControls.IsGameKeyPressed(0, Main.SelectFireCtrl) && !NativeControls.IsGameKeyPressed(0, GameKey.Attack) && !hasPressedButton)
+                            if ((NativeControls.IsGameKeyPressed(0, GameKey.Aim) || NativeControls.IsGameKeyPressed(2, GameKey.Aim)) && (NativeControls.IsGameKeyPressed(0, Main.SelectFireCtrl) || NativeControls.IsGameKeyPressed(2, Main.SelectFireCtrl)) && !NativeControls.IsGameKeyPressed(0, GameKey.Attack) && !NativeControls.IsGameKeyPressed(2, GameKey.Attack) && !hasPressedButton)
                             {
                                 if (fireType < 2)
                                     fireType += 1;
@@ -172,7 +172,7 @@ namespace WeapFuncs.ivsdk
                                         IVGame.ShowSubtitleMessage("Semi-Auto");
                                 }
                             }
-                            else if (!NativeControls.IsGameKeyPressed(0, Main.SelectFireCtrl) && hasPressedButton)
+                            else if (!NativeControls.IsGameKeyPressed(0, Main.SelectFireCtrl) && !NativeControls.IsGameKeyPressed(2, Main.SelectFireCtrl) && hasPressedButton)
                                 hasPressedButton = false;
                             if (fireType > 0)
                             {
@@ -180,7 +180,7 @@ namespace WeapFuncs.ivsdk
                                     NumOfBullets = Main.ShotsPerBurst;
                                 else
                                     NumOfBullets = 1;
-                                if (NativeControls.IsGameKeyPressed(0, GameKey.Attack))
+                                if (NativeControls.IsGameKeyPressed(0, GameKey.Attack) || NativeControls.IsGameKeyPressed(2, GameKey.Attack))
                                 {
                                     if ((!GotAmmo && Main.pAmmo != 0) || Main.pAmmo == pMaxAmmo)
                                     {

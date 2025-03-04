@@ -33,13 +33,13 @@ namespace WeapFuncs.ivsdk
                 {
                     if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_l_high_corner", "shotgun_blindfire"))
                     {
-                        if (Main.pAmmo > 0 && NativeControls.IsGameKeyPressed(0, GameKey.Attack))
+                        if (Main.pAmmo > 0 && (NativeControls.IsGameKeyPressed(0, GameKey.Attack) || NativeControls.IsGameKeyPressed(2, GameKey.Attack)))
                         {
                             GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_l_high_corner", "shotgun_blindfire", out ShotgunBF);
                             if (ShotgunBF > 0.345 && ShotgunBF < 0.44)
                                 SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_l_high_corner", "shotgun_blindfire", 0.2f);
                         }
-                        else if (Main.pAmmo < 1 || !NativeControls.IsGameKeyPressed(0, GameKey.Attack) || !IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_l_high_corner", "shotgun_blindfire"))
+                        else if (Main.pAmmo < 1 || (!NativeControls.IsGameKeyPressed(0, GameKey.Attack) && !NativeControls.IsGameKeyPressed(2, GameKey.Attack)) || !IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_l_high_corner", "shotgun_blindfire"))
                         {
                             GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_l_high_corner", "shotgun_blindfire", out ShotgunBF);
                             if (ShotgunBF > 0.345 && ShotgunBF < 0.44)
@@ -48,13 +48,13 @@ namespace WeapFuncs.ivsdk
                     }
                     else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_r_high_corner", "shotgun_blindfire"))
                     {
-                        if (Main.pAmmo > 0 && NativeControls.IsGameKeyPressed(0, GameKey.Attack))
+                        if (Main.pAmmo > 0 && (NativeControls.IsGameKeyPressed(0, GameKey.Attack) || NativeControls.IsGameKeyPressed(2, GameKey.Attack)))
                         {
                             GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_high_corner", "shotgun_blindfire", out ShotgunBF);
                             if (ShotgunBF > 0.4 && ShotgunBF < 0.51)
                                 SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_high_corner", "shotgun_blindfire", 0.25f);
                         }
-                        else if (Main.pAmmo < 1 || !NativeControls.IsGameKeyPressed(0, GameKey.Attack) || !IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_r_high_corner", "shotgun_blindfire"))
+                        else if (Main.pAmmo < 1 || (!NativeControls.IsGameKeyPressed(0, GameKey.Attack) && !NativeControls.IsGameKeyPressed(2, GameKey.Attack)) || !IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_r_high_corner", "shotgun_blindfire"))
                         {
                             GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_high_corner", "shotgun_blindfire", out ShotgunBF);
                             if (ShotgunBF > 0.4 && ShotgunBF < 0.51)
@@ -63,7 +63,7 @@ namespace WeapFuncs.ivsdk
                     }
                     else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_l_low_corner", "shotgun_blindfire"))
                     {
-                        if (Main.pAmmo > 0 && NativeControls.IsGameKeyPressed(0, GameKey.Attack))
+                        if (Main.pAmmo > 0 && (NativeControls.IsGameKeyPressed(0, GameKey.Attack) || NativeControls.IsGameKeyPressed(2, GameKey.Attack)))
                         {
                             GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_l_low_corner", "shotgun_blindfire", out ShotgunBF);
                             if (ShotgunBF < 0.27)
@@ -72,13 +72,13 @@ namespace WeapFuncs.ivsdk
                             else if (ShotgunBF > 0.33 && ShotgunBF < 0.54)
                                 SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_l_low_corner", "shotgun_blindfire", 0.71f);
 
-                            else if (ShotgunBF > 0.73 && ShotgunBF < 0.76 && Main.pAmmo > 0 && NativeControls.IsGameKeyPressed(0, GameKey.Attack) && (Main.Boolet - Main.pAmmo) == 1)
+                            else if (ShotgunBF > 0.73 && ShotgunBF < 0.76 && Main.pAmmo > 0 && (NativeControls.IsGameKeyPressed(0, GameKey.Attack) || NativeControls.IsGameKeyPressed(2, GameKey.Attack)) && (Main.Boolet - Main.pAmmo) == 1)
                             {
                                 Main.Boolet = Main.pAmmo;
                                 SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_l_low_corner", "shotgun_blindfire", 0.23f);
                             }
                         }
-                        else if (Main.pAmmo < 1 || !NativeControls.IsGameKeyPressed(0, GameKey.Attack) || !IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_l_low_corner", "shotgun_blindfire"))
+                        else if (Main.pAmmo < 1 || (!NativeControls.IsGameKeyPressed(0, GameKey.Attack) && !NativeControls.IsGameKeyPressed(2, GameKey.Attack)) || !IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_l_low_corner", "shotgun_blindfire"))
                         {
                             GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_l_low_corner", "shotgun_blindfire", out ShotgunBF);
                             if (ShotgunBF > 0.33 && ShotgunBF < 0.56)
@@ -87,7 +87,7 @@ namespace WeapFuncs.ivsdk
                     }
                     else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_r_low_corner", "shotgun_blindfire"))
                     {
-                        if (Main.pAmmo > 0 && NativeControls.IsGameKeyPressed(0, GameKey.Attack))
+                        if (Main.pAmmo > 0 && (NativeControls.IsGameKeyPressed(0, GameKey.Attack) || NativeControls.IsGameKeyPressed(2, GameKey.Attack)))
                         {
                             GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_low_corner", "shotgun_blindfire", out ShotgunBF);
                             if (ShotgunBF < 0.21)
@@ -96,13 +96,13 @@ namespace WeapFuncs.ivsdk
                             else if (ShotgunBF > 0.24 && ShotgunBF < 0.54)
                                 SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_low_corner", "shotgun_blindfire", 0.76f);
 
-                            else if (ShotgunBF > 0.82 && ShotgunBF < 0.9 && Main.pAmmo > 0 && NativeControls.IsGameKeyPressed(0, GameKey.Attack) && (Main.Boolet - Main.pAmmo) == 1)
+                            else if (ShotgunBF > 0.82 && ShotgunBF < 0.9 && Main.pAmmo > 0 && (NativeControls.IsGameKeyPressed(0, GameKey.Attack) || NativeControls.IsGameKeyPressed(2, GameKey.Attack)) && (Main.Boolet - Main.pAmmo) == 1)
                             {
                                 Main.Boolet = Main.pAmmo;
                                 SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_low_corner", "shotgun_blindfire", 0.17f);
                             }
                         }
-                        else if (Main.pAmmo < 1 || !NativeControls.IsGameKeyPressed(0, GameKey.Attack) || !IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_r_low_corner", "shotgun_blindfire"))
+                        else if (Main.pAmmo < 1 || (!NativeControls.IsGameKeyPressed(0, GameKey.Attack) && !NativeControls.IsGameKeyPressed(2, GameKey.Attack)) || !IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_r_low_corner", "shotgun_blindfire"))
                         {
                             GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_low_corner", "shotgun_blindfire", out ShotgunBF);
                             if (ShotgunBF > 0.24 && ShotgunBF < 0.54)
@@ -111,13 +111,13 @@ namespace WeapFuncs.ivsdk
                     }
                     else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_l_low_centre", "shotgun_blindfire"))
                     {
-                        if (Main.pAmmo > 0 && NativeControls.IsGameKeyPressed(0, GameKey.Attack))
+                        if (Main.pAmmo > 0 && (NativeControls.IsGameKeyPressed(0, GameKey.Attack) || NativeControls.IsGameKeyPressed(2, GameKey.Attack)))
                         {
                             GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_l_low_centre", "shotgun_blindfire", out ShotgunBF);
                             if (ShotgunBF > 0.33 && ShotgunBF < 0.54)
                                 SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_l_low_centre", "shotgun_blindfire", 0.21f);
                         }
-                        else if (Main.pAmmo < 1 || !NativeControls.IsGameKeyPressed(0, GameKey.Attack) || !IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_l_low_centre", "shotgun_blindfire"))
+                        else if (Main.pAmmo < 1 || (!NativeControls.IsGameKeyPressed(0, GameKey.Attack) && !NativeControls.IsGameKeyPressed(2, GameKey.Attack)) || !IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_l_low_centre", "shotgun_blindfire"))
                         {
                             GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_l_low_centre", "shotgun_blindfire", out ShotgunBF);
                             if (ShotgunBF > 0.33 && ShotgunBF < 0.56)
@@ -126,7 +126,7 @@ namespace WeapFuncs.ivsdk
                     }
                     else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_r_low_centre", "shotgun_blindfire"))
                     {
-                        if (Main.pAmmo > 0 && NativeControls.IsGameKeyPressed(0, GameKey.Attack))
+                        if (Main.pAmmo > 0 && (NativeControls.IsGameKeyPressed(0, GameKey.Attack) || NativeControls.IsGameKeyPressed(2, GameKey.Attack)))
                         {
                             GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_low_centre", "shotgun_blindfire", out ShotgunBF);
                             if (ShotgunBF < 0.25)
@@ -135,13 +135,13 @@ namespace WeapFuncs.ivsdk
                             else if (ShotgunBF > 0.3 && ShotgunBF < 0.54)
                                 SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_low_centre", "shotgun_blindfire", 0.69f);
 
-                            else if (ShotgunBF > 0.76 && ShotgunBF < 0.9 && Main.pAmmo > 0 && NativeControls.IsGameKeyPressed(0, GameKey.Attack) && (Main.Boolet - Main.pAmmo) == 1)
+                            else if (ShotgunBF > 0.76 && ShotgunBF < 0.9 && Main.pAmmo > 0 && (NativeControls.IsGameKeyPressed(0, GameKey.Attack) || NativeControls.IsGameKeyPressed(2, GameKey.Attack)) && (Main.Boolet - Main.pAmmo) == 1)
                             {
                                 Main.Boolet = Main.pAmmo;
                                 SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_low_centre", "shotgun_blindfire", 0.23f);
                             }
                         }
-                        else if (Main.pAmmo < 1 || !NativeControls.IsGameKeyPressed(0, GameKey.Attack) || !IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_r_low_centre", "shotgun_blindfire"))
+                        else if (Main.pAmmo < 1 || (!NativeControls.IsGameKeyPressed(0, GameKey.Attack) && !NativeControls.IsGameKeyPressed(2, GameKey.Attack)) || !IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_r_low_centre", "shotgun_blindfire"))
                         {
                             GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_low_centre", "shotgun_blindfire", out ShotgunBF);
                             if (ShotgunBF > 0.3 && ShotgunBF < 0.54)
