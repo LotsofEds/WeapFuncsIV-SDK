@@ -98,18 +98,15 @@ namespace WeapFuncs.ivsdk
 
                 if (Main.SawnOffYeet)
                 {
-                    if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.SawnOffAnim, "fire"))
+                    if (Main.pAmmo > 0 && (NativeControls.IsGameKeyPressed(0, GameKey.Attack) || NativeControls.IsGameKeyPressed(2, GameKey.Attack)) && !NativeControls.IsGameKeyPressed(0, GameKey.Aim) && !(Main.IsAimKeyPressedOnController() && IS_USING_CONTROLLER()))
                     {
-                        if (Main.pAmmo > 0 && (NativeControls.IsGameKeyPressed(0, GameKey.Attack) || NativeControls.IsGameKeyPressed(2, GameKey.Attack)) && !NativeControls.IsGameKeyPressed(0, GameKey.Aim) && !NativeControls.IsGameKeyPressed(2, GameKey.Aim))
+                        if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.SawnOffAnim, "fire"))
                         {
                             GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, Main.SawnOffAnim, "fire", out AnimPointer);
                             if (AnimPointer > 0.72 && AnimPointer < 0.88)
                                 SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, Main.SawnOffAnim, "fire", 0.7f);
                         }
-                    }
-                    else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.SawnOffAnim, "fire_crouch"))
-                    {
-                        if (Main.pAmmo > 0 && (NativeControls.IsGameKeyPressed(0, GameKey.Attack) || NativeControls.IsGameKeyPressed(2, GameKey.Attack)) && !NativeControls.IsGameKeyPressed(0, GameKey.Aim) && !NativeControls.IsGameKeyPressed(2, GameKey.Aim))
+                        else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.SawnOffAnim, "fire_crouch"))
                         {
                             GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, Main.SawnOffAnim, "fire_crouch", out AnimPointer);
                             if (AnimPointer > 0.675 && AnimPointer < 0.88)
@@ -153,7 +150,7 @@ namespace WeapFuncs.ivsdk
                         if (Main.currWeap == (int)weaponType)
                         {
                             GET_MAX_AMMO_IN_CLIP(Main.PlayerHandle, Main.currWeap, out int pMaxAmmo);
-                            if ((NativeControls.IsGameKeyPressed(0, GameKey.Aim) || NativeControls.IsGameKeyPressed(2, GameKey.Aim)) && (NativeControls.IsGameKeyPressed(0, Main.SelectFireCtrl) || NativeControls.IsGameKeyPressed(2, Main.SelectFireCtrl)) && !NativeControls.IsGameKeyPressed(0, GameKey.Attack) && !NativeControls.IsGameKeyPressed(2, GameKey.Attack) && !hasPressedButton)
+                            if ((NativeControls.IsGameKeyPressed(0, GameKey.Aim) || (Main.IsAimKeyPressedOnController() && IS_USING_CONTROLLER())) && (NativeControls.IsGameKeyPressed(0, Main.SelectFireCtrl) || NativeControls.IsGameKeyPressed(2, Main.SelectFireCtrl)) && !NativeControls.IsGameKeyPressed(0, GameKey.Attack) && !NativeControls.IsGameKeyPressed(2, GameKey.Attack) && !hasPressedButton)
                             {
                                 if (fireType < 2)
                                     fireType += 1;

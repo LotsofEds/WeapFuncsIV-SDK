@@ -129,9 +129,7 @@ namespace WeapFuncs.ivsdk
                         }
                     }
                     else
-                    {
                         ammoList[pedList.IndexOf(vped)] = currAmmo;
-                    }
                 }
             }
         }

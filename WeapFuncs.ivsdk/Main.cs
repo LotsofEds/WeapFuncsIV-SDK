@@ -28,6 +28,7 @@ namespace WeapFuncs.ivsdk
         public static bool LoseAmmoInMag;
         public static int ShotsPerBurst;
         public static GameKey SelectFireCtrl;
+        public static bool AllRoundReload;
 
         public static int gunModel;
         public static int Boolet;
@@ -267,6 +268,8 @@ namespace WeapFuncs.ivsdk
             BlindFireFixes.Init(Settings);
             WeapFuncs.Init(Settings);
             SwitchWeapNoReload.Init();
+            if (AllRoundReload)
+                ShotgunRel.Init(Settings);
         }
 
         private void Main_Tick(object sender, EventArgs e)
@@ -714,6 +717,26 @@ namespace WeapFuncs.ivsdk
                 NPCSemiAutoShot.Tick();
             if (SwitchWeaponNoReload)
                 SwitchWeapNoReload.Tick();
+            if (AllRoundReload)
+                ShotgunRel.Tick();
+        }
+        public static bool IsAimKeyPressedOnController()
+        {
+            uint standard = 0;
+            var settings = IVMenuManager.GetSetting(IVSDKDotNet.Enums.eSettings.SETTING_CONFIGURATION);
+            ControllerButton button;
+
+            if (settings == standard
+                && !IS_CHAR_IN_ANY_CAR(Main.PlayerPed.GetHandle()))
+                button = ControllerButton.BUTTON_TRIGGER_LEFT;
+            else
+                button = ControllerButton.BUTTON_BUMPER_LEFT;
+
+
+            if (NativeControls.IsControllerButtonPressed(2, button))
+                return true;
+
+            return false;
         }
         private void LoadSettings(SettingsFile settings)
         {
@@ -733,6 +756,7 @@ namespace WeapFuncs.ivsdk
             PressToFire = settings.GetBoolean("WEAPFUNCS", "PressToFire", false);
             LoseAmmoInMag = settings.GetBoolean("WEAPFUNCS", "LoseAmmoInMag", false);
             SelectFireCtrl = (GameKey)settings.GetInteger("WEAPFUNCS", "SelectFireControl", 23);
+            AllRoundReload = settings.GetBoolean("WEAPFUNCS", "AllRoundReload", false);
 
             PistolAnim = settings.GetValue("GLOCK", "NormalAnim", "");
             SilencedAnim = settings.GetValue("SILENCED", "NormalAnim", "");

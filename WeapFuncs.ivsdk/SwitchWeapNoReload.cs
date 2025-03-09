@@ -6,6 +6,7 @@ using IVSDKDotNet;
 using static IVSDKDotNet.Native.Natives;
 using CCL;
 
+//Credits: Symbiote/AngryAmoeba for the original ScriptHook.Net mod
 namespace WeapFuncs.ivsdk
 {
     internal class SwitchWeapNoReload
