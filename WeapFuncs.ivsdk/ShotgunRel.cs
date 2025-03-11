@@ -16,7 +16,6 @@ namespace WeapFuncs.ivsdk
     {
         private static int ClipAmmo = 0;
         private static int TotalAmmo = 0;
-        private static bool SpacePressed = false;
         private static bool FirstShot = false;
         private static bool ReloadStart = false;
         private static bool LastShot = false;
@@ -163,7 +162,13 @@ namespace WeapFuncs.ivsdk
                             }
                             FirstShot = false;
                             LastShot = false;
-                            RelShot();
+                            if (shotrel < 0.9 && (NativeControls.IsGameKeyPressed(0, GameKey.Attack) || NativeControls.IsGameKeyPressed(0, GameKey.Jump) || (IS_PED_IN_COVER(Main.PlayerHandle) && (NativeControls.IsGameKeyPressed(0, GameKey.MoveRight) || NativeControls.IsGameKeyPressed(0, GameKey.MoveLeft)))))
+                            {
+                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, wAnim, "reload", 0.9f);
+                                GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, wAnim, "reload", out shotrel);
+                            }
+                            else
+                                RelShot();
                         }
                         else if (!FirstShot)
                         {
@@ -219,7 +224,13 @@ namespace WeapFuncs.ivsdk
                             }
                             FirstShot = false;
                             LastShot = false;
-                            RelShotC();
+                            if (shotrel < 0.9 && (NativeControls.IsGameKeyPressed(0, GameKey.Attack) || NativeControls.IsGameKeyPressed(0, GameKey.Jump) || (IS_PED_IN_COVER(Main.PlayerHandle) && (NativeControls.IsGameKeyPressed(0, GameKey.MoveRight) || NativeControls.IsGameKeyPressed(0, GameKey.MoveLeft)))))
+                            {
+                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, wAnim, "reload_crouch", 0.9f);
+                                GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, wAnim, "reload_crouch", out shotrel);
+                            }
+                            else
+                                RelShotC();
                         }
                         else if (!FirstShot)
                         {
@@ -232,7 +243,7 @@ namespace WeapFuncs.ivsdk
         }
         private static void RelShot()
         {
-            if (SpacePressed == false && !NativeControls.IsGameKeyPressed(0, GameKey.Attack) && !NativeControls.IsGameKeyPressed(0, GameKey.Jump) && !(IS_PED_IN_COVER(Main.PlayerHandle) && (NativeControls.IsGameKeyPressed(0, GameKey.MoveRight) || NativeControls.IsGameKeyPressed(0, GameKey.MoveLeft))) && LastShot == false && pAmmo != 0 && pAmmo != mAmmo && (aAmmo - pAmmo) > 0)
+            if (LastShot == false && pAmmo != 0 && pAmmo != mAmmo && (aAmmo - pAmmo) > 0)
             {
                 if (pAmmo != mAmmo)
                 {
@@ -263,23 +274,23 @@ namespace WeapFuncs.ivsdk
                     ClipAmmo = pAmmo;
                     TotalAmmo = aAmmo;
                 }
-                if (SpacePressed == false && !NativeControls.IsGameKeyPressed(0, GameKey.Attack) && pAmmo != mAmmo && !NativeControls.IsGameKeyPressed(0, GameKey.Jump) && !(IS_PED_IN_COVER(Main.PlayerHandle) && (NativeControls.IsGameKeyPressed(0, GameKey.MoveRight) || NativeControls.IsGameKeyPressed(0, GameKey.MoveLeft))) && LastShot == false)
+                if (shotrel < 0.9 && (NativeControls.IsGameKeyPressed(0, GameKey.Attack) || NativeControls.IsGameKeyPressed(0, GameKey.Jump) || (IS_PED_IN_COVER(Main.PlayerHandle) && (NativeControls.IsGameKeyPressed(0, GameKey.MoveRight) || NativeControls.IsGameKeyPressed(0, GameKey.MoveLeft)))))
                 {
-                    ReloadStart = false;
-                    return;
+                    SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, wAnim, "reload", 0.9f);
+                    GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, wAnim, "reload", out shotrel);
                 }
             }
-            SpacePressed = false;
             GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, wAnim, "reload", out shotrel);
-            if (LastShot == false && shotrel <= 0.8 && shotrel > 0.1)
+            if (LastShot == false && shotrel <= 0.8 && shotrel > 0.45)
             {
+                ReloadStart = false;
                 SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, wAnim, "reload", 0.9f);
                 GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, wAnim, "reload", out shotrel);
             }
         }
         private static void RelShotC()
         {
-            if (SpacePressed == false && !NativeControls.IsGameKeyPressed(0, GameKey.Attack) && !NativeControls.IsGameKeyPressed(0, GameKey.Jump) && !(IS_PED_IN_COVER(Main.PlayerHandle) && (NativeControls.IsGameKeyPressed(0, GameKey.MoveRight) || NativeControls.IsGameKeyPressed(0, GameKey.MoveLeft))) && LastShot == false && pAmmo != 0 && pAmmo != mAmmo && (aAmmo - pAmmo) > 0)
+            if (LastShot == false && pAmmo != 0 && pAmmo != mAmmo && (aAmmo - pAmmo) > 0)
             {
                 if (pAmmo != mAmmo)
                 {
@@ -310,16 +321,16 @@ namespace WeapFuncs.ivsdk
                     ClipAmmo = pAmmo;
                     TotalAmmo = aAmmo;
                 }
-                if (SpacePressed == false && !NativeControls.IsGameKeyPressed(0, GameKey.Attack) && pAmmo != mAmmo && !NativeControls.IsGameKeyPressed(0, GameKey.Jump) && !(IS_PED_IN_COVER(Main.PlayerHandle) && (NativeControls.IsGameKeyPressed(0, GameKey.MoveRight) || NativeControls.IsGameKeyPressed(0, GameKey.MoveLeft))) && LastShot == false)
+                if (shotrel < 0.9 && (NativeControls.IsGameKeyPressed(0, GameKey.Attack) || NativeControls.IsGameKeyPressed(0, GameKey.Jump) || (IS_PED_IN_COVER(Main.PlayerHandle) && (NativeControls.IsGameKeyPressed(0, GameKey.MoveRight) || NativeControls.IsGameKeyPressed(0, GameKey.MoveLeft)))))
                 {
-                    ReloadStart = false;
-                    return;
+                    SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, wAnim, "reload_crouch", 0.9f);
+                    GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, wAnim, "reload_crouch", out shotrel);
                 }
             }
-            SpacePressed = false;
             GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, wAnim, "reload_crouch", out shotrel);
-            if (LastShot == false && shotrel <= 0.8 && shotrel > 0.1)
+            if (LastShot == false && shotrel <= 0.8 && shotrel > 0.45)
             {
+                ReloadStart = false;
                 SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, wAnim, "reload_crouch", 0.9f);
                 GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, wAnim, "reload_crouch", out shotrel);
             }
