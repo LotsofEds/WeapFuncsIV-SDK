@@ -131,7 +131,6 @@ namespace WeapFuncs.ivsdk
         // Sets the current weapon's clip ammo to the value last saved for it
         private static void RevertAmmo()
         {
-            IVGame.ShowSubtitleMessage(ammoList[currWeaponIndex].ToString() + " " + Main.pAmmo.ToString());
             int ammoDiff = currClip - ammoList[currWeaponIndex];
             if (ammoDiff != 0)
             {
