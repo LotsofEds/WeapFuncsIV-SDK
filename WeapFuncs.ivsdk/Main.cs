@@ -14,6 +14,7 @@ namespace WeapFuncs.ivsdk
     {
         public static bool GlobalRateOfFire;
         public static bool ReloadInVehicles;
+        public static bool ReloadOnBikes;
         public static bool CrouchRelFix;
         public static bool SemiAutoShotgunBlindfire;
         public static bool NPCSemiAutoShotgunBlindfire;
@@ -742,6 +743,7 @@ namespace WeapFuncs.ivsdk
         {
             GlobalRateOfFire = settings.GetBoolean("WEAPFUNCS", "GlobalROF", false);
             ReloadInVehicles = settings.GetBoolean("WEAPFUNCS", "ReloadInVehicles", false);
+            ReloadOnBikes = settings.GetBoolean("WEAPFUNCS", "ReloadOnBikes", false);
             CrouchRelFix = settings.GetBoolean("WEAPFUNCS", "MP5ReloadCrouchFix", false);
             SemiAutoShotgunBlindfire = settings.GetBoolean("WEAPFUNCS", "SemiAutoShotgunBlindfire", false);
             NPCSemiAutoShotgunBlindfire = settings.GetBoolean("WEAPFUNCS", "NPCSemiAutoShotgunBlindfire", false);

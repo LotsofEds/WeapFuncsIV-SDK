@@ -68,12 +68,12 @@ namespace WeapFuncs.ivsdk
                 if (isReloading || !bGunIsUsable)
                     return;
                 */
-                if (IS_CHAR_SITTING_IN_ANY_CAR(Main.PlayerHandle) && currClip != Main.mAmmo && (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "p_load") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload_crouch")))
+                if (IS_CHAR_SITTING_IN_ANY_CAR(Main.PlayerHandle) && currClip != Main.mAmmo && (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "p_load") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload_crouch") || (WeapFuncs.FiringWeapon(Main.PlayerPed) && Main.pAmmo == 0)))
                 {
                     currClip = Main.mAmmo;
-                    if (Main.LoseAmmoInMag)
+                    int ammoDiff = Main.pAmmo - ammoList[currWeaponIndex];
+                    if (Main.LoseAmmoInMag && !(WeapFuncs.FiringWeapon(Main.PlayerPed) && Main.pAmmo == 0))
                     {
-                        int ammoDiff = Main.pAmmo - ammoList[currWeaponIndex];
                         SET_CHAR_AMMO(Main.PlayerHandle, currWeapon, (Main.aAmmo + ammoDiff));
                         SET_AMMO_IN_CLIP(Main.PlayerHandle, currWeapon, 0);
                     }
@@ -85,11 +85,16 @@ namespace WeapFuncs.ivsdk
                     currClip = Main.pAmmo;
                 }
 
+                if (currWeapon == Main.currWeap && !IS_CHAR_SITTING_IN_ANY_CAR(Main.PlayerHandle) && (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "p_load") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload_crouch")))
+                {
+                    currClip = Main.pAmmo;
+                }
+
                 if (bulletsFired < GET_INT_STAT(287))
                 {
                     if (currWeapon == Main.currWeap && currClip == 1 && Main.pAmmo == 0)
                     {
-                        currClip = Main.mAmmo;
+                        currClip = 0;
                         isReloading = true;
                     }
                     bulletsFired = GET_INT_STAT(287);
@@ -110,11 +115,11 @@ namespace WeapFuncs.ivsdk
                 {
                     if (isReloading)
                     {
-                        ammoList[currWeaponIndex] = Main.mAmmo;
+                        ammoList[currWeaponIndex] = currClip;
                         isReloading = false;
                     }
 
-                    else if (currClip > ammoList[currWeaponIndex] && !isReloading && !IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload") && !IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "p_load") && !IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload_crouch"))
+                    else if (currClip > ammoList[currWeaponIndex] && !(WeapFuncs.FiringWeapon(Main.PlayerPed) && Main.pAmmo == 0) && !isReloading && !IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload") && !IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "p_load") && !IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload_crouch"))
                         RevertAmmo();
 
                     else
@@ -126,7 +131,8 @@ namespace WeapFuncs.ivsdk
         // Sets the current weapon's clip ammo to the value last saved for it
         private static void RevertAmmo()
         {
-            int ammoDiff = Main.pAmmo - ammoList[currWeaponIndex];
+            IVGame.ShowSubtitleMessage(ammoList[currWeaponIndex].ToString() + " " + Main.pAmmo.ToString());
+            int ammoDiff = currClip - ammoList[currWeaponIndex];
             if (ammoDiff != 0)
             {
                 SET_CHAR_AMMO(Main.PlayerHandle, currWeapon, (Main.aAmmo + ammoDiff));
