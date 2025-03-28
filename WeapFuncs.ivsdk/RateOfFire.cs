@@ -301,40 +301,40 @@ namespace WeapFuncs.ivsdk
                 switch (currWeap)
                 {
                     case 1:
-                        WeapAnim = Main.PistolAnim;
-                        FireRate = PistolFire;
-                        DbFireRate = PistolFireDb;
-                        BFFireRate = PistolFireCover;
+                        WeapAnim = Main.BatAnim;
+                        FireRate = BatFire;
+                        DbFireRate = BatFireDb;
+                        BFFireRate = BatFireCover;
                         break;
                     case 2:
-                        WeapAnim = Main.PistolAnim;
-                        FireRate = PistolFire;
-                        DbFireRate = PistolFireDb;
-                        BFFireRate = PistolFireCover;
+                        WeapAnim = Main.PoolcueAnim;
+                        FireRate = PoolcueFire;
+                        DbFireRate = PoolcueFireDb;
+                        BFFireRate = PoolcueFireCover;
                         break;
                     case 3:
-                        WeapAnim = Main.PistolAnim;
-                        FireRate = PistolFire;
-                        DbFireRate = PistolFireDb;
-                        BFFireRate = PistolFireCover;
+                        WeapAnim = Main.KnifeAnim;
+                        FireRate = KnifeFire;
+                        DbFireRate = KnifeFireDb;
+                        BFFireRate = KnifeFireCover;
                         break;
                     case 4:
-                        WeapAnim = Main.PistolAnim;
-                        FireRate = PistolFire;
-                        DbFireRate = PistolFireDb;
-                        BFFireRate = PistolFireCover;
+                        WeapAnim = Main.GrenadeAnim;
+                        FireRate = GrenadeFire;
+                        DbFireRate = GrenadeFireDb;
+                        BFFireRate = GrenadeFireCover;
                         break;
                     case 5:
-                        WeapAnim = Main.PistolAnim;
-                        FireRate = PistolFire;
-                        DbFireRate = PistolFireDb;
-                        BFFireRate = PistolFireCover;
+                        WeapAnim = Main.MolotovAnim;
+                        FireRate = MolotovFire;
+                        DbFireRate = MolotovFireDb;
+                        BFFireRate = MolotovFireCover;
                         break;
                     case 6:
-                        WeapAnim = Main.PistolAnim;
-                        FireRate = PistolFire;
-                        DbFireRate = PistolFireDb;
-                        BFFireRate = PistolFireCover;
+                        WeapAnim = Main.RocketAnim;
+                        FireRate = RocketFire;
+                        DbFireRate = RocketFireDb;
+                        BFFireRate = RocketFireCover;
                         break;
                     case 7:
                         WeapAnim = Main.PistolAnim;
@@ -439,16 +439,16 @@ namespace WeapFuncs.ivsdk
                         BFFireRate = Episodic3FireCover;
                         break;
                     case 24:
-                        WeapAnim = Main.DeagleAnim;
-                        FireRate = DeagleFire;
-                        DbFireRate = DeagleFireDb;
-                        BFFireRate = DeagleFireCover;
+                        WeapAnim = Main.Episodic4Anim;
+                        FireRate = Episodic4Fire;
+                        DbFireRate = Episodic4FireDb;
+                        BFFireRate = Episodic4FireCover;
                         break;
                     case 25:
-                        WeapAnim = Main.DeagleAnim;
-                        FireRate = DeagleFire;
-                        DbFireRate = DeagleFireDb;
-                        BFFireRate = DeagleFireCover;
+                        WeapAnim = Main.Episodic5Anim;
+                        FireRate = Episodic5Fire;
+                        DbFireRate = Episodic5FireDb;
+                        BFFireRate = Episodic5FireCover;
                         break;
                     case 26:
                         WeapAnim = Main.SawnOffAnim;
@@ -463,10 +463,10 @@ namespace WeapFuncs.ivsdk
                         BFFireRate = AutoPFireCover;
                         break;
                     case 28:
-                        WeapAnim = Main.DeagleAnim;
-                        FireRate = DeagleFire;
-                        DbFireRate = DeagleFireDb;
-                        BFFireRate = DeagleFireCover;
+                        WeapAnim = Main.Episodic8Anim;
+                        FireRate = Episodic8Fire;
+                        DbFireRate = Episodic8FireDb;
+                        BFFireRate = Episodic8FireCover;
                         break;
                     case 29:
                         WeapAnim = Main.Pistol44Anim;
@@ -511,40 +511,40 @@ namespace WeapFuncs.ivsdk
                         BFFireRate = AdvSnipFireCover;
                         break;
                     case 36:
-                        WeapAnim = Main.DeagleAnim;
-                        FireRate = DeagleFire;
-                        DbFireRate = DeagleFireDb;
-                        BFFireRate = DeagleFireCover;
+                        WeapAnim = Main.Episodic16Anim;
+                        FireRate = Episodic16Fire;
+                        DbFireRate = Episodic16FireDb;
+                        BFFireRate = Episodic16FireCover;
                         break;
                     case 37:
-                        WeapAnim = Main.DeagleAnim;
-                        FireRate = DeagleFire;
-                        DbFireRate = DeagleFireDb;
-                        BFFireRate = DeagleFireCover;
+                        WeapAnim = Main.Episodic17Anim;
+                        FireRate = Episodic17Fire;
+                        DbFireRate = Episodic17FireDb;
+                        BFFireRate = Episodic17FireCover;
                         break;
                     case 38:
-                        WeapAnim = Main.DeagleAnim;
-                        FireRate = DeagleFire;
-                        DbFireRate = DeagleFireDb;
-                        BFFireRate = DeagleFireCover;
+                        WeapAnim = Main.Episodic18Anim;
+                        FireRate = Episodic18Fire;
+                        DbFireRate = Episodic18FireDb;
+                        BFFireRate = Episodic18FireCover;
                         break;
                     case 39:
-                        WeapAnim = Main.DeagleAnim;
-                        FireRate = DeagleFire;
-                        DbFireRate = DeagleFireDb;
-                        BFFireRate = DeagleFireCover;
+                        WeapAnim = Main.Episodic19Anim;
+                        FireRate = Episodic19Fire;
+                        DbFireRate = Episodic19FireDb;
+                        BFFireRate = Episodic19FireCover;
                         break;
                     case 40:
-                        WeapAnim = Main.DeagleAnim;
-                        FireRate = DeagleFire;
-                        DbFireRate = DeagleFireDb;
-                        BFFireRate = DeagleFireCover;
+                        WeapAnim = Main.Episodic20Anim;
+                        FireRate = Episodic20Fire;
+                        DbFireRate = Episodic20FireDb;
+                        BFFireRate = Episodic20FireCover;
                         break;
                     case 41:
-                        WeapAnim = Main.DeagleAnim;
-                        FireRate = DeagleFire;
-                        DbFireRate = DeagleFireDb;
-                        BFFireRate = DeagleFireCover;
+                        WeapAnim = Main.Episodic21Anim;
+                        FireRate = Episodic21Fire;
+                        DbFireRate = Episodic21FireDb;
+                        BFFireRate = Episodic21FireCover;
                         break;
                     case 42:
                         WeapAnim = Main.Episodic22Anim;
@@ -565,16 +565,16 @@ namespace WeapFuncs.ivsdk
                         BFFireRate = Episodic24FireCover;
                         break;
                     case 45:
-                        WeapAnim = Main.DeagleAnim;
-                        FireRate = DeagleFire;
-                        DbFireRate = DeagleFireDb;
-                        BFFireRate = DeagleFireCover;
+                        WeapAnim = Main.CameraAnim;
+                        FireRate = CameraFire;
+                        DbFireRate = CameraFireDb;
+                        BFFireRate = CameraFireCover;
                         break;
                     case 46:
-                        WeapAnim = Main.DeagleAnim;
-                        FireRate = DeagleFire;
-                        DbFireRate = DeagleFireDb;
-                        BFFireRate = DeagleFireCover;
+                        WeapAnim = Main.ObjectAnim;
+                        FireRate = ObjectFire;
+                        DbFireRate = ObjectFireDb;
+                        BFFireRate = ObjectFireCover;
                         break;
                     case 47:
                         WeapAnim = Main.DeagleAnim;

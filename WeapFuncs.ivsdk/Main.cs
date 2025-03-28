@@ -30,6 +30,7 @@ namespace WeapFuncs.ivsdk
         public static int ShotsPerBurst;
         public static GameKey SelectFireCtrl;
         public static bool AllRoundReload;
+        public static bool HeadShotty;
 
         public static int gunModel;
         public static int Boolet;
@@ -271,6 +272,8 @@ namespace WeapFuncs.ivsdk
             SwitchWeapNoReload.Init();
             if (AllRoundReload)
                 ShotgunRel.Init(Settings);
+            if (HeadShotty)
+                ShottyHeadShot.Init(Settings);
         }
 
         private void Main_Tick(object sender, EventArgs e)
@@ -720,6 +723,8 @@ namespace WeapFuncs.ivsdk
                 SwitchWeapNoReload.Tick();
             if (AllRoundReload)
                 ShotgunRel.Tick();
+            if (HeadShotty)
+                ShottyHeadShot.Tick();
         }
         public static bool IsAimKeyPressedOnController()
         {
@@ -759,6 +764,7 @@ namespace WeapFuncs.ivsdk
             LoseAmmoInMag = settings.GetBoolean("WEAPFUNCS", "LoseAmmoInMag", false);
             SelectFireCtrl = (GameKey)settings.GetInteger("WEAPFUNCS", "SelectFireControl", 23);
             AllRoundReload = settings.GetBoolean("WEAPFUNCS", "AllRoundReload", false);
+            HeadShotty = settings.GetBoolean("WEAPFUNCS", "LethalShotgunHeadshots", false);
 
             PistolAnim = settings.GetValue("GLOCK", "NormalAnim", "");
             SilencedAnim = settings.GetValue("SILENCED", "NormalAnim", "");

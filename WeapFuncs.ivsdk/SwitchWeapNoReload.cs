@@ -16,7 +16,6 @@ namespace WeapFuncs.ivsdk
 
         private static List<int> gunList = new List<int>();        // List of held guns
         private static List<int> ammoList = new List<int>();       // List of each gun's last clip ammo
-        private static List<int> totalAmmoList = new List<int>();       // List of each gun's last clip ammo
         private static int currWeaponIndex = 0;                    // The gunList index of the current weapon
         private static int currWeapon;                             // The current weapon
         private static int currClip = 0,                           // The current weapon's clip ammo
@@ -29,7 +28,6 @@ namespace WeapFuncs.ivsdk
         {
             gunList.Clear();
             ammoList.Clear();
-            totalAmmoList.Clear();
         }
         public static void Tick()
         {
@@ -92,7 +90,7 @@ namespace WeapFuncs.ivsdk
 
                 if (bulletsFired < GET_INT_STAT(287))
                 {
-                    if (currWeapon == Main.currWeap && currClip == 1 && Main.pAmmo == 0)
+                    if (currWeapon == Main.currWeap && Main.pAmmo == 0 && Main.pAmmo != Main.mAmmo)
                     {
                         currClip = 0;
                         isReloading = true;
@@ -104,25 +102,28 @@ namespace WeapFuncs.ivsdk
                 {
                     gunList.Add(currWeapon);
                     ammoList.Add(currClip);
-                    totalAmmoList.Add(currClip);
                 }
                 currWeaponIndex = gunList.IndexOf(currWeapon);
 
                 if (currWeaponIndex < 0)
                     return;
 
-                if (currClip != ammoList[currWeaponIndex])
+                if (currClip != ammoList[currWeaponIndex] && IVWeaponInfo.GetWeaponInfo((uint)currWeapon).WeaponFlags.AnimReload)
                 {
                     if (isReloading)
                     {
-                        ammoList[currWeaponIndex] = currClip;
+                        ammoList[currWeaponIndex] = Main.mAmmo;
+                        //IVGame.ShowSubtitleMessage("Rel  " +  currClip.ToString() + "  " + ammoList[currWeaponIndex].ToString());
                         isReloading = false;
                     }
 
                     else if (currClip > ammoList[currWeaponIndex] && !(WeapFuncs.FiringWeapon(Main.PlayerPed) && Main.pAmmo == 0) && !isReloading && !IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload") && !IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "p_load") && !IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload_crouch"))
+                    {
+                        //IVGame.ShowSubtitleMessage(currClip.ToString() + "  " + ammoList[currWeaponIndex].ToString());
                         RevertAmmo();
+                    }
 
-                    else
+                    else if (ammoList[currWeaponIndex] != Main.mAmmo)
                         ammoList[currWeaponIndex] = currClip;
                 }
             }
