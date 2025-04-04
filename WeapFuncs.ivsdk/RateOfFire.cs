@@ -855,6 +855,7 @@ namespace WeapFuncs.ivsdk
             PsgFireCover = settings.GetFloat("SEMIAUTO SNIPER", "InCoverROF", 1.0f);
 
             RpgFire = settings.GetFloat("RPG", "NormalROF", 1.0f);
+            RpgFireDb = settings.GetFloat("RPG", "DrivebyROF", 1.0f);
             RpgFireCover = settings.GetFloat("RPG", "InCoverROF", 1.0f);
 
             FThrowerFire = settings.GetFloat("FTHROWER", "NormalROF", 1.0f);
@@ -874,6 +875,7 @@ namespace WeapFuncs.ivsdk
             AssaultShotFireCover = settings.GetFloat("ASSAULT SHOTGUN", "InCoverROF", 1.0f);
 
             GrndLaunchFire = settings.GetFloat("GRENADE LAUNCHER", "NormalROF", 1.0f);
+            GrndLaunchFireDb = settings.GetFloat("GRENADE LAUNCHER", "DrivebyROF", 1.0f);
             GrndLaunchFireCover = settings.GetFloat("GRENADE LAUNCHER", "InCoverROF", 1.0f);
 
             Pistol44Fire = settings.GetFloat("PISTOL 44", "NormalROF", 1.0f);
@@ -881,9 +883,11 @@ namespace WeapFuncs.ivsdk
             Pistol44FireCover = settings.GetFloat("PISTOL 44", "InCoverROF", 1.0f);
 
             AA12Fire = settings.GetFloat("AA12", "NormalROF", 1.0f);
+            AA12FireDb = settings.GetFloat("AA12", "DrivebyROF", 1.0f);
             AA12FireCover = settings.GetFloat("AA12", "InCoverROF", 1.0f);
 
             AA12ExpFire = settings.GetFloat("AA12 EXP", "NormalROF", 1.0f);
+            AA12ExpFireDb = settings.GetFloat("AA12 EXP", "DrivebyROF", 1.0f);
             AA12ExpFireCover = settings.GetFloat("AA12 EXP", "InCoverROF", 1.0f);
 
             P90Fire = settings.GetFloat("P90", "NormalROF", 1.0f);

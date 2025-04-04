@@ -77,10 +77,11 @@ namespace WeapFuncs.ivsdk
                     }
                 }
 
-                if (Main.pAmmo != 0)
+                if (Main.pAmmo != 0 && !(IS_CHAR_SITTING_IN_ANY_CAR(Main.PlayerHandle) && Main.pAmmo == Main.mAmmo))
                 {
                     currWeapon = Main.currWeap;
                     currClip = Main.pAmmo;
+                    //IVGame.ShowSubtitleMessage("Rel  " + currClip.ToString() + "  " + ammoList[currWeaponIndex].ToString());
                 }
 
                 if (currWeapon == Main.currWeap && !IS_CHAR_SITTING_IN_ANY_CAR(Main.PlayerHandle) && (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "p_load") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload_crouch")))
@@ -123,8 +124,10 @@ namespace WeapFuncs.ivsdk
                         RevertAmmo();
                     }
 
-                    else if (ammoList[currWeaponIndex] != Main.mAmmo)
+                    else if (ammoList[currWeaponIndex] != Main.mAmmo || IS_CHAR_SITTING_IN_ANY_CAR(Main.PlayerHandle))
+                    {
                         ammoList[currWeaponIndex] = currClip;
+                    }
                 }
             }
         }
@@ -139,6 +142,13 @@ namespace WeapFuncs.ivsdk
                 SET_AMMO_IN_CLIP(Main.PlayerHandle, currWeapon, ammoList[currWeaponIndex]);
                 //Main.aAmmo += ammoDiff;
                 //Main.pAmmo -= ammoDiff;
+                currClip = Main.pAmmo;
+            }
+            if (IS_CHAR_SITTING_IN_ANY_CAR(Main.PlayerHandle))
+            {
+                //IVGame.ShowSubtitleMessage(ammoDiff.ToString() + "  " + Main.aAmmo.ToString());
+                SET_CHAR_AMMO(Main.PlayerHandle, currWeapon, (Main.aAmmo + 1));
+                SET_AMMO_IN_CLIP(Main.PlayerHandle, currWeapon, ammoList[currWeaponIndex] - 1);
                 currClip = Main.pAmmo;
             }
         }
