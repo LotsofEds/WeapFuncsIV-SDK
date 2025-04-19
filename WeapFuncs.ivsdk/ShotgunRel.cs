@@ -9,6 +9,7 @@ using IVSDKDotNet.Enums;
 using CCL.GTAIV;
 using System.Security.Policy;
 using System.Numerics;
+using System.Linq;
 
 namespace WeapFuncs.ivsdk
 {
@@ -28,8 +29,11 @@ namespace WeapFuncs.ivsdk
         private static string wAnim = "";
         private static int bulletsFired = 0;
         private static readonly List<eWeaponType> AllRoundReloads = new List<eWeaponType>();
-        /*private static readonly List<eWeaponType> ReloadWithPump = new List<eWeaponType>();
-        private static readonly List<eWeaponType> ReloadNoPump = new List<eWeaponType>();*/
+        private static List<float> Loop1Start = new List<float>();
+        private static List<float> Loop1End = new List<float>();
+        private static List<float> Loop2Start = new List<float>();
+        private static List<float> Loop2End = new List<float>();
+        private static int weapIndex = 0;
 
         private static void GetAmmo()
         {
@@ -40,26 +44,24 @@ namespace WeapFuncs.ivsdk
         public static void Init(SettingsFile settings)
         {
             string IncludedWeaps = settings.GetValue("INCLUDED WEAPONS", "AllRoundReloads", "");
-            /*string YesPump = settings.GetValue("INCLUDED WEAPONS", "ReloadWithPump", "");
-            string NoPump = settings.GetValue("INCLUDED WEAPONS", "ReloadNoPump", "");*/
             AllRoundReloads.Clear();
             foreach (var weaponName in IncludedWeaps.Split(','))
             {
                 eWeaponType weaponType = (eWeaponType)Enum.Parse(typeof(eWeaponType), weaponName.Trim(), true);
                 AllRoundReloads.Add(weaponType);
             }
-            /*ReloadWithPump.Clear();
-            foreach (var weaponName in YesPump.Split(','))
-            {
-                eWeaponType weaponType = (eWeaponType)Enum.Parse(typeof(eWeaponType), weaponName.Trim(), true);
-                ReloadWithPump.Add(weaponType);
-            }
-            ReloadNoPump.Clear();
-            foreach (var weaponName in NoPump.Split(','))
-            {
-                eWeaponType weaponType = (eWeaponType)Enum.Parse(typeof(eWeaponType), weaponName.Trim(), true);
-                ReloadNoPump.Add(weaponType);
-            }*/
+            Loop1Start.Clear();
+            Loop1End.Clear();
+            Loop2Start.Clear();
+            Loop2End.Clear();
+            string LoopStart1 = settings.GetValue("INCLUDED WEAPONS", "ReloadLoop1Start", "");
+            Loop1Start = LoopStart1.Split(',').Select(float.Parse).ToList();
+            string LoopEnd1 = settings.GetValue("INCLUDED WEAPONS", "ReloadLoop1End", "");
+            Loop1End = LoopEnd1.Split(',').Select(float.Parse).ToList();
+            string LoopStart2 = settings.GetValue("INCLUDED WEAPONS", "ReloadLoop2Start", "");
+            Loop2Start = LoopStart2.Split(',').Select(float.Parse).ToList();
+            string LoopEnd2 = settings.GetValue("INCLUDED WEAPONS", "ReloadLoop2End", "");
+            Loop2End = LoopEnd2.Split(',').Select(float.Parse).ToList();
         }
         public static void Tick()
         {
@@ -67,6 +69,7 @@ namespace WeapFuncs.ivsdk
             {
                 if (Main.currWeap == (int)weaponType)
                 {
+                    weapIndex = AllRoundReloads.IndexOf(weaponType);
                     wAnim = Main.WeapAnim;
                     GetAmmo();
                     if (!IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, wAnim, "reload") && !IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, wAnim, "reload_crouch"))
@@ -76,47 +79,25 @@ namespace WeapFuncs.ivsdk
                             ClipAmmo = pAmmo;
                             TotalAmmo = aAmmo;
                         }
-                        if (ClipAmmo == 1 && IS_PED_IN_COVER(Main.PlayerHandle))
+                        if (bulletsFired < GET_INT_STAT(287))
                         {
-                            if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "gun@shotgun", "fire"))
-                            {
-                                GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "gun@shotgun", "fire", out shotrel);
-                                if (shotrel > 0.6 && shotrel < 0.64)
-                                    LastShot = true;
-                                else if (shotrel > 0.67 && shotrel < 0.72)
-                                    LastShot = false;
-                            }
-                            else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "gun@shotgun", "fire_crouch"))
-                            {
-                                GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "gun@shotgun", "fire_crouch", out shotrel);
-                                if (shotrel > 0.6 && shotrel < 0.64)
-                                    LastShot = true;
-                                if (shotrel > 0.67 && shotrel < 0.72)
-                                    LastShot = false;
-                            }
-                            else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "gun@baretta", "fire"))
-                            {
-                                GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "gun@baretta", "fire", out shotrel);
-                                if (shotrel > 0.85 && shotrel < 0.88)
-                                    LastShot = true;
-                                if (shotrel > 0.91 && shotrel < 0.94)
-                                    LastShot = false;
-                            }
-                            else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "gun@baretta", "fire_crouch"))
-                            {
-                                GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "gun@baretta", "fire_crouch", out shotrel);
-                                if (shotrel > 0.85 && shotrel < 0.88)
-                                    LastShot = true;
-                                if (shotrel > 0.91 && shotrel < 0.94)
-                                    LastShot = false;
-                            }
+                            LastShot = true;
+                            bulletsFired = GET_INT_STAT(287);
                         }
+                        else if (LastShot)
+                            LastShot = false;
+
                         if (pAmmo == 0)
                             LastShot = false;
                     }
 
                     else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, wAnim, "reload"))
                     {
+                        if (bulletsFired < GET_INT_STAT(287))
+                        {
+                            LastShot = true;
+                            bulletsFired = GET_INT_STAT(287);
+                        }
                         if (pAmmo > ClipAmmo)
                         {
                             if (LastShot == true)
@@ -134,7 +115,7 @@ namespace WeapFuncs.ivsdk
                         if ((pAmmo == 0 || (FirstShot) || LastShot == true) && (aAmmo - pAmmo) > 0)
                         {
                             GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, wAnim, "reload", out shotrel);
-                            if (shotrel <= 0.4)
+                            /*if (shotrel <= 0.4)
                             {
                                 SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, wAnim, "reload", 0.5f);
                                 GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, wAnim, "reload", out shotrel);
@@ -144,6 +125,32 @@ namespace WeapFuncs.ivsdk
                                 return;
 
                             if (shotrel >= 0.85 && shotrel < 0.9)
+                            {
+                                if (FullAmmoFix)
+                                {
+                                    SET_AMMO_IN_CLIP(Main.PlayerHandle, Main.currWeap, 1);
+                                    SET_CHAR_AMMO(Main.PlayerHandle, Main.currWeap, TotalAmmo - 1);
+                                    FullAmmoFix = false;
+                                }
+                                else
+                                {
+                                    SET_AMMO_IN_CLIP(Main.PlayerHandle, Main.currWeap, 1);
+                                    SET_CHAR_AMMO(Main.PlayerHandle, Main.currWeap, TotalAmmo);
+                                }
+                                GetAmmo();
+                                ClipAmmo = pAmmo;
+                                TotalAmmo = aAmmo;
+                            }*/
+                            if (shotrel < Loop1Start[weapIndex])
+                            {
+                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, wAnim, "reload", Loop1Start[weapIndex]);
+                                GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, wAnim, "reload", out shotrel);
+                                FirstShot = true;
+                            }
+                            if (shotrel < Loop1End[weapIndex] && shotrel >= Loop1Start[weapIndex])
+                                return;
+
+                            if (shotrel >= Loop1End[weapIndex] && shotrel < 0.9)
                             {
                                 if (FullAmmoFix)
                                 {
@@ -251,7 +258,7 @@ namespace WeapFuncs.ivsdk
                     TotalAmmo = aAmmo;
                 }
                 GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, wAnim, "reload", out shotrel);
-                if (((shotrel >= 0.25 && shotrel < 0.9) || shotrel <= 0.10) && ReloadStart == false)
+                /*if (((shotrel >= 0.25 && shotrel < 0.9) || shotrel <= 0.10) && ReloadStart == false)
                 {
                     SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, wAnim, "reload", 0.15f);
                     GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, wAnim, "reload", out shotrel);
@@ -261,6 +268,25 @@ namespace WeapFuncs.ivsdk
                     return;
 
                 if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, wAnim, "reload") && shotrel < 0.75 && shotrel > 0.15 && pAmmo != mAmmo)
+                {
+                    ReloadStart = false;
+                    SET_AMMO_IN_CLIP(Main.PlayerHandle, Main.currWeap, ClipAmmo + 1);
+                    SET_CHAR_AMMO(Main.PlayerHandle, Main.currWeap, TotalAmmo);
+                    GetAmmo();
+                    ClipAmmo = pAmmo;
+                    TotalAmmo = aAmmo;
+                }*/
+                //IVGame.ShowSubtitleMessage(shotrel.ToString() + "   " + Loop2End[weapIndex]);
+                if (((shotrel > Loop2Start[weapIndex] && shotrel < 0.9) || shotrel <= 0.10) && ReloadStart == false)
+                {
+                    SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, wAnim, "reload", Loop2Start[weapIndex]);
+                    GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, wAnim, "reload", out shotrel);
+                    ReloadStart = true;
+                }
+                if (shotrel <= Loop2End[weapIndex] && shotrel >= Loop2Start[weapIndex])
+                    return;
+
+                if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, wAnim, "reload") && shotrel < 0.9 && shotrel > Loop2Start[weapIndex] && pAmmo != mAmmo)
                 {
                     ReloadStart = false;
                     SET_AMMO_IN_CLIP(Main.PlayerHandle, Main.currWeap, ClipAmmo + 1);
@@ -281,7 +307,13 @@ namespace WeapFuncs.ivsdk
                 }
             }
             GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, wAnim, "reload", out shotrel);
-            if (LastShot == false && shotrel <= 0.8 && shotrel > 0.45)
+            /*if (LastShot == false && shotrel <= 0.8 && shotrel > 0.45)
+            {
+                ReloadStart = false;
+                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, wAnim, "reload", 0.9f);
+                GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, wAnim, "reload", out shotrel);
+            }*/
+            if (LastShot == false && shotrel < 0.9 && shotrel > (Loop2End[weapIndex] + 0.1))
             {
                 ReloadStart = false;
                 SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, wAnim, "reload", 0.9f);
