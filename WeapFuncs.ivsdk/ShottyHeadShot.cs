@@ -37,12 +37,17 @@ namespace WeapFuncs.ivsdk
                     continue;*/
                 if (IS_CHAR_DEAD(pedHandle))
                     continue;
-                foreach (eWeaponType weaponType in Shotties)
+
+                if (NativeWorld.GetPedInstanceFromHandle(pedHandle).PedFlags.NoHeadshots || NativeWorld.GetPedInstanceFromHandle(pedHandle).IsPlayer)
+                    continue;
+
+                /*foreach (eWeaponType weaponType in Shotties)
                 {
                     if (!HAS_CHAR_BEEN_DAMAGED_BY_WEAPON(pedHandle, (int)weaponType))
                         continue;
-                }
-                if (NativeWorld.GetPedInstanceFromHandle(pedHandle).PedFlags.NoHeadshots || NativeWorld.GetPedInstanceFromHandle(pedHandle).IsPlayer)
+                }*/
+
+                if (!HAS_CHAR_BEEN_DAMAGED_BY_WEAPON(pedHandle, 57))
                     continue;
 
                 GET_CHAR_ARMOUR(pedHandle, out uint pArmor);
@@ -51,8 +56,14 @@ namespace WeapFuncs.ivsdk
 
                 GET_CHAR_LAST_DAMAGE_BONE(pedHandle, out int pedBone);
 
-                if (pedBone == (int)(eBone.BONE_HEAD))
-                    SET_CHAR_HEALTH(pedHandle, 0);
+                if (pedBone != (int)(eBone.BONE_HEAD))
+                    continue;
+
+                foreach (eWeaponType weaponType in Shotties)
+                {
+                    if (HAS_CHAR_BEEN_DAMAGED_BY_WEAPON(pedHandle, (int)weaponType) && pedBone == (int)(eBone.BONE_HEAD))
+                            SET_CHAR_HEALTH(pedHandle, 0);
+                }
             }
         }
     }
