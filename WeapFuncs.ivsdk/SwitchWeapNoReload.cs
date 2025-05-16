@@ -81,7 +81,16 @@ namespace WeapFuncs.ivsdk
                 else if (bulletsFired < GET_INT_STAT(287) && currWeapon == Main.currWeap)
                 {
                     if (IS_CHAR_SITTING_IN_ANY_CAR(Main.PlayerHandle) || IS_CHAR_GETTING_IN_TO_A_CAR(Main.PlayerHandle))
-                        currClip = Main.pAmmo;
+                    {
+                        if (Main.pAmmo != 0)
+                            currClip = Main.pAmmo;
+                        else
+                        {
+                            currClip = Main.pAmmo;
+                            isReloading = true;
+                        }
+                    }
+
                     ammoList[currWeaponIndex] = currClip;
                     if (!isReloading && Main.pAmmo == 0 && !IS_CHAR_SITTING_IN_ANY_CAR(Main.PlayerHandle) && !IS_CHAR_GETTING_IN_TO_A_CAR(Main.PlayerHandle))
                     {

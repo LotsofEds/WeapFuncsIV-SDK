@@ -119,7 +119,7 @@ namespace WeapFuncs.ivsdk
                                 SET_CHAR_AMMO(Main.PlayerHandle, Main.currWeap, TotalAmmo);
                             }
                         }
-                        if ((pAmmo == 0 || FirstShot || LastShot) && (aAmmo - pAmmo) > 0)
+                        if ((pAmmo == 0 || FirstShot || LastShot) && (((aAmmo - pAmmo) > 0 && aAmmo > mAmmo) || (aAmmo > 0 && aAmmo <= mAmmo)))
                         {
                             if (!LoopStart)
                             {
@@ -135,7 +135,13 @@ namespace WeapFuncs.ivsdk
 
                                 if (shotrel >= Loop1End[weapIndex] && shotrel < 0.92)
                                 {
-                                    if (FullAmmoFix)
+                                    if (aAmmo == 1)
+                                    {
+                                        SET_AMMO_IN_CLIP(Main.PlayerHandle, Main.currWeap, 1);
+                                        SET_CHAR_AMMO(Main.PlayerHandle, Main.currWeap, 1);
+                                        FullAmmoFix = false;
+                                    }
+                                    else if (FullAmmoFix)
                                     {
                                         SET_AMMO_IN_CLIP(Main.PlayerHandle, Main.currWeap, 1);
                                         SET_CHAR_AMMO(Main.PlayerHandle, Main.currWeap, TotalAmmo - 1);
@@ -198,7 +204,7 @@ namespace WeapFuncs.ivsdk
                                 SET_CHAR_AMMO(Main.PlayerHandle, Main.currWeap, TotalAmmo);
                             }
                         }
-                        if ((pAmmo == 0 || FirstShot || LastShot) && (aAmmo - pAmmo) > 0)
+                        if ((pAmmo == 0 || FirstShot || LastShot) && (((aAmmo - pAmmo) > 0 && aAmmo > mAmmo) || (aAmmo > 0 && aAmmo <= mAmmo)))
                         {
                             if (!LoopStart)
                             {
@@ -214,7 +220,13 @@ namespace WeapFuncs.ivsdk
 
                                 if (shotrel >= Loop1End[weapIndex] && shotrel < 0.92)
                                 {
-                                    if (FullAmmoFix)
+                                    if (aAmmo == 1)
+                                    {
+                                        SET_AMMO_IN_CLIP(Main.PlayerHandle, Main.currWeap, 1);
+                                        SET_CHAR_AMMO(Main.PlayerHandle, Main.currWeap, 1);
+                                        FullAmmoFix = false;
+                                    }
+                                    else if (FullAmmoFix)
                                     {
                                         SET_AMMO_IN_CLIP(Main.PlayerHandle, Main.currWeap, 1);
                                         SET_CHAR_AMMO(Main.PlayerHandle, Main.currWeap, TotalAmmo - 1);
