@@ -61,6 +61,7 @@
     <Compile Include="ShottyHeadShot.cs" />
     <Compile Include="SwitchWeapNoReload.cs" />
     <Compile Include="WeapFuncs.cs" />
+    <Compile Include="WeaponZoom.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

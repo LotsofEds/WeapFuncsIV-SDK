@@ -45,7 +45,7 @@ namespace WeapFuncs.ivsdk
         }
         public static void Init(SettingsFile settings)
         {
-            string IncludedWeaps = settings.GetValue("INCLUDED WEAPONS", "AllRoundReloads", "");
+            string IncludedWeaps = settings.GetValue("RELOADS", "AllRoundReloads", "");
             AllRoundReloads.Clear();
             foreach (var weaponName in IncludedWeaps.Split(','))
             {
@@ -57,15 +57,15 @@ namespace WeapFuncs.ivsdk
             Loop2Start.Clear();
             Loop2End.Clear();
             PumpDuration.Clear();
-            string LoopStart1 = settings.GetValue("INCLUDED WEAPONS", "ReloadLoop1Start", "");
+            string LoopStart1 = settings.GetValue("RELOADS", "ReloadLoop1Start", "");
             Loop1Start = LoopStart1.Split(',').Select(float.Parse).ToList();
-            string LoopEnd1 = settings.GetValue("INCLUDED WEAPONS", "ReloadLoop1End", "");
+            string LoopEnd1 = settings.GetValue("RELOADS", "ReloadLoop1End", "");
             Loop1End = LoopEnd1.Split(',').Select(float.Parse).ToList();
-            string LoopStart2 = settings.GetValue("INCLUDED WEAPONS", "ReloadLoop2Start", "");
+            string LoopStart2 = settings.GetValue("RELOADS", "ReloadLoop2Start", "");
             Loop2Start = LoopStart2.Split(',').Select(float.Parse).ToList();
-            string LoopEnd2 = settings.GetValue("INCLUDED WEAPONS", "ReloadLoop2End", "");
+            string LoopEnd2 = settings.GetValue("RELOADS", "ReloadLoop2End", "");
             Loop2End = LoopEnd2.Split(',').Select(float.Parse).ToList();
-            string PumpDur = settings.GetValue("INCLUDED WEAPONS", "PumpDuration", "");
+            string PumpDur = settings.GetValue("RELOADS", "PumpDuration", "");
             PumpDuration = PumpDur.Split(',').Select(float.Parse).ToList();
         }
         public static void Tick()

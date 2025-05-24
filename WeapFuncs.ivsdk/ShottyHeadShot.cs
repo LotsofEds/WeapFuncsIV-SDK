@@ -19,14 +19,14 @@ namespace WeapFuncs.ivsdk
         private static int ArmorThresh;
         public static void Init(SettingsFile settings)
         {
-            string weaponsString = settings.GetValue("INCLUDED WEAPONS", "LethalShotgunHeadshots", "");
+            string weaponsString = settings.GetValue("OTHER", "LethalShotgunHeadshots", "");
             Shotties.Clear();
             foreach (var weaponName in weaponsString.Split(','))
             {
                 eWeaponType weaponType = (eWeaponType)Enum.Parse(typeof(eWeaponType), weaponName.Trim(), true);
                 Shotties.Add(weaponType);
             }
-            ArmorThresh = settings.GetInteger("WEAPFUNCS", "ArmorThreshold", 50);
+            ArmorThresh = settings.GetInteger("OTHER", "ArmorThreshold", 50);
         }
         public static void Tick()
         {

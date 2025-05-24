@@ -254,6 +254,7 @@ namespace WeapFuncs.ivsdk
         {
             Initialized += Main_Initialized;
             Tick += Main_Tick;
+            //ProcessCamera += Main_ProcessCamera;
             //TheWeaponHandler = new WeaponHandling();
         }
 
@@ -726,6 +727,24 @@ namespace WeapFuncs.ivsdk
             if (HeadShotty)
                 ShottyHeadShot.Tick();
         }
+
+        // Credits to catsmackaroo for these helpers, couldn't be assed to make my own from scratch.
+        public static float Clamp(float value, float min, float max)
+        {
+            if (value < min) return min;
+            if (value > max) return max;
+            return value;
+        }
+        public static float SmoothStep(float start, float end, float amount)
+        {
+            amount = Clamp(amount, 0, 1);
+            amount = amount * amount * (3 - 2 * amount);
+            return start + (end - start) * amount;
+        }
+        private void Main_ProcessCamera(object sender, EventArgs e)
+        {
+            WeaponZoom.Tick();
+        }
         public static bool IsAimKeyPressedOnController()
         {
             uint standard = 0;
@@ -746,25 +765,25 @@ namespace WeapFuncs.ivsdk
         }
         private void LoadSettings(SettingsFile settings)
         {
-            GlobalRateOfFire = settings.GetBoolean("WEAPFUNCS", "GlobalROF", false);
-            ReloadInVehicles = settings.GetBoolean("WEAPFUNCS", "ReloadInVehicles", false);
-            ReloadOnBikes = settings.GetBoolean("WEAPFUNCS", "ReloadOnBikes", false);
-            CrouchRelFix = settings.GetBoolean("WEAPFUNCS", "MP5ReloadCrouchFix", false);
-            SemiAutoShotgunBlindfire = settings.GetBoolean("WEAPFUNCS", "SemiAutoShotgunBlindfire", false);
-            NPCSemiAutoShotgunBlindfire = settings.GetBoolean("WEAPFUNCS", "NPCSemiAutoShotgunBlindfire", false);
-            ConsistentPistolBlindfireLoop = settings.GetBoolean("WEAPFUNCS", "ConsistentPistolBlindfireLoop", false);
-            FullAutoPistol = settings.GetBoolean("WEAPFUNCS", "FullAutoPistolBlindfire", false);
-            FullAutoShotgun = settings.GetBoolean("WEAPFUNCS", "FullAutoShotgunBlindfire", false);
-            SawnOffYeet = settings.GetBoolean("WEAPFUNCS", "SawnOffFiresSecondShellImmediately", false);
-            SelectFire = settings.GetBoolean("WEAPFUNCS", "SelectFire", false);
-            ShowFireModeText = settings.GetBoolean("WEAPFUNCS", "ShowFireModeText", false);
-            ShotsPerBurst = settings.GetInteger("WEAPFUNCS", "ShotsPerBurst", 3);
-            SwitchWeaponNoReload = settings.GetBoolean("WEAPFUNCS", "SwitchWeaponNoReload", false);
-            PressToFire = settings.GetBoolean("WEAPFUNCS", "PressToFire", false);
-            LoseAmmoInMag = settings.GetBoolean("WEAPFUNCS", "LoseAmmoInMag", false);
-            SelectFireCtrl = (GameKey)settings.GetInteger("WEAPFUNCS", "SelectFireControl", 23);
-            AllRoundReload = settings.GetBoolean("WEAPFUNCS", "AllRoundReload", false);
-            HeadShotty = settings.GetBoolean("WEAPFUNCS", "LethalShotgunHeadshots", false);
+            GlobalRateOfFire = settings.GetBoolean("OTHER", "GlobalROF", false);
+            ReloadInVehicles = settings.GetBoolean("RELOADS", "ReloadInVehicles", false);
+            ReloadOnBikes = settings.GetBoolean("RELOADS", "ReloadOnBikes", false);
+            CrouchRelFix = settings.GetBoolean("RELOADS", "MP5ReloadCrouchFix", false);
+            SemiAutoShotgunBlindfire = settings.GetBoolean("BLINDFIRING", "SemiAutoShotgunBlindfire", false);
+            NPCSemiAutoShotgunBlindfire = settings.GetBoolean("BLINDFIRING", "NPCSemiAutoShotgunBlindfire", false);
+            ConsistentPistolBlindfireLoop = settings.GetBoolean("BLINDFIRING", "ConsistentPistolBlindfireLoop", false);
+            FullAutoPistol = settings.GetBoolean("BLINDFIRING", "FullAutoPistolBlindfire", false);
+            FullAutoShotgun = settings.GetBoolean("BLINDFIRING", "FullAutoShotgunBlindfire", false);
+            SawnOffYeet = settings.GetBoolean("OTHER", "SawnOffFiresSecondShellImmediately", false);
+            SelectFire = settings.GetBoolean("SELECT FIRE", "SelectFire", false);
+            ShowFireModeText = settings.GetBoolean("SELECT FIRE", "ShowFireModeText", false);
+            ShotsPerBurst = settings.GetInteger("SELECT FIRE", "ShotsPerBurst", 3);
+            SwitchWeaponNoReload = settings.GetBoolean("RELOADS", "SwitchWeaponNoReload", false);
+            PressToFire = settings.GetBoolean("SELECT FIRE", "PressToFire", false);
+            LoseAmmoInMag = settings.GetBoolean("RELOADS", "LoseAmmoInMag", false);
+            SelectFireCtrl = (GameKey)settings.GetInteger("SELECT FIRE", "SelectFireControl", 23);
+            AllRoundReload = settings.GetBoolean("RELOADS", "AllRoundReload", false);
+            HeadShotty = settings.GetBoolean("OTHER", "LethalShotgunHeadshot", false);
 
             PistolAnim = settings.GetValue("GLOCK", "NormalAnim", "");
             SilencedAnim = settings.GetValue("SILENCED", "NormalAnim", "");

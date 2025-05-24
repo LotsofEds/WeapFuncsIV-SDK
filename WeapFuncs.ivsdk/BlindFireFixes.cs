@@ -14,12 +14,14 @@ namespace WeapFuncs.ivsdk
 {
     internal class BlindFireFixes
     {
+        private static bool HeavyRifle;
         private static float AnimPointer;
         private static string pWeapAnim = "";
         private static readonly List<eWeaponType> Automatics = new List<eWeaponType>();
         public static void Init(SettingsFile settings)
         {
-            string weaponString = settings.GetValue("INCLUDED WEAPONS", "Full Auto Blindfire", "");
+            HeavyRifle = settings.GetBoolean("BLINDFIRING", "HeavyRiflesBlindfireFix", false);
+            string weaponString = settings.GetValue("BLINDFIRING", "FullAutoBlindfire", "");
             Automatics.Clear();
             foreach (var weaponName in weaponString.Split(','))
             {
@@ -347,7 +349,7 @@ namespace WeapFuncs.ivsdk
                     }
                 }
 
-                if (IVWeaponInfo.GetWeaponInfo((uint)Main.currWeap).WeaponFlags.HeavyWeaponUsesRifleAnims)
+                if (IVWeaponInfo.GetWeaponInfo((uint)Main.currWeap).WeaponFlags.HeavyWeaponUsesRifleAnims && HeavyRifle)
                 {
                     if (Main.pAmmo > 0 && (NativeControls.IsGameKeyPressed(0, GameKey.Attack) || NativeControls.IsGameKeyPressed(2, GameKey.Attack)))
                     {

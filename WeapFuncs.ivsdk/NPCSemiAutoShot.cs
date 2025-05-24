@@ -24,7 +24,7 @@ namespace WeapFuncs.ivsdk
         {
             pedList.Clear();
             ammoList.Clear();
-            string weaponsString = settings.GetValue("INCLUDED WEAPONS", "Shotgun Blindfire", "");
+            string weaponsString = settings.GetValue("BLINDFIRING", "ShotgunBlindfire", "");
             NotPump.Clear();
             foreach (var weaponName in weaponsString.Split(','))
             {

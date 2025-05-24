@@ -53,14 +53,15 @@ namespace WeapFuncs.ivsdk
         private static int currFireType;
         private static int weapIndex;
         private static int timeBetBurst;
+        private static int weapObj;
         public static void Init(SettingsFile settings)
         {
-            timeBetBurst = settings.GetInteger("MAIN", "TimeBetweenShots", 250);
-            accuracyTimeBurstNum = settings.GetFloat("MAIN", "BurstAccuracyTime", 0);
-            accuracyTimeBurstMult = settings.GetFloat("MAIN", "BurstAccuracyMult", 8);
-            accuracyTimeSemiNum = settings.GetFloat("MAIN", "SemiAutoAccuracyTime", 0);
-            accuracyTimeSemiMult = settings.GetFloat("MAIN", "SemiAutoAccuracyMult", 16);
-            string weaponString = settings.GetValue("INCLUDED WEAPONS", "Select Fire Weapons", "");
+            timeBetBurst = settings.GetInteger("SELECT FIRE", "TimeBetweenShots", 250);
+            accuracyTimeBurstNum = settings.GetFloat("SELECT FIRE", "BurstAccuracyTime", 0);
+            accuracyTimeBurstMult = settings.GetFloat("SELECT FIRE", "BurstAccuracyMult", 8);
+            accuracyTimeSemiNum = settings.GetFloat("SELECT FIRE", "SemiAutoAccuracyTime", 0);
+            accuracyTimeSemiMult = settings.GetFloat("SELECT FIRE", "SemiAutoAccuracyMult", 16);
+            string weaponString = settings.GetValue("SELECT FIRE", "SelectFireWeapons", "");
             BurstWeaps.Clear();
             foreach (var weaponName in weaponString.Split(','))
             {
@@ -76,37 +77,22 @@ namespace WeapFuncs.ivsdk
             Loop6.Clear();
             Loop7.Clear();
             Loop8.Clear();
-            string wLoop1 = settings.GetValue("INCLUDED WEAPONS", "SelectFireLoopNormal", "");
+            string wLoop1 = settings.GetValue("SELECT FIRE", "SelectFireLoopNormal", "");
             Loop1 = wLoop1.Split(',').Select(float.Parse).ToList();
-            string wLoop2 = settings.GetValue("INCLUDED WEAPONS", "SelectFireLoopDriveBy", "");
+            string wLoop2 = settings.GetValue("SELECT FIRE", "SelectFireLoopDriveBy", "");
             Loop2 = wLoop2.Split(',').Select(float.Parse).ToList();
-            string wLoop3 = settings.GetValue("INCLUDED WEAPONS", "SelectFireLoopBlindFireLHigh", "");
+            string wLoop3 = settings.GetValue("SELECT FIRE", "SelectFireLoopBlindFireLHigh", "");
             Loop3 = wLoop3.Split(',').Select(float.Parse).ToList();
-            string wLoop4 = settings.GetValue("INCLUDED WEAPONS", "SelectFireLoopBlindFireLCntr", "");
+            string wLoop4 = settings.GetValue("SELECT FIRE", "SelectFireLoopBlindFireLCntr", "");
             Loop4 = wLoop4.Split(',').Select(float.Parse).ToList();
-            string wLoop5 = settings.GetValue("INCLUDED WEAPONS", "SelectFireLoopBlindFireLCrnr", "");
+            string wLoop5 = settings.GetValue("SELECT FIRE", "SelectFireLoopBlindFireLCrnr", "");
             Loop5 = wLoop5.Split(',').Select(float.Parse).ToList();
-            string wLoop6 = settings.GetValue("INCLUDED WEAPONS", "SelectFireLoopBlindFireRHigh", "");
+            string wLoop6 = settings.GetValue("SELECT FIRE", "SelectFireLoopBlindFireRHigh", "");
             Loop6 = wLoop6.Split(',').Select(float.Parse).ToList();
-            string wLoop7 = settings.GetValue("INCLUDED WEAPONS", "SelectFireLoopBlindFireRCntr", "");
+            string wLoop7 = settings.GetValue("SELECT FIRE", "SelectFireLoopBlindFireRCntr", "");
             Loop7 = wLoop7.Split(',').Select(float.Parse).ToList();
-            string wLoop8 = settings.GetValue("INCLUDED WEAPONS", "SelectFireLoopBlindFireRCrnr", "");
+            string wLoop8 = settings.GetValue("SELECT FIRE", "SelectFireLoopBlindFireRCrnr", "");
             Loop8 = wLoop8.Split(',').Select(float.Parse).ToList();
-
-            /*string rifleString = settings.GetValue("INCLUDED WEAPONS", "Select Fire Rifles", "");
-            BurstRifles.Clear();
-            foreach (var rifleName in rifleString.Split(','))
-            {
-                eWeaponType rifleType = (eWeaponType)Enum.Parse(typeof(eWeaponType), rifleName.Trim(), true);
-                BurstRifles.Add(rifleType);
-            }
-            string pistolString = settings.GetValue("INCLUDED WEAPONS", "Select Fire Pistols", "");
-            BurstPistols.Clear();
-            foreach (var pistolName in pistolString.Split(','))
-            {
-                eWeaponType pistolType = (eWeaponType)Enum.Parse(typeof(eWeaponType), pistolName.Trim(), true);
-                BurstPistols.Add(pistolType);
-            }*/
         }
         public static void Tick()
         {
@@ -116,6 +102,7 @@ namespace WeapFuncs.ivsdk
 
             if (!IS_CHAR_DEAD(Main.PlayerHandle) && !IS_PED_RAGDOLL(Main.PlayerHandle) && !IS_CHAR_GETTING_UP(Main.PlayerHandle))
             {
+                weapObj = GET_OBJECT_PED_IS_HOLDING(Main.PlayerHandle);
                 if (Main.ReloadInVehicles)
                 {
                     if ((FiringWeapon(Main.PlayerPed) || (!FiringWeapon(Main.PlayerPed) && (NativeControls.IsGameKeyPressed(0, GameKey.Reload) || NativeControls.IsGameKeyPressed(2, GameKey.Reload)))) && IS_CHAR_SITTING_IN_ANY_CAR(Main.PlayerHandle) && Main.aAmmo > 0 && Main.pAmmo == 0 && Main.currWeap != 56 && Main.currWeap != 46)

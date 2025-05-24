@@ -17,7 +17,7 @@ namespace WeapFuncs.ivsdk
         private static readonly List<eWeaponType> NotPump = new List<eWeaponType>();
         public static void Init(SettingsFile settings)
         {
-            string weaponsString = settings.GetValue("INCLUDED WEAPONS", "Shotgun Blindfire", "");
+            string weaponsString = settings.GetValue("BLINDFIRING", "ShotgunBlindfire", "");
             NotPump.Clear();
             foreach (var weaponName in weaponsString.Split(','))
             {
