@@ -254,7 +254,7 @@ namespace WeapFuncs.ivsdk
         {
             Initialized += Main_Initialized;
             Tick += Main_Tick;
-            //ProcessCamera += Main_ProcessCamera;
+            ProcessCamera += Main_ProcessCamera;
             //TheWeaponHandler = new WeaponHandling();
         }
 
@@ -275,6 +275,7 @@ namespace WeapFuncs.ivsdk
                 ShotgunRel.Init(Settings);
             if (HeadShotty)
                 ShottyHeadShot.Init(Settings);
+            WeaponZoom.Init(Settings);
         }
 
         private void Main_Tick(object sender, EventArgs e)
