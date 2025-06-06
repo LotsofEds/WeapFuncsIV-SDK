@@ -32,7 +32,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="ClonksCodingLib.GTAIV">
-      <HintPath>..\..\..\..\..\..\Games\CCL 1.9\ClonksCodingLib.GTAIV.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\Games\CCL\ClonksCodingLib.GTAIV.dll</HintPath>
     </Reference>
     <Reference Include="IVSDKDotNetWrapper">
       <HintPath>..\..\..\..\..\..\Games\IVSDK\IVSDKDotNetWrapper.dll</HintPath>
@@ -52,6 +52,8 @@
     <Compile Include="BlindFireFixes.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="NPCSemiAutoShot.cs" />
+    <Compile Include="ObjectHelper.cs" />
+    <Compile Include="ObjectTest.cs" />
     <Compile Include="PedHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RateOfFire.cs" />

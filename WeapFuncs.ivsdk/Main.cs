@@ -712,6 +712,7 @@ namespace WeapFuncs.ivsdk
             }
 
             PedHelper.GrabAllPeds();
+            //ObjectHelper.GrabAllObjs();
             if (GlobalRateOfFire)
                 RateOfFire.Tick();
             ReloadSpeed.Tick();
@@ -727,6 +728,7 @@ namespace WeapFuncs.ivsdk
                 ShotgunRel.Tick();
             if (HeadShotty)
                 ShottyHeadShot.Tick();
+            //ObjectTest.Tick();
         }
 
         // Credits to catsmackaroo for these helpers, couldn't be assed to make my own from scratch.
