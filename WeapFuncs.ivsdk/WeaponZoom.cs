@@ -1,16 +1,8 @@
-﻿using System;
-using System.Windows.Forms;
-using System.Collections.Generic;
-using System.IO;
+﻿using CCL.GTAIV;
 using IVSDKDotNet;
-using IVSDKDotNet.Attributes;
-using static IVSDKDotNet.Native.Natives;
-using CCL;
-using IVSDKDotNet.Enums;
-using System.Threading;
-using System.Runtime;
+using System;
 using System.Numerics;
-using CCL.GTAIV;
+using static IVSDKDotNet.Native.Natives;
 
 namespace WeapFuncs.ivsdk
 {
@@ -162,6 +154,9 @@ namespace WeapFuncs.ivsdk
         }
         public static void Tick()
         {
+            IVCam cam = IVCamera.TheFinalCam;
+            NativeCamera gameCam = NativeCamera.GetGameCam();
+
             switch (Main.currWeap)
             {
                 case 1:
@@ -396,46 +391,47 @@ namespace WeapFuncs.ivsdk
                     weaponZoom = Addon20Zoom;
                     break;
             }
-            IVCam cam = IVCamera.TheFinalCam;
-            NativeCamera gameCam = NativeCamera.GetGameCam();
 
-            if (pWeap == Main.currWeap && !IS_PED_RAGDOLL(Main.PlayerHandle) && !IS_CHAR_SWIMMING(Main.PlayerHandle) && !IS_CHAR_SITTING_IN_ANY_CAR(Main.PlayerHandle) && (NativeControls.IsGameKeyPressed(0, GameKey.Aim) || (Main.IsAimKeyPressedOnController() && IS_USING_CONTROLLER())))
+            if (Main.IsHoldingGun())
             {
-                if ((NativeControls.IsGameKeyPressed(0, GameKey.LookBehind) || NativeControls.IsGameKeyPressed(2, GameKey.LookBehind)) && !isButtonPressed)
+                if (pWeap == Main.currWeap && !IS_PED_RAGDOLL(Main.PlayerHandle) && !IS_CHAR_SWIMMING(Main.PlayerHandle) && !IS_CHAR_SITTING_IN_ANY_CAR(Main.PlayerHandle) && (NativeControls.IsGameKeyPressed(0, GameKey.Aim) || (Main.IsAimKeyPressedOnController() && IS_USING_CONTROLLER())))
                 {
-                    isZoomOn = !isZoomOn;
-                    isButtonPressed = true;
-                }
-                else if (!NativeControls.IsGameKeyPressed(0, GameKey.LookBehind) && !NativeControls.IsGameKeyPressed(2, GameKey.LookBehind) && isButtonPressed)
-                    isButtonPressed = false;
+                    if ((NativeControls.IsGameKeyPressed(0, GameKey.LookBehind) || NativeControls.IsGameKeyPressed(2, GameKey.LookBehind)) && !isButtonPressed)
+                    {
+                        isZoomOn = !isZoomOn;
+                        isButtonPressed = true;
+                    }
+                    else if (!NativeControls.IsGameKeyPressed(0, GameKey.LookBehind) && !NativeControls.IsGameKeyPressed(2, GameKey.LookBehind) && isButtonPressed)
+                        isButtonPressed = false;
 
-                GET_MOUSE_WHEEL(out msWhl);
-                if ((msWhl < 0 || isZoomOn || gameCam.FOV <= 35) && isAiming && zoomAmt != weaponZoom)
-                {
-                    isZoomOn = true;
-                    zoomAmt = weaponZoom;
+                    GET_MOUSE_WHEEL(out msWhl);
+                    if ((msWhl < 0 || isZoomOn || gameCam.FOV <= 35) && isAiming && zoomAmt != weaponZoom)
+                    {
+                        isZoomOn = true;
+                        zoomAmt = weaponZoom;
+                    }
+                    else if ((msWhl > 0 || !isZoomOn || (gameCam.FOV > 35 && IVWeaponInfo.GetWeaponInfo((uint)Main.currWeap).WeaponSlot != 3)) && zoomAmt != 1.0)
+                    {
+                        isZoomOn = false;
+                        zoomAmt = 1.0f;
+                    }
                 }
-                else if ((msWhl > 0 || !isZoomOn || (gameCam.FOV > 35 && IVWeaponInfo.GetWeaponInfo((uint)Main.currWeap).WeaponSlot != 3)) && zoomAmt != 1.0)
+
+                else if (!isAiming || IS_CHAR_SITTING_IN_ANY_CAR(Main.PlayerHandle) || (!NativeControls.IsGameKeyPressed(0, GameKey.Aim) && !(Main.IsAimKeyPressedOnController() && IS_USING_CONTROLLER())))
                 {
                     isZoomOn = false;
+                    isButtonPressed = false;
                     zoomAmt = 1.0f;
                 }
+                pWeap = Main.currWeap;
+
+                if (cam == null)
+                    return;
+
+                //IVGame.ShowSubtitleMessage(gameCam.FOV.ToString() + "   " + zoomAmt.ToString());
+                currentFOV = Main.SmoothStep(currentFOV, zoomAmt, 0.5f);
+                cam.FOV /= currentFOV;
             }
-
-            else if (!isAiming || IS_CHAR_SITTING_IN_ANY_CAR(Main.PlayerHandle) || (!NativeControls.IsGameKeyPressed(0, GameKey.Aim) && !(Main.IsAimKeyPressedOnController() && IS_USING_CONTROLLER())))
-            {
-                isZoomOn = false;
-                isButtonPressed = false;
-                zoomAmt = 1.0f;
-            }
-            pWeap = Main.currWeap;
-
-            if (cam == null)
-                return;
-
-            //IVGame.ShowSubtitleMessage(gameCam.FOV.ToString() + "   " + zoomAmt.ToString());
-            currentFOV = Main.SmoothStep(currentFOV, zoomAmt, 0.5f);
-            cam.FOV /= currentFOV;
         }
     }
 }

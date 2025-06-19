@@ -22,7 +22,7 @@ namespace WeapFuncs.ivsdk
         public static bool FullAutoPistol;
         public static bool FullAutoShotgun;
         public static bool SawnOffYeet;
-        public static bool SelectFire;
+        public static bool FireMode;
         public static bool ShowFireModeText;
         public static bool SwitchWeaponNoReload;
         public static bool PressToFire;
@@ -269,21 +269,38 @@ namespace WeapFuncs.ivsdk
             if (NPCSemiAutoShotgunBlindfire)
                 NPCSemiAutoShot.Init(Settings);
             BlindFireFixes.Init(Settings);
-            WeapFuncs.Init(Settings);
             SwitchWeapNoReload.Init();
             if (AllRoundReload)
                 ShotgunRel.Init(Settings);
             if (HeadShotty)
                 ShottyHeadShot.Init(Settings);
             WeaponZoom.Init(Settings);
+            if (FireMode)
+                SelectFire.Init(Settings);
+            //GLaunchAttachment.Init(Settings);
         }
-
+        public static bool InitialChecks()
+        {
+            if (IS_SCREEN_FADED_OUT()) return false;
+            if (IS_PAUSE_MENU_ACTIVE()) return false;
+            return true;
+        }
+        public static bool IsHoldingGun()
+        {
+            if (IVWeaponInfo.GetWeaponInfo((uint)Main.currWeap).WeaponFlags.Gun == true)
+                return true;
+            else
+                return false;
+        }
         private void Main_Tick(object sender, EventArgs e)
         {
             PlayerPed = IVPed.FromUIntPtr(IVPlayerInfo.FindThePlayerPed());
             PlayerHandle = PlayerPed.GetHandle();
+            PlayerIndex = GET_PLAYER_ID();
             PlayerPos = PlayerPed.Matrix.Pos;
 
+            if (!InitialChecks())
+                return;
             if (PlayerPed == null)
                 return;
 
@@ -728,6 +745,9 @@ namespace WeapFuncs.ivsdk
                 ShotgunRel.Tick();
             if (HeadShotty)
                 ShottyHeadShot.Tick();
+            if (FireMode)
+                SelectFire.Tick();
+            //GLaunchAttachment.Tick();
             //ObjectTest.Tick();
         }
 
@@ -746,6 +766,8 @@ namespace WeapFuncs.ivsdk
         }
         private void Main_ProcessCamera(object sender, EventArgs e)
         {
+            if (!InitialChecks())
+                return;
             WeaponZoom.Tick();
         }
         public static bool IsAimKeyPressedOnController()
@@ -778,7 +800,7 @@ namespace WeapFuncs.ivsdk
             FullAutoPistol = settings.GetBoolean("BLINDFIRING", "FullAutoPistolBlindfire", false);
             FullAutoShotgun = settings.GetBoolean("BLINDFIRING", "FullAutoShotgunBlindfire", false);
             SawnOffYeet = settings.GetBoolean("OTHER", "SawnOffFiresSecondShellImmediately", false);
-            SelectFire = settings.GetBoolean("SELECT FIRE", "SelectFire", false);
+            FireMode = settings.GetBoolean("SELECT FIRE", "SelectFire", false);
             ShowFireModeText = settings.GetBoolean("SELECT FIRE", "ShowFireModeText", false);
             ShotsPerBurst = settings.GetInteger("SELECT FIRE", "ShotsPerBurst", 3);
             SwitchWeaponNoReload = settings.GetBoolean("RELOADS", "SwitchWeaponNoReload", false);

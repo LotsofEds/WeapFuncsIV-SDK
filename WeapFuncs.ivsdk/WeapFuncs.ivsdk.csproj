@@ -50,6 +50,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BlindFireFixes.cs" />
+    <Compile Include="GLaunchAttachment.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="NPCSemiAutoShot.cs" />
     <Compile Include="ObjectHelper.cs" />
@@ -58,6 +59,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RateOfFire.cs" />
     <Compile Include="ReloadSpeed.cs" />
+    <Compile Include="SelectFire.cs" />
     <Compile Include="ShotgunBlindfireFix.cs" />
     <Compile Include="ShotgunRel.cs" />
     <Compile Include="ShottyHeadShot.cs" />
