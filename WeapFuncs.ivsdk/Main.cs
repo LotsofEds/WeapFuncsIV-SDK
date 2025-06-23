@@ -31,6 +31,7 @@ namespace WeapFuncs.ivsdk
         public static GameKey SelectFireCtrl;
         public static bool AllRoundReload;
         public static bool HeadShotty;
+        public static bool GLaunchEnable;
 
         public static int gunModel;
         public static int Boolet;
@@ -257,7 +258,6 @@ namespace WeapFuncs.ivsdk
             ProcessCamera += Main_ProcessCamera;
             //TheWeaponHandler = new WeaponHandling();
         }
-
         private void Main_Initialized(object sender, EventArgs e)
         {
             LoadSettings(Settings);
@@ -277,7 +277,8 @@ namespace WeapFuncs.ivsdk
             WeaponZoom.Init(Settings);
             if (FireMode)
                 SelectFire.Init(Settings);
-            //GLaunchAttachment.Init(Settings);
+            //if (GLaunchEnable)
+                //GLaunchAttachment.Init(Settings);
         }
         public static bool InitialChecks()
         {
@@ -747,7 +748,8 @@ namespace WeapFuncs.ivsdk
                 ShottyHeadShot.Tick();
             if (FireMode)
                 SelectFire.Tick();
-            //GLaunchAttachment.Tick();
+            //if (GLaunchEnable)
+                //GLaunchAttachment.Tick();
             //ObjectTest.Tick();
         }
 
@@ -809,6 +811,7 @@ namespace WeapFuncs.ivsdk
             SelectFireCtrl = (GameKey)settings.GetInteger("SELECT FIRE", "SelectFireControl", 23);
             AllRoundReload = settings.GetBoolean("RELOADS", "AllRoundReload", false);
             HeadShotty = settings.GetBoolean("OTHER", "LethalShotgunHeadshot", false);
+            //GLaunchEnable = settings.GetBoolean("ATTACHMENTS", "GrenadeLauncherAttachment", false);
 
             PistolAnim = settings.GetValue("GLOCK", "NormalAnim", "");
             SilencedAnim = settings.GetValue("SILENCED", "NormalAnim", "");
