@@ -33,19 +33,16 @@ namespace WeapFuncs.ivsdk
             foreach (var ped in PedHelper.PedHandles)
             {
                 int pedHandle = ped.Value;
-                /*if (pedHandle == Main.PlayerHandle)
-                    continue;*/
-                if (IS_CHAR_DEAD(pedHandle))
+                if (IS_CHAR_DEAD(pedHandle) || IS_CHAR_INJURED(pedHandle))
                     continue;
+
+                /*if (IS_PED_IN_COMBAT(pedHandle))
+                {
+                    SET_CHAR_SUFFERS_CRITICAL_HITS(pedHandle, false);
+                }*/
 
                 if (NativeWorld.GetPedInstanceFromHandle(pedHandle).PedFlags.NoHeadshots || NativeWorld.GetPedInstanceFromHandle(pedHandle).IsPlayer)
                     continue;
-
-                /*foreach (eWeaponType weaponType in Shotties)
-                {
-                    if (!HAS_CHAR_BEEN_DAMAGED_BY_WEAPON(pedHandle, (int)weaponType))
-                        continue;
-                }*/
 
                 if (!HAS_CHAR_BEEN_DAMAGED_BY_WEAPON(pedHandle, 57))
                     continue;

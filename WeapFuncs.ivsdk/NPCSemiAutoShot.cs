@@ -66,9 +66,9 @@ namespace WeapFuncs.ivsdk
 
                 if (pedList.Count > 0)
                 {
-                    for (int i = pedList.Count - 1; i >= 0; i--)
+                    for (int i = 0; i < pedList.Count; i++)
                     {
-                        if (!DOES_CHAR_EXIST(pedList[i]) || IS_CHAR_DEAD(pedList[i]) || pedList[i] == Main.PlayerHandle)
+                        if (!DOES_CHAR_EXIST(pedList[i]) || IS_CHAR_INJURED(pedList[i]) || IS_CHAR_DEAD(pedList[i]) || pedList[i] == Main.PlayerHandle)
                         {
                             pedList.Remove(pedList[i]);
                             ammoList.Remove(ammoList[i]);

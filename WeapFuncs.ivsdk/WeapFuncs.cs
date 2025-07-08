@@ -16,6 +16,7 @@ namespace WeapFuncs.ivsdk
     internal class WeapFuncs
     {
         private static float AnimPointer;
+        private static float ReloadTime;
         private static float AnimTime;
         private static string pWeapAnim = "";
         private static string pBFAnim = "";
@@ -48,9 +49,11 @@ namespace WeapFuncs.ivsdk
                         }
                     }
                     if (IS_CHAR_SITTING_IN_ANY_CAR(Main.PlayerHandle))
-                        GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "reload", out AnimPointer);
+                        GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "reload", out ReloadTime);
+                    else
+                        ReloadTime = 0;
 
-                    if (AnimPointer > 0.9 || IS_CHAR_DEAD(Main.PlayerHandle) || pWeap != Main.currWeap || IS_PED_RAGDOLL(Main.PlayerHandle))
+                    if (ReloadTime > 0.9 || IS_CHAR_DEAD(Main.PlayerHandle) || pWeap != Main.currWeap || IS_PED_RAGDOLL(Main.PlayerHandle))
                     {
                         SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "reload", 1.0f);
                         DELETE_OBJECT(ref Main.gunModel);
@@ -73,9 +76,11 @@ namespace WeapFuncs.ivsdk
                         }
                     }
                     if (IS_CHAR_ON_ANY_BIKE(Main.PlayerHandle))
-                        GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "reload", out AnimPointer);
+                        GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "reload", out ReloadTime);
+                    else
+                        ReloadTime = 0;
 
-                    if (AnimPointer > 0.9 || IS_CHAR_DEAD(Main.PlayerHandle) || pWeap != Main.currWeap || IS_PED_RAGDOLL(Main.PlayerHandle))
+                    if (ReloadTime > 0.9 || IS_CHAR_DEAD(Main.PlayerHandle) || pWeap != Main.currWeap || IS_PED_RAGDOLL(Main.PlayerHandle))
                     {
                         SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "reload", 1.0f);
                         DELETE_OBJECT(ref Main.gunModel);
@@ -83,28 +88,28 @@ namespace WeapFuncs.ivsdk
                     }
                 }
 
-                if (Main.CrouchRelFix && IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.MP5Anim, "reload_crouch"))
+                if (Main.CrouchRelFix && IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "gun@mp5k", "reload_crouch"))
                 {
-                    GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, Main.MP5Anim, "reload_crouch", out AnimPointer);
+                    GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "gun@mp5k", "reload_crouch", out AnimPointer);
                     if (AnimPointer > 0.6 && AnimPointer < 0.85)
-                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, Main.MP5Anim, "reload_crouch", 0.9f);
+                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "gun@mp5k", "reload_crouch", 0.9f);
                 }
 
                 if (Main.SawnOffYeet)
                 {
                     if (Main.pAmmo > 0 && (NativeControls.IsGameKeyPressed(0, GameKey.Attack) || NativeControls.IsGameKeyPressed(2, GameKey.Attack)) && !NativeControls.IsGameKeyPressed(0, GameKey.Aim) && !(Main.IsAimKeyPressedOnController() && IS_USING_CONTROLLER()))
                     {
-                        if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.SawnOffAnim, "fire"))
+                        if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "gun@sawnoff", "fire"))
                         {
-                            GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, Main.SawnOffAnim, "fire", out AnimPointer);
+                            GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "gun@sawnoff", "fire", out AnimPointer);
                             if (AnimPointer > 0.72 && AnimPointer < 0.88)
-                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, Main.SawnOffAnim, "fire", 0.7f);
+                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "gun@sawnoff", "fire", 0.7f);
                         }
-                        else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.SawnOffAnim, "fire_crouch"))
+                        else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "gun@sawnoff", "fire_crouch"))
                         {
-                            GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, Main.SawnOffAnim, "fire_crouch", out AnimPointer);
+                            GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "gun@sawnoff", "fire_crouch", out AnimPointer);
                             if (AnimPointer > 0.675 && AnimPointer < 0.88)
-                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, Main.SawnOffAnim, "fire_crouch", 0.655f);
+                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "gun@sawnoff", "fire_crouch", 0.655f);
                         }
                     }
                 }
