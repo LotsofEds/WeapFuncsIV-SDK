@@ -19,52 +19,109 @@ namespace WeapFuncs.ivsdk
 {
     internal class GLaunchAttachment
     {
-        private static uint fTimer;
-        private static uint gTimer;
-        private static bool hasPressedButton;
-        private static int grenObj;
-        private static Vector3 grndPos;
+        // IniShit
+        private static bool hasAttachment;
+        private static string glModel;
+        private static Vector3 glModelOff;
+        private static Vector3 glModelRot;
+        private static string projModel;
+        private static string reloadAnim = "";
+        private static Vector3 grndOffset;
+        private static Vector3 grndRot;
+        private static GameKey GrndFireCtrl;
         private static int grndForce;
+        private static int fuseTime;
+        private static int expType;
+        private static int gAmmo;
+        private static string fireSound;
+        private static string muzFxName;
+        private static Vector3 muzFxOff;
+        private static string trailFxName;
 
+        // Lists,Arrays
+        private static bool[] attachmentUnlocks;
+        private static int[] grenadeAmmo;
+
+        // BooleShit
+        private static bool hasPressedButton;
         private static bool cantFire;
         private static bool isReloading;
         private static bool animPlaying;
         private static bool ammoDisplay;
+        private static bool weapInHand;
+
+        // Some Other Shit
         private static int currWeap;
-
-        private static string projModel;
-        private static string reloadAnim;
-        private static Vector3 grndOffset;
-        private static GameKey GrndFireCtrl;
-        private static int fuseTime;
-        private static int expType;
-        private static int gAmmo;
+        private static uint fTimer;
+        private static uint gTimer;
+        private static int glAttachProp;
+        private static int grenObj;
+        private static Vector3 attachPos;
+        private static Vector3 grndPos;
         private static int wIndex;
+        private static int soundID = -1;
         private static uint alpha = 255;
-
-        private static List<eWeaponType> GLaunchWeaps = new List<eWeaponType>();
-        private static List<int> expTypes = new List<int>();
+        private static int muzFxID = -1;
+        private static int trailFxID = -1;
+        private static uint pModel;
         public static void Init(SettingsFile settings)
         {
-            projModel = settings.GetValue("ATTACHMENTS", "GrenadeModel", "");
-            reloadAnim = settings.GetValue("ATTACHMENTS", "ReloadAnim", "");
-            grndOffset = settings.GetVector3("ATTACHMENTS", "GrenadeOffset", Vector3.Zero);
-            GrndFireCtrl = (GameKey)settings.GetInteger("ATTACHMENTS", "FireGrenadeControl", 7);
-            fuseTime = settings.GetInteger("ATTACHMENTS", "GrenadeFuseTime", 4000);
-            expType = settings.GetInteger("ATTACHMENTS", "ExplosionType", 0);
-            grndForce = settings.GetInteger("ATTACHMENTS", "ProjectileForce", 40);
-            gAmmo = settings.GetInteger("ATTACHMENTS", "GrenadeAmmo", 4);
+            attachmentUnlocks = new bool[Main.numOfWeapIDs];
+            grenadeAmmo = new int[Main.numOfWeapIDs];
 
-            string weaponString = settings.GetValue("ATTACHMENTS", "WeaponsWithGrenadeLauncherAttachment", "");
-            GLaunchWeaps.Clear();
-            foreach (var weaponName in weaponString.Split(','))
+            GrndFireCtrl = (GameKey)settings.GetInteger("ATTACHMENTS", "FireGrenadeControl", 7);
+        }
+        List<eWeaponType> GLaunchWeaps = new List<eWeaponType>();
+        public static void UnInit()
+        {
+            DELETE_OBJECT(ref glAttachProp);
+        }
+        public static void OnGameLoad()
+        {
+            for (int i = 0; i < Main.numOfWeapIDs; i++)
             {
-                eWeaponType weaponType = (eWeaponType)Enum.Parse(typeof(eWeaponType), weaponName.Trim(), true);
-                GLaunchWeaps.Add(weaponType);
+                if (Main.attachmentConfig.DoesSectionExists(i.ToString()))
+                {
+                    Main.wfAttachConfig.SetBoolean(IVGenericGameStorage.ValidSaveName, i.ToString() + "HasGLAttachment", Main.attachmentConfig.GetBoolean(IVGenericGameStorage.ValidSaveName, i.ToString() + "HasGLAttachment", false));
+                    Main.wfAttachConfig.SetInteger(IVGenericGameStorage.ValidSaveName, i.ToString() + "GrenadeAmmo", Main.attachmentConfig.GetInteger(IVGenericGameStorage.ValidSaveName, i.ToString() + "GrenadeAmmo", 0));
+                }
             }
-            expTypes.Clear();
-            string expString = settings.GetValue("ATTACHMENTS", "ExplosionTypes", "");
-            expTypes = expString.Split(',').Select(int.Parse).ToList();
+            Main.wfAttachConfig.Save();
+            Main.wfAttachConfig.Load();
+        }
+        private static void SaveAmmo(int weapon)
+        {
+            Main.wfAttachConfig.SetInteger(IVGenericGameStorage.ValidSaveName, weapon.ToString() + "GrenadeAmmo", gAmmo);
+            Main.wfAttachConfig.Save();
+        }
+        private static void LoadWeaponConfig(int weapon)
+        {
+            if (Main.wfAttachConfig.DoesSectionExists(weapon.ToString()))
+            {
+                //IVGame.ShowSubtitleMessage(Main.attachmentConfig.ToString());
+                //IVGame.ShowSubtitleMessage(Main.attachmentConfig.GetBoolean(IVGenericGameStorage.ValidSaveName, weapon.ToString() + "HasGLAttachment", false).ToString());
+                hasAttachment = Main.wfAttachConfig.GetBoolean(IVGenericGameStorage.ValidSaveName, weapon.ToString() + "HasGLAttachment", false);
+                glModel = Main.wfAttachConfig.GetValue(weapon.ToString(), "GrenadeLauncherModel", "");
+                projModel = Main.wfAttachConfig.GetValue(weapon.ToString(), "GrenadeModel", "");
+                reloadAnim = Main.wfAttachConfig.GetValue(weapon.ToString(), "GrenadeLauncherReloadAnim", "");
+                glModelOff = Main.wfAttachConfig.GetVector3(weapon.ToString(), "GrenadeLauncherOffset", Vector3.Zero);
+                glModelRot = Main.wfAttachConfig.GetVector3(weapon.ToString(), "GrenadeLauncherRot", Vector3.Zero);
+                grndOffset = Main.wfAttachConfig.GetVector3(weapon.ToString(), "GrenadeOffset", Vector3.Zero);
+                grndRot = Main.wfAttachConfig.GetVector3(weapon.ToString(), "GrenadeRot", Vector3.Zero);
+                gAmmo = Main.wfAttachConfig.GetInteger(IVGenericGameStorage.ValidSaveName, weapon.ToString() + "GrenadeAmmo", 0);
+                fireSound = Main.wfAttachConfig.GetValue(weapon.ToString(), "FireSound", "");
+                muzFxName = Main.wfAttachConfig.GetValue(weapon.ToString(), "MuzzleFx", "");
+                muzFxOff = Main.wfAttachConfig.GetVector3(weapon.ToString(), "MuzzleFxOffset", Vector3.Zero);
+                trailFxName = Main.wfAttachConfig.GetValue(weapon.ToString(), "TrailFx", "");
+
+                Main.wfAttachConfig.Load();
+            }
+        }
+        private static void LoadGrenadeConfig(int weapon)
+        {
+            fuseTime = Main.wfAttachConfig.GetInteger(weapon.ToString(), "GrenadeFuseTime", 4000);
+            expType = Main.wfAttachConfig.GetInteger(weapon.ToString(), "ExplosionType", 0);
+            grndForce = Main.wfAttachConfig.GetInteger(weapon.ToString(), "ProjectileForce", 40);
         }
         public static void OnButtonPress()
         {
@@ -74,12 +131,17 @@ namespace WeapFuncs.ivsdk
                 {
                     GET_PED_BONE_POSITION(Main.PlayerHandle, 1232, grndOffset, out grndPos);
                     CREATE_OBJECT(GET_HASH_KEY(projModel), grndPos, out grenObj, true);
-                    ATTACH_OBJECT_TO_PED(grenObj, Main.PlayerHandle, 1232, grndOffset.X, grndOffset.Y, grndOffset.Z, 0.0f, -0.75f, 0.0f, 0);
+                    ATTACH_OBJECT_TO_PED(grenObj, Main.PlayerHandle, 1232, grndOffset.X, grndOffset.Y, grndOffset.Z, grndRot.X, grndRot.Y, grndRot.Z, 0);
                     GET_CURRENT_CHAR_WEAPON(Main.PlayerHandle, out currWeap);
-                    _TASK_PLAY_ANIM_SECONDARY_UPPER_BODY(Main.PlayerHandle, "reload", reloadAnim, 4.0f, 0, 0, 0, 0, 0);
-                    gAmmo --;
+                    _TASK_PLAY_ANIM_SECONDARY_UPPER_BODY(Main.PlayerHandle, "fire", reloadAnim, 8.0f, 0, 0, 0, 0, 0);
+                    PLAY_SOUND_FROM_PED(soundID, fireSound, Main.PlayerHandle);
+                    muzFxID = START_PTFX_ON_PED_BONE(muzFxName, Main.PlayerHandle, muzFxOff.X, muzFxOff.Y, muzFxOff.Z, 0.0f, 0.0f, 0.0f, (int)eBone.BONE_RIGHT_HAND, 1.0f);
+                    trailFxID = START_PTFX_ON_OBJ(trailFxName, grenObj, 0, 0, 0, 0, 0, 0, 1.0f);
+                    gAmmo--;
+                    SaveAmmo(currWeap);
 
                     GET_GAME_TIMER(out fTimer);
+                    LoadGrenadeConfig(currWeap);
 
                     isReloading = true;
                     hasPressedButton = true;
@@ -90,17 +152,55 @@ namespace WeapFuncs.ivsdk
         }
         public static void Tick()
         {
-            if (!HAVE_ANIMS_LOADED(reloadAnim))
-                REQUEST_ANIMS(reloadAnim);
-
             GET_GAME_TIMER(out gTimer);
-            foreach (eWeaponType weaponType in GLaunchWeaps)
+
+            LoadWeaponConfig((int)Main.currWeap);
+            if (hasAttachment && wIndex == Main.currWeap && !isReloading)
             {
-                if (Main.currWeap == (int)weaponType)
+                if (!HAVE_ANIMS_LOADED(reloadAnim))
+                    REQUEST_ANIMS(reloadAnim);
+                if (!HAS_MODEL_LOADED(GET_HASH_KEY(glModel)))
+                    REQUEST_MODEL(GET_HASH_KEY(glModel));
+
+                attachmentUnlocks[Main.currWeap] = true;
+                grenadeAmmo[Main.currWeap] = gAmmo;
+
+                GET_WEAPONTYPE_MODEL(Main.currWeap, out uint wModel);
+                foreach (var obj in ObjectHelper.ObjHandles)
                 {
-                    OnButtonPress();
-                    wIndex = GLaunchWeaps.IndexOf(weaponType);
+                    int objHandle = obj.Value;
+
+                    GET_OBJECT_COORDINATES(objHandle, out float objX, out float objY, out float objZ);
+
+                    GET_DISTANCE_BETWEEN_COORDS_3D(Main.PlayerPos.X, Main.PlayerPos.Y, Main.PlayerPos.Z, objX, objY, objZ, out float Dist);
+                    if (Dist > 1)
+                        continue;
+
+                    GET_OBJECT_MODEL(objHandle, out pModel);
+
+                    if (!DOES_OBJECT_EXIST(objHandle) || pModel != wModel)
+                        weapInHand = false;
+
+                    if (pModel == wModel)
+                        weapInHand = true;
                 }
+                if (weapInHand)
+                {
+                    if (!DOES_OBJECT_EXIST(glAttachProp))
+                    {
+                        GET_PED_BONE_POSITION(Main.PlayerHandle, 1232, glModelOff, out attachPos);
+                        CREATE_OBJECT(GET_HASH_KEY(glModel), attachPos, out glAttachProp, true);
+                        ATTACH_OBJECT_TO_PED(glAttachProp, Main.PlayerHandle, 1232, glModelOff.X, glModelOff.Y, glModelOff.Z, glModelRot.X, glModelRot.Y, glModelRot.Z, 0);
+                    }
+                }
+                wIndex = Main.currWeap;
+                OnButtonPress();
+            }
+            else if (wIndex != Main.currWeap)
+            {
+                hasAttachment = false;
+                DELETE_OBJECT(ref glAttachProp);
+                wIndex = Main.currWeap;
             }
             if (IS_HUD_PREFERENCE_SWITCHED_ON() && gTimer > 0 && gTimer <= (fTimer + 5000))
             {
@@ -126,21 +226,25 @@ namespace WeapFuncs.ivsdk
                 SET_TEXT_COLOUR(255, 255, 255, alpha);
 
                 DISPLAY_TEXT_WITH_NUMBER(0.944f, 0.18f, "NUMBER", gAmmo);
-                //DRAW_SPRITE
             }
             else if (IS_FONT_LOADED(4))
                 UNLOAD_TEXT_FONT();
 
-            if (isReloading && IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, reloadAnim, "reload"))
+            if (isReloading && (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, reloadAnim, "fire") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, reloadAnim, "reload")))
             {
+                GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, reloadAnim, "fire", out float fireTime);
+                if (fireTime < 0.85)
+                    SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, reloadAnim, "fire", 0.85f);
+                else if (fireTime > 0.91)
+                {
+                    _TASK_PLAY_ANIM_SECONDARY_UPPER_BODY(Main.PlayerHandle, "reload", reloadAnim, 4.0f, 0, 0, 0, 0, 0);
+                    animPlaying = true;
+                }
                 IVWeaponInfo.GetWeaponInfo((uint)currWeap).WeaponFlags.Gun = false;
-                animPlaying = true;
             }
 
-            if (animPlaying && !IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, reloadAnim, "reload"))
+            if (animPlaying && !IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, reloadAnim, "fire") && !IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, reloadAnim, "reload"))
             {
-                //IVGame.ShowSubtitleMessage("shit");
-                //SET_CURRENT_CHAR_WEAPON(Main.PlayerHandle, currWeap, true);
                 IVWeaponInfo.GetWeaponInfo((uint)currWeap).WeaponFlags.Gun = true;
                 animPlaying = false;
                 isReloading = false;
@@ -163,9 +267,7 @@ namespace WeapFuncs.ivsdk
                     }
                     else
                     {
-                        //IVGame.ShowSubtitleMessage(cRot.ToString());
                         APPLY_FORCE_TO_OBJECT(grenObj, 1, 0, grndForce, 3, 0, 0, 0, 1, 1, 1, 1);
-                        //SET_OBJECT_ROTATION(grenObj, cRot.X - 5, cRot.Y - 15, cRot.Z + 80);
                         SET_OBJECT_ROTATION(grenObj, cRot.X, cRot.Y - 50, cRot.Z + 70);
                         cantFire = true;
                     }
@@ -175,9 +277,29 @@ namespace WeapFuncs.ivsdk
                 {
                     cantFire = false;
                     GET_OBJECT_COORDINATES(grenObj, out Vector3 gPos);
-                    ADD_EXPLOSION(gPos.X, gPos.Y, gPos.Z, expTypes[wIndex], 15, true, false, 1.0f);
+                    ADD_EXPLOSION(gPos.X, gPos.Y, gPos.Z, expType, 15, true, false, 1.0f);
+                    STOP_PTFX(trailFxID);
+                    REMOVE_PTFX(trailFxID);
                     DELETE_OBJECT(ref grenObj);
                 }
+            }
+            if (DID_SAVE_COMPLETE_SUCCESSFULLY() && GET_IS_DISPLAYINGSAVEMESSAGE())
+            {
+                for (int i = 0; i < Main.numOfWeapIDs; i++)
+                {
+                    if (Main.wfAttachConfig.DoesSectionExists(i.ToString()))
+                    {
+                        Main.WriteBooleanToINI(Main.wfAttachConfig, i.ToString() + "HasGLAttachment", attachmentUnlocks[i]);
+                        Main.WriteIntToINI(Main.wfAttachConfig, i.ToString() + "GrenadeAmmo", grenadeAmmo[i]);
+                    }
+                    if (Main.attachmentConfig.DoesSectionExists(i.ToString()))
+                    {
+                        Main.WriteBooleanToINI(Main.attachmentConfig, i.ToString() + "HasGLAttachment", attachmentUnlocks[i]);
+                        Main.WriteIntToINI(Main.attachmentConfig, i.ToString() + "GrenadeAmmo", grenadeAmmo[i]);
+                    }
+                }
+                Main.wfAttachConfig.Save();
+                Main.attachmentConfig.Save();
             }
         }
     }

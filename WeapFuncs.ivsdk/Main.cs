@@ -33,6 +33,7 @@ namespace WeapFuncs.ivsdk
         public static bool AllRoundReload;
         public static bool HeadShotty;
         public static bool GLaunchEnable;
+        public static int numOfWeapIDs;
 
         public static int gunModel;
         public static int Boolet;
@@ -50,15 +51,44 @@ namespace WeapFuncs.ivsdk
         public static uint PlayerIndex { get; set; }
         public static int PlayerHandle { get; set; }
         public static Vector3 PlayerPos { get; set; }
+
+        // SettingsFiles
+        public static SettingsFile attachmentConfig;
+        public static SettingsFile wfAttachConfig;
         public Main()
         {
+            Uninitialize += Main_Uninitialize;
             Initialized += Main_Initialized;
+            GameLoad += Main_GameLoad;
             Tick += Main_Tick;
             ProcessCamera += Main_ProcessCamera;
             //TheWeaponHandler = new WeaponHandling();
         }
+
+        private void Main_GameLoad(object sender, EventArgs e)
+        {
+            GLaunchAttachment.OnGameLoad();
+        }
+
+        private void Main_Uninitialize(object sender, EventArgs e)
+        {
+            WeapFuncs.UnInit();
+            GLaunchAttachment.UnInit();
+        }
+
         private void Main_Initialized(object sender, EventArgs e)
         {
+            if (System.IO.File.Exists(string.Format("{0}\\IVSDKDotNet\\scripts\\ImprovedGunStores\\Attachments.ini", IVGame.GameStartupPath)))
+            {
+                attachmentConfig = new SettingsFile(string.Format("{0}\\IVSDKDotNet\\scripts\\ImprovedGunStores\\Attachments.ini", IVGame.GameStartupPath));
+            }
+            else
+                attachmentConfig = new SettingsFile(string.Format("{0}\\IVSDKDotNet\\scripts\\WeapFuncs\\Attachments.ini", IVGame.GameStartupPath));
+            attachmentConfig.Load();
+
+            wfAttachConfig = new SettingsFile(string.Format("{0}\\IVSDKDotNet\\scripts\\WeapFuncs\\Attachments.ini", IVGame.GameStartupPath));
+            wfAttachConfig.Load();
+
             LoadSettings(Settings);
             //if (GlobalRateOfFire)
                 //RateOfFire.LoadSettings(Settings);
@@ -73,7 +103,7 @@ namespace WeapFuncs.ivsdk
                 ShotgunRel.Init(Settings);
             if (HeadShotty)
                 ShottyHeadShot.Init(Settings);
-            WeaponZoom.Init(Settings);
+            //WeaponZoom.Init(Settings);
             if (FireMode)
                 SelectFire.Init(Settings);
             if (GLaunchEnable)
@@ -113,7 +143,7 @@ namespace WeapFuncs.ivsdk
                 LoadWeaponConfig(currWeap);
 
             PedHelper.GrabAllPeds();
-            //ObjectHelper.GrabAllObjs();
+            ObjectHelper.GrabAllObjs();
             if (GlobalRateOfFire)
                 RateOfFire.Tick();
             ReloadSpeed.Tick();
@@ -133,9 +163,26 @@ namespace WeapFuncs.ivsdk
                 SelectFire.Tick();
             if (GLaunchEnable)
                 GLaunchAttachment.Tick();
+
+            //Silence.Tick();
             //ObjectTest.Tick();
         }
-
+        public static void WriteBooleanToINI(SettingsFile settings, string name, bool booleShit)
+        {
+            if (!settings.DoesSectionExists(IVGenericGameStorage.ValidSaveName))
+                settings.AddSection(IVGenericGameStorage.ValidSaveName);
+            if (!settings.DoesKeyExists(IVGenericGameStorage.ValidSaveName, name))
+                settings.AddKeyToSection(IVGenericGameStorage.ValidSaveName, name);
+            settings.SetBoolean(IVGenericGameStorage.ValidSaveName, name, booleShit);
+        }
+        public static void WriteIntToINI(SettingsFile settings, string name, int integerShit)
+        {
+            if (!settings.DoesSectionExists(IVGenericGameStorage.ValidSaveName))
+                settings.AddSection(IVGenericGameStorage.ValidSaveName);
+            if (!settings.DoesKeyExists(IVGenericGameStorage.ValidSaveName, name))
+                settings.AddKeyToSection(IVGenericGameStorage.ValidSaveName, name);
+            settings.SetInteger(IVGenericGameStorage.ValidSaveName, name, integerShit);
+        }
         // Credits to catsmackaroo for these helpers, couldn't be assed to make my own from scratch.
         public static float Clamp(float value, float min, float max)
         {
@@ -218,8 +265,9 @@ namespace WeapFuncs.ivsdk
         }
         private void LoadSettings(SettingsFile settings)
         {
-            wConfFile = new SettingsFile(string.Format("{0}\\IVSDKDotNet\\scripts\\WeapFuncs\\WeaponConfigs.txt", IVGame.GameStartupPath));
+            wConfFile = new SettingsFile(string.Format("{0}\\IVSDKDotNet\\scripts\\WeapFuncs\\WeaponConfigs.ini", IVGame.GameStartupPath));
             wConfFile.Load();
+            numOfWeapIDs = settings.GetInteger("MAIN", "NumOfWeaponIDs", 60);
             GlobalRateOfFire = settings.GetBoolean("OTHER", "GlobalROF", false);
             ReloadInVehicles = settings.GetBoolean("RELOADS", "ReloadInVehicles", false);
             ReloadOnBikes = settings.GetBoolean("RELOADS", "ReloadOnBikes", false);
