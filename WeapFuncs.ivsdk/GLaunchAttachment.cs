@@ -64,6 +64,7 @@ namespace WeapFuncs.ivsdk
         private static int muzFxID = -1;
         private static int trailFxID = -1;
         private static uint pModel;
+        private static uint wModel;
         public static void Init(SettingsFile settings)
         {
             attachmentUnlocks = new bool[Main.numOfWeapIDs];
@@ -71,7 +72,7 @@ namespace WeapFuncs.ivsdk
 
             GrndFireCtrl = (GameKey)settings.GetInteger("ATTACHMENTS", "FireGrenadeControl", 7);
         }
-        List<eWeaponType> GLaunchWeaps = new List<eWeaponType>();
+        //List<eWeaponType> GLaunchWeaps = new List<eWeaponType>();
         public static void UnInit()
         {
             DELETE_OBJECT(ref glAttachProp);
@@ -82,7 +83,7 @@ namespace WeapFuncs.ivsdk
             {
                 if (Main.attachmentConfig.DoesSectionExists(i.ToString()))
                 {
-                    Main.wfAttachConfig.SetBoolean(IVGenericGameStorage.ValidSaveName, i.ToString() + "HasGLAttachment", Main.attachmentConfig.GetBoolean(IVGenericGameStorage.ValidSaveName, i.ToString() + "HasGLAttachment", false));
+                    Main.wfAttachConfig.SetBoolean(IVGenericGameStorage.ValidSaveName, i.ToString() + "HasGrenadeLauncherAttachment", Main.attachmentConfig.GetBoolean(IVGenericGameStorage.ValidSaveName, i.ToString() + "HasGrenadeLauncherAttachment", false));
                     Main.wfAttachConfig.SetInteger(IVGenericGameStorage.ValidSaveName, i.ToString() + "GrenadeAmmo", Main.attachmentConfig.GetInteger(IVGenericGameStorage.ValidSaveName, i.ToString() + "GrenadeAmmo", 0));
                 }
             }
@@ -100,7 +101,7 @@ namespace WeapFuncs.ivsdk
             {
                 //IVGame.ShowSubtitleMessage(Main.attachmentConfig.ToString());
                 //IVGame.ShowSubtitleMessage(Main.attachmentConfig.GetBoolean(IVGenericGameStorage.ValidSaveName, weapon.ToString() + "HasGLAttachment", false).ToString());
-                hasAttachment = Main.wfAttachConfig.GetBoolean(IVGenericGameStorage.ValidSaveName, weapon.ToString() + "HasGLAttachment", false);
+                hasAttachment = Main.wfAttachConfig.GetBoolean(IVGenericGameStorage.ValidSaveName, weapon.ToString() + "HasGrenadeLauncherAttachment", false);
                 glModel = Main.wfAttachConfig.GetValue(weapon.ToString(), "GrenadeLauncherModel", "");
                 projModel = Main.wfAttachConfig.GetValue(weapon.ToString(), "GrenadeModel", "");
                 reloadAnim = Main.wfAttachConfig.GetValue(weapon.ToString(), "GrenadeLauncherReloadAnim", "");
@@ -165,7 +166,7 @@ namespace WeapFuncs.ivsdk
                 attachmentUnlocks[Main.currWeap] = true;
                 grenadeAmmo[Main.currWeap] = gAmmo;
 
-                GET_WEAPONTYPE_MODEL(Main.currWeap, out uint wModel);
+                GET_WEAPONTYPE_MODEL(Main.currWeap, out wModel);
                 foreach (var obj in ObjectHelper.ObjHandles)
                 {
                     int objHandle = obj.Value;
@@ -196,7 +197,7 @@ namespace WeapFuncs.ivsdk
                 wIndex = Main.currWeap;
                 OnButtonPress();
             }
-            else if (wIndex != Main.currWeap)
+            else if (wIndex != Main.currWeap || pModel != wModel)
             {
                 hasAttachment = false;
                 DELETE_OBJECT(ref glAttachProp);
@@ -267,9 +268,13 @@ namespace WeapFuncs.ivsdk
                     }
                     else
                     {
+                        GET_OBJECT_SPEED(grenObj, out float objSpd);
                         APPLY_FORCE_TO_OBJECT(grenObj, 1, 0, grndForce, 3, 0, 0, 0, 1, 1, 1, 1);
-                        SET_OBJECT_ROTATION(grenObj, cRot.X, cRot.Y - 50, cRot.Z + 70);
-                        cantFire = true;
+                        if (objSpd > 0)
+                        {
+                            SET_OBJECT_ROTATION(grenObj, cRot.X, cRot.Y - 50, cRot.Z + 70);
+                            cantFire = true;
+                        }
                     }
                 }
 
@@ -289,12 +294,12 @@ namespace WeapFuncs.ivsdk
                 {
                     if (Main.wfAttachConfig.DoesSectionExists(i.ToString()))
                     {
-                        Main.WriteBooleanToINI(Main.wfAttachConfig, i.ToString() + "HasGLAttachment", attachmentUnlocks[i]);
+                        Main.WriteBooleanToINI(Main.wfAttachConfig, i.ToString() + "HasGrenadeLauncherAttachment", attachmentUnlocks[i]);
                         Main.WriteIntToINI(Main.wfAttachConfig, i.ToString() + "GrenadeAmmo", grenadeAmmo[i]);
                     }
                     if (Main.attachmentConfig.DoesSectionExists(i.ToString()))
                     {
-                        Main.WriteBooleanToINI(Main.attachmentConfig, i.ToString() + "HasGLAttachment", attachmentUnlocks[i]);
+                        Main.WriteBooleanToINI(Main.attachmentConfig, i.ToString() + "HasGrenadeLauncherAttachment", attachmentUnlocks[i]);
                         Main.WriteIntToINI(Main.attachmentConfig, i.ToString() + "GrenadeAmmo", grenadeAmmo[i]);
                     }
                 }

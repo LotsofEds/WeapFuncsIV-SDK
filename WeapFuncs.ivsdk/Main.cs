@@ -13,6 +13,8 @@ namespace WeapFuncs.ivsdk
     public class Main : Script
     {
         public static SettingsFile wConfFile;
+
+        // IniShit
         public static bool GlobalRateOfFire;
         public static bool ReloadInVehicles;
         public static bool ReloadOnBikes;
@@ -34,7 +36,10 @@ namespace WeapFuncs.ivsdk
         public static bool HeadShotty;
         public static bool GLaunchEnable;
         public static int numOfWeapIDs;
+        public static bool flameOn;
+        public static bool equipGun;
 
+        // Other variables n shit
         public static int gunModel;
         public static int Boolet;
         public static uint CurrEp;
@@ -47,6 +52,8 @@ namespace WeapFuncs.ivsdk
         public static string BFAnim = "";
         public static float weapReload = 1.0f;
         public static Vector3 WeapOffset = new Vector3(0, 0, 0);
+
+        public static DelayedCalling TheDelayedCaller;
         public static IVPed PlayerPed { get; set; }
         public static uint PlayerIndex { get; set; }
         public static int PlayerHandle { get; set; }
@@ -62,18 +69,26 @@ namespace WeapFuncs.ivsdk
             GameLoad += Main_GameLoad;
             Tick += Main_Tick;
             ProcessCamera += Main_ProcessCamera;
+            TheDelayedCaller = new DelayedCalling();
             //TheWeaponHandler = new WeaponHandling();
         }
 
         private void Main_GameLoad(object sender, EventArgs e)
         {
             GLaunchAttachment.OnGameLoad();
+            WeaponZoom.OnGameLoad();
         }
 
         private void Main_Uninitialize(object sender, EventArgs e)
         {
+            if (TheDelayedCaller != null)
+            {
+                TheDelayedCaller.ClearAll();
+                TheDelayedCaller = null;
+            }
             WeapFuncs.UnInit();
             GLaunchAttachment.UnInit();
+            EquipGun.UnInit();
         }
 
         private void Main_Initialized(object sender, EventArgs e)
@@ -103,11 +118,15 @@ namespace WeapFuncs.ivsdk
                 ShotgunRel.Init(Settings);
             if (HeadShotty)
                 ShottyHeadShot.Init(Settings);
-            //WeaponZoom.Init(Settings);
+            WeaponZoom.Init(Settings);
             if (FireMode)
                 SelectFire.Init(Settings);
             if (GLaunchEnable)
                 GLaunchAttachment.Init(Settings);
+            if (flameOn)
+                Flames.Init(Settings);
+            if (equipGun)
+                EquipGun.Init(Settings);
         }
         public static bool InitialChecks()
         {
@@ -134,6 +153,7 @@ namespace WeapFuncs.ivsdk
             if (PlayerPed == null)
                 return;
 
+            TheDelayedCaller.Process();
             GET_CURRENT_CHAR_WEAPON(PlayerHandle, out currWeap);
             GET_AMMO_IN_CLIP(PlayerHandle, currWeap, out pAmmo);
             GET_AMMO_IN_CHAR_WEAPON(PlayerHandle, currWeap, out aAmmo);
@@ -163,6 +183,10 @@ namespace WeapFuncs.ivsdk
                 SelectFire.Tick();
             if (GLaunchEnable)
                 GLaunchAttachment.Tick();
+            if (flameOn)
+                Flames.Tick();
+            if (equipGun)
+                EquipGun.Tick();
 
             //Silence.Tick();
             //ObjectTest.Tick();
@@ -288,6 +312,8 @@ namespace WeapFuncs.ivsdk
             AllRoundReload = settings.GetBoolean("RELOADS", "AllRoundReload", false);
             HeadShotty = settings.GetBoolean("OTHER", "LethalShotgunHeadshot", false);
             GLaunchEnable = settings.GetBoolean("ATTACHMENTS", "GrenadeLauncherAttachment", false);
+            flameOn = settings.GetBoolean("OTHER", "FlameEnable", false);
+            equipGun = settings.GetBoolean("OTHER", "HolsteredWeaponsOnPlayer", false);
         }
     }
 }
