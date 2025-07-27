@@ -351,7 +351,7 @@ namespace WeapFuncs.ivsdk
 
                 if (IVWeaponInfo.GetWeaponInfo((uint)Main.currWeap).WeaponFlags.HeavyWeaponUsesRifleAnims && HeavyRifle)
                 {
-                    if (Main.pAmmo > 0 && (NativeControls.IsGameKeyPressed(0, GameKey.Attack) || NativeControls.IsGameKeyPressed(2, GameKey.Attack)))
+                    if ((Main.pAmmo > 0 || !IVWeaponInfo.GetWeaponInfo((uint)Main.currWeap).WeaponFlags.AnimReload) && (NativeControls.IsGameKeyPressed(0, GameKey.Attack) || NativeControls.IsGameKeyPressed(2, GameKey.Attack)))
                     {
                         if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_l_high_corner", "rocket_blindfire"))
                         {

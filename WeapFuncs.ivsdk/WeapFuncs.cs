@@ -101,7 +101,7 @@ namespace WeapFuncs.ivsdk
 
                 if (Main.SawnOffYeet)
                 {
-                    if (Main.pAmmo > 0 && (NativeControls.IsGameKeyPressed(0, GameKey.Attack) || NativeControls.IsGameKeyPressed(2, GameKey.Attack)) && !NativeControls.IsGameKeyPressed(0, GameKey.Aim) && !(Main.IsAimKeyPressedOnController() && IS_USING_CONTROLLER()))
+                    if (Main.pAmmo > 0 && (NativeControls.IsGameKeyPressed(0, GameKey.Attack) || NativeControls.IsGameKeyPressed(2, GameKey.Attack)) && !Main.IsPressingAimButton())
                     {
                         if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "gun@sawnoff", "fire"))
                         {

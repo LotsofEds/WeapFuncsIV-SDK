@@ -75,7 +75,7 @@ namespace WeapFuncs.ivsdk
 
             if (Main.IsHoldingGun())
             {
-                if (pWeap == Main.currWeap && !IS_PED_RAGDOLL(Main.PlayerHandle) && !IS_CHAR_SWIMMING(Main.PlayerHandle) && !IS_CHAR_SITTING_IN_ANY_CAR(Main.PlayerHandle) && (NativeControls.IsGameKeyPressed(0, GameKey.Aim) || (Main.IsAimKeyPressedOnController() && IS_USING_CONTROLLER())))
+                if (pWeap == Main.currWeap && !IS_PED_RAGDOLL(Main.PlayerHandle) && !IS_CHAR_SWIMMING(Main.PlayerHandle) && !IS_CHAR_SITTING_IN_ANY_CAR(Main.PlayerHandle) && Main.IsPressingAimButton())
                 {
                     if ((NativeControls.IsGameKeyPressed(0, GameKey.LookBehind) || NativeControls.IsGameKeyPressed(2, GameKey.LookBehind)) && !isButtonPressed)
                     {
@@ -130,7 +130,7 @@ namespace WeapFuncs.ivsdk
                     }
                 }
 
-                else if (!isAiming || IS_CHAR_SITTING_IN_ANY_CAR(Main.PlayerHandle) || (!NativeControls.IsGameKeyPressed(0, GameKey.Aim) && !(Main.IsAimKeyPressedOnController() && IS_USING_CONTROLLER())))
+                else if (!isAiming || IS_CHAR_SITTING_IN_ANY_CAR(Main.PlayerHandle) || !Main.IsPressingAimButton())
                 {
                     isZoomOn = false;
                     isButtonPressed = false;

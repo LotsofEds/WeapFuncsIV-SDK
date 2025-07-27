@@ -70,8 +70,8 @@ namespace WeapFuncs.ivsdk
                     {
                         if (!DOES_CHAR_EXIST(pedList[i]) || IS_CHAR_INJURED(pedList[i]) || IS_CHAR_DEAD(pedList[i]) || pedList[i] == Main.PlayerHandle)
                         {
-                            pedList.Remove(pedList[i]);
-                            ammoList.Remove(ammoList[i]);
+                            ammoList.RemoveAt(i);
+                            pedList.RemoveAt(i);
                         }
                     }
                 }

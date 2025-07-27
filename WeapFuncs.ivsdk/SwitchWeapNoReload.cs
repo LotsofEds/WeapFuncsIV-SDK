@@ -1,54 +1,57 @@
-﻿using System;
-using System.Windows.Forms;
+﻿using CCL;
+using IVSDKDotNet;
+using IVSDKDotNet.Enums;
+using System;
 using System.Collections.Generic;
 using System.IO;
-using IVSDKDotNet;
+using System.Windows.Forms;
 using static IVSDKDotNet.Native.Natives;
-using CCL;
 
 //Credits: Symbiote/AngryAmoeba for the original ScriptHook.Net mod
 namespace WeapFuncs.ivsdk
 {
     internal class SwitchWeapNoReload
     {
-        Keys ini_ReloadKey;
-        bool ini_LoseClipAmmo;
-
         private static List<int> gunList = new List<int>();        // List of held guns
         private static List<int> ammoList = new List<int>();       // List of each gun's last clip ammo
         private static int currWeaponIndex = 0;                    // The gunList index of the current weapon
         private static int currWeapon;                             // The current weapon
-        private static int currClip = -1,                           // The current weapon's clip ammo
-            extraAmmo = 0,                                         // The current weapon's total ammo, minus the clip
+        private static int currClip = -1,                          // The current weapon's clip ammo
             bulletsFired = 0;                                      // Used to detect legitimate drops in clip ammo
-        private static bool isReloading = false,
-            bGunIsUsable = false;
+        private static bool isReloading = false;
+        private static List<eWeaponType> exceptionList = new List<eWeaponType>();  // List of lose ammo in mag exceptions
 
-        public static void Init()
+        public static void Init(SettingsFile settings)
         {
             gunList.Clear();
             ammoList.Clear();
+            exceptionList.Clear();
+
+            string weaponsString = settings.GetValue("RELOADS", "LoseAmmoInMagExceptions", "");
+            foreach (var weaponName in weaponsString.Split(','))
+            {
+                eWeaponType weaponType = (eWeaponType)Enum.Parse(typeof(eWeaponType), weaponName.Trim(), true);
+                exceptionList.Add(weaponType);
+            }
         }
         public static void Tick()
         {
             // Prune guns that are no longer present
-            for (int i = gunList.Count - 1; i >= 0; i--)
+            for (int i = 0; i < gunList.Count; i++)
             {
                 if (!HAS_CHAR_GOT_WEAPON(Main.PlayerHandle, gunList[i]))
                 {
-                    gunList.Remove(gunList[i]);
-                    ammoList.Remove(ammoList[i]);
+                    gunList.RemoveAt(i);
+                    ammoList.RemoveAt(i);
                 }
             }
 
             if (!IS_CHAR_DEAD(Main.PlayerHandle) && Main.currWeap != 56 && Main.currWeap != 46 && Main.wSlot != 8)
             {
-                //IVGame.ShowSubtitleMessage("IDK  " + currClip.ToString(), 1);
                 if (Main.pAmmo != 0 && !IS_CHAR_GETTING_IN_TO_A_CAR(Main.PlayerHandle) && !(IS_CHAR_SITTING_IN_ANY_CAR(Main.PlayerHandle) && Main.pAmmo != Main.mAmmo))
                 {
                     currWeapon = Main.currWeap;
                     currClip = Main.pAmmo;
-                    //.ShowSubtitleMessage("IDK  " + currClip.ToString(), 1);
                 }
 
                 if (!gunList.Contains(Main.currWeap))
@@ -62,10 +65,7 @@ namespace WeapFuncs.ivsdk
                     return;
 
                 if (currWeapon != Main.currWeap)
-                {
-                    //ammoList[currWeaponIndex] = currClip;
                     isReloading = false;
-                }
 
                 if (IS_CHAR_SITTING_IN_ANY_CAR(Main.PlayerHandle) && currClip != Main.mAmmo && (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "p_load") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload_crouch") || (WeapFuncs.FiringWeapon(Main.PlayerPed) && Main.pAmmo == 0)))
                 {
@@ -94,117 +94,68 @@ namespace WeapFuncs.ivsdk
                     ammoList[currWeaponIndex] = currClip;
                     if (!isReloading && Main.pAmmo == 0 && !IS_CHAR_SITTING_IN_ANY_CAR(Main.PlayerHandle) && !IS_CHAR_GETTING_IN_TO_A_CAR(Main.PlayerHandle))
                     {
-                        //IVGame.ShowSubtitleMessage("IDK  " + currClip.ToString() + "  " + ammoList[currWeaponIndex].ToString());
                         ammoList[currWeaponIndex] = Main.pAmmo;
                         currClip = ammoList[currWeaponIndex];
                         isReloading = true;
                     }
-                    //else if (currWeapon == Main.currWeap && !isReloading && (IS_CHAR_SITTING_IN_ANY_CAR(Main.PlayerHandle) || IS_CHAR_GETTING_IN_TO_A_CAR(Main.PlayerHandle)))
                     bulletsFired = GET_INT_STAT(287);
                 }
 
                 if ((IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "p_load") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload_crouch")) && Main.pAmmo != Main.mAmmo && !isReloading)
                 {
-                    ammoList[currWeaponIndex] = Main.pAmmo;
+                    bool dontLoseAmmo = false;
+                    foreach (eWeaponType weaponType in exceptionList)
+                    {
+                        if (currWeapon == (int)weaponType)
+                            dontLoseAmmo = true;
+                    }
+                    if (!Main.LoseAmmoInMag || dontLoseAmmo)
+                        ammoList[currWeaponIndex] = Main.pAmmo;
+                    else
+                    {
+                        SET_AMMO_IN_CLIP(Main.PlayerHandle, currWeapon, 0);
+                        ammoList[currWeaponIndex] = 0;
+                    }
+
                     currClip = ammoList[currWeaponIndex];
                     isReloading = true;
-                    //IVGame.ShowSubtitleMessage("SHIET  " + currClip.ToString() + "  " + ammoList[currWeaponIndex].ToString());
                 }
 
                 if (currWeapon == Main.currWeap && currClip != ammoList[currWeaponIndex] && IVWeaponInfo.GetWeaponInfo((uint)currWeapon).WeaponFlags.AnimReload)
                 {
-                    //IVGame.ShowSubtitleMessage("FUCK  " + currClip.ToString() + "  " + ammoList[currWeaponIndex].ToString());
-                    if ((IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "p_load") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload_crouch") || isReloading) && Main.pAmmo == Main.mAmmo)
+                    if ((IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "p_load") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload_crouch") || isReloading))
                     {
-                        ammoList[currWeaponIndex] = Main.mAmmo;
-                        currClip = ammoList[currWeaponIndex];
-                        isReloading = false;
-                        //IVGame.ShowSubtitleMessage("FUCK  " + currClip.ToString() + "  " + ammoList[currWeaponIndex].ToString());
-                    }
-
-                    else if (currClip > ammoList[currWeaponIndex] && !(WeapFuncs.FiringWeapon(Main.PlayerPed) && Main.pAmmo == 0) && !isReloading && !IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload") && !IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "p_load") && !IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload_crouch"))
-                    {
-                        //IVGame.ShowSubtitleMessage(currClip.ToString() + "  " + ammoList[currWeaponIndex].ToString());
-                        RevertAmmo();
-                    }
-                }
-                /*
-
-                if (Main.pAmmo != 0 && !IS_CHAR_GETTING_IN_TO_A_CAR(Main.PlayerHandle) && !(IS_CHAR_SITTING_IN_ANY_CAR(Main.PlayerHandle) && Main.pAmmo == Main.mAmmo))
-                {
-                    currWeapon = Main.currWeap;
-                    currClip = Main.pAmmo;
-                    //IVGame.ShowSubtitleMessage("IDK  " + currClip.ToString(), 1);
-                }
-
-                else if (bulletsFired < GET_INT_STAT(287))
-                {
-                    if (currWeapon == Main.currWeap && !IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload") && !IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "p_load") && !IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload_crouch") && Main.pAmmo == 0 && Main.pAmmo != Main.mAmmo && !IS_CHAR_SITTING_IN_ANY_CAR(Main.PlayerHandle) && !IS_CHAR_GETTING_IN_TO_A_CAR(Main.PlayerHandle))
-                    {
-                        //IVGame.ShowSubtitleMessage("IDK  " + currClip.ToString() + "  " + ammoList[currWeaponIndex].ToString());
-                        currClip = 0;
-                        isReloading = true;
-                    }
-                    bulletsFired = GET_INT_STAT(287);
-                }
-
-                if (!gunList.Contains(Main.currWeap))
-                {
-                    gunList.Add(currWeapon);
-                    ammoList.Add(currClip);
-                }
-                currWeaponIndex = gunList.IndexOf(currWeapon);
-
-                if (currWeaponIndex < 0)
-                    return;
-
-                if (currClip != ammoList[currWeaponIndex] && IVWeaponInfo.GetWeaponInfo((uint)currWeapon).WeaponFlags.AnimReload)
-                {
-                    //IVGame.ShowSubtitleMessage("cock" + currClip.ToString() + "  " + ammoList[currWeaponIndex].ToString());
-                    if (isReloading)
-                    {
-                        if (!IS_CHAR_SHOOTING(Main.PlayerHandle) && (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "p_load") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload_crouch")))
+                        if (Main.pAmmo == Main.mAmmo)
                         {
                             ammoList[currWeaponIndex] = Main.mAmmo;
                             currClip = ammoList[currWeaponIndex];
-                            //IVGame.ShowSubtitleMessage("Rel  " + currClip.ToString() + "  " + ammoList[currWeaponIndex].ToString());
+                            isReloading = false;
                         }
-                        isReloading = false;
+                        else
+                        {
+                            ammoList[currWeaponIndex] = Main.pAmmo;
+                            currClip = ammoList[currWeaponIndex];
+                        }
                     }
 
                     else if (currClip > ammoList[currWeaponIndex] && !(WeapFuncs.FiringWeapon(Main.PlayerPed) && Main.pAmmo == 0) && !isReloading && !IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload") && !IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "p_load") && !IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload_crouch"))
-                    {
-                        //IVGame.ShowSubtitleMessage(currClip.ToString() + "  " + ammoList[currWeaponIndex].ToString());
                         RevertAmmo();
-                    }
-
-                    else if (ammoList[currWeaponIndex] != Main.mAmmo || (IS_CHAR_SITTING_IN_ANY_CAR(Main.PlayerHandle) && currClip > 0))
-                    {
-                        //IVGame.ShowSubtitleMessage("Ammo = curr" + currClip.ToString() + "  " + ammoList[currWeaponIndex].ToString());
-                        ammoList[currWeaponIndex] = currClip;
-                    }
-                }*/
+                }
             }
         }
 
         // Sets the current weapon's clip ammo to the value last saved for it
         private static void RevertAmmo()
         {
-            //IVGame.ShowSubtitleMessage("Rev  " + currClip.ToString() + "  " + ammoList[currWeaponIndex].ToString());
             int ammoDiff = currClip - ammoList[currWeaponIndex];
             if (ammoDiff != 0)
             {
                 SET_CHAR_AMMO(Main.PlayerHandle, currWeapon, (Main.aAmmo + ammoDiff));
                 SET_AMMO_IN_CLIP(Main.PlayerHandle, currWeapon, ammoList[currWeaponIndex]);
-                //Main.aAmmo += ammoDiff;
-                //Main.pAmmo -= ammoDiff;
                 currClip = Main.pAmmo;
             }
             if (IS_CHAR_SITTING_IN_ANY_CAR(Main.PlayerHandle))
             {
-                //IVGame.ShowSubtitleMessage(ammoDiff.ToString() + "  " + Main.aAmmo.ToString());
-                /*SET_CHAR_AMMO(Main.PlayerHandle, currWeapon, (Main.aAmmo + 1));
-                SET_AMMO_IN_CLIP(Main.PlayerHandle, currWeapon, ammoList[currWeaponIndex] - 1);*/
                 SET_CHAR_AMMO(Main.PlayerHandle, currWeapon, (Main.aAmmo));
                 SET_AMMO_IN_CLIP(Main.PlayerHandle, currWeapon, ammoList[currWeaponIndex]);
                 currClip = Main.pAmmo;

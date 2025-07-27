@@ -89,6 +89,7 @@ namespace WeapFuncs.ivsdk
             WeapFuncs.UnInit();
             GLaunchAttachment.UnInit();
             EquipGun.UnInit();
+            Pickups.UnInit();
         }
 
         private void Main_Initialized(object sender, EventArgs e)
@@ -113,7 +114,7 @@ namespace WeapFuncs.ivsdk
             if (NPCSemiAutoShotgunBlindfire)
                 NPCSemiAutoShot.Init(Settings);
             BlindFireFixes.Init(Settings);
-            SwitchWeapNoReload.Init();
+            SwitchWeapNoReload.Init(Settings);
             if (AllRoundReload)
                 ShotgunRel.Init(Settings);
             if (HeadShotty)
@@ -127,6 +128,7 @@ namespace WeapFuncs.ivsdk
                 Flames.Init(Settings);
             if (equipGun)
                 EquipGun.Init(Settings);
+            Pickups.Init(Settings);
         }
         public static bool InitialChecks()
         {
@@ -187,6 +189,7 @@ namespace WeapFuncs.ivsdk
                 Flames.Tick();
             if (equipGun)
                 EquipGun.Tick();
+            Pickups.Tick();
 
             //Silence.Tick();
             //ObjectTest.Tick();
@@ -227,6 +230,13 @@ namespace WeapFuncs.ivsdk
             else
                 return false;
         }
+        public static bool IsAimingAnimPlaying()
+        {
+            if (IS_CHAR_PLAYING_ANIM(PlayerHandle, WeapAnim, "fire") || IS_CHAR_PLAYING_ANIM(PlayerHandle, WeapAnim, "fire_crouch") || IS_CHAR_PLAYING_ANIM(PlayerHandle, WeapAnim, "fire_alt") || IS_CHAR_PLAYING_ANIM(PlayerHandle, WeapAnim, "fire_crouch_alt") || IS_CHAR_PLAYING_ANIM(PlayerHandle, WeapAnim, "fire_up") || IS_CHAR_PLAYING_ANIM(PlayerHandle, WeapAnim, "fire_down"))
+                return true;
+            else
+                return false;
+        }
         private void Main_ProcessCamera(object sender, EventArgs e)
         {
             if (!InitialChecks())
@@ -250,6 +260,13 @@ namespace WeapFuncs.ivsdk
                 return true;
 
             return false;
+        }
+        public static bool IsPressingAimButton()
+        {
+            if ((IsAimKeyPressedOnController() && IS_USING_CONTROLLER()) || NativeControls.IsGameKeyPressed(0, GameKey.Aim) || NativeControls.IsGameKeyPressed(2, GameKey.Aim))
+                return true;
+            else
+                return false;
         }
         public static void LoadWeaponConfig(int weapon)
         {
