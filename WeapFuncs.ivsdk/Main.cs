@@ -38,6 +38,7 @@ namespace WeapFuncs.ivsdk
         public static int numOfWeapIDs;
         public static bool flameOn;
         public static bool equipGun;
+        public static bool enableStun;
 
         // Other variables n shit
         public static int gunModel;
@@ -90,6 +91,7 @@ namespace WeapFuncs.ivsdk
             GLaunchAttachment.UnInit();
             EquipGun.UnInit();
             Pickups.UnInit();
+            //Silence.UnInit();
         }
 
         private void Main_Initialized(object sender, EventArgs e)
@@ -129,6 +131,8 @@ namespace WeapFuncs.ivsdk
             if (equipGun)
                 EquipGun.Init(Settings);
             Pickups.Init(Settings);
+            if (enableStun)
+                Flashbang.Init(Settings);
         }
         public static bool InitialChecks()
         {
@@ -190,7 +194,8 @@ namespace WeapFuncs.ivsdk
             if (equipGun)
                 EquipGun.Tick();
             Pickups.Tick();
-
+            if (enableStun)
+                Flashbang.Tick();
             //Silence.Tick();
             //ObjectTest.Tick();
         }
@@ -331,6 +336,7 @@ namespace WeapFuncs.ivsdk
             GLaunchEnable = settings.GetBoolean("ATTACHMENTS", "GrenadeLauncherAttachment", false);
             flameOn = settings.GetBoolean("OTHER", "FlameEnable", false);
             equipGun = settings.GetBoolean("OTHER", "HolsteredWeaponsOnPlayer", false);
+            enableStun = settings.GetBoolean("OTHER", "StunGrenadeEnable", false);
         }
     }
 }

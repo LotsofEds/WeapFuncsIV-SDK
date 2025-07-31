@@ -54,6 +54,7 @@
     <Compile Include="DelayedCaller.cs" />
     <Compile Include="EquipGun.cs" />
     <Compile Include="Flames.cs" />
+    <Compile Include="Flashbang.cs" />
     <Compile Include="GLaunchAttachment.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="NPCSemiAutoShot.cs" />

@@ -29,6 +29,8 @@ namespace WeapFuncs.ivsdk
         private static bool sharedAmmo;
         private static GameKey pickupKey;
         private static GameKey dropKey;
+        private static int maxPickups = 0;
+        private static float despawnDist = 0;
 
         // Lists
         private static List<int> pedList = new List<int>();
@@ -40,6 +42,7 @@ namespace WeapFuncs.ivsdk
 
         // OtherShit
         private static string WeapPickSound = "";
+        private static int pWeapObj = 0;
         public static void UnInit()
         {
             if (pickupList.Count > 0)
@@ -60,6 +63,8 @@ namespace WeapFuncs.ivsdk
             sharedAmmo = settings.GetBoolean("PICKUPS", "SharedAmmo", false);
             pickupKey = (GameKey)settings.GetInteger("PICKUPS", "PickupControlKey", 23);
             dropKey = (GameKey)settings.GetInteger("PICKUPS", "DropControlKey", 78);
+            despawnDist = settings.GetFloat("PICKUPS", "DespawnDistance", 30);
+            maxPickups = settings.GetInteger("PICKUPS", "MaxPickups", 20);
             ClearLists();
         }
 
@@ -74,6 +79,7 @@ namespace WeapFuncs.ivsdk
         }
         private static void DropCurrWeap(int weap)
         {
+            DELETE_OBJECT(ref pWeapObj);
             GET_WEAPONTYPE_MODEL(weap, out uint wModel);
             GET_AMMO_IN_CHAR_WEAPON(Main.PlayerHandle, weap, out int pAmmo);
 
@@ -82,7 +88,6 @@ namespace WeapFuncs.ivsdk
 
             CREATE_OBJECT((int)wModel, Vector3.Zero, out int wPickup, true);
             ADD_OBJECT_TO_INTERIOR_ROOM_BY_KEY(wPickup, roomKey);
-            MARK_OBJECT_AS_NO_LONGER_NEEDED(wPickup);
             ATTACH_OBJECT_TO_PED(wPickup, Main.PlayerHandle, (uint)eBone.BONE_RIGHT_HAND, Vector3.Zero, Vector3.Zero, 0);
             SET_OBJECT_COORDINATES(wPickup, pos);
 
@@ -93,17 +98,27 @@ namespace WeapFuncs.ivsdk
                 pAmmoList.Add(pAmmo);
             }
             else
+            {
+                pWeapObj = wPickup;
                 DETACH_OBJECT(wPickup, true);
+            }
         }
         public static void Tick()
         {
             if (enableDrop)
             {
-                if (Main.currWeap > 0 && Main.IsPressingAimButton() && Main.IsAimingAnimPlaying() && (IS_CONTROL_JUST_PRESSED(0, (int)dropKey) || IS_CONTROL_JUST_PRESSED(2, (int)dropKey)))
+                if (Main.currWeap > 0 && Main.IsPressingAimButton() && (Main.IsAimingAnimPlaying() || IVWeaponInfo.GetWeaponInfo((uint)Main.currWeap).WeaponSlot == 1 || IVWeaponInfo.GetWeaponInfo((uint)Main.currWeap).WeaponSlot == 8) && (IS_CONTROL_JUST_PRESSED(0, (int)dropKey) || IS_CONTROL_JUST_PRESSED(2, (int)dropKey)))
                 {
                     DropCurrWeap(Main.currWeap);
 
                     REMOVE_WEAPON_FROM_CHAR(Main.PlayerHandle, Main.currWeap);
+                }
+                if (DOES_OBJECT_EXIST(pWeapObj))
+                {
+                    GET_OBJECT_COORDINATES(pWeapObj, out Vector3 objPos);
+
+                    if (!LOCATE_CHAR_ANY_MEANS_3D(Main.PlayerHandle, objPos.X, objPos.Y, objPos.Z, despawnDist, despawnDist, despawnDist, false))
+                        DELETE_OBJECT(ref pWeapObj);
                 }
             }
 
@@ -183,7 +198,6 @@ namespace WeapFuncs.ivsdk
                         //CREATE_OBJECT((int)wModel, pos, out wPickup, true);
                         CREATE_OBJECT((int)wModel, Vector3.Zero, out wPickup, true);
                         ADD_OBJECT_TO_INTERIOR_ROOM_BY_KEY(wPickup, roomKey);
-                        MARK_OBJECT_AS_NO_LONGER_NEEDED(wPickup);
                         ATTACH_OBJECT_TO_PED(wPickup, ped, (uint)eBone.BONE_RIGHT_HAND, Vector3.Zero, Vector3.Zero, 0);
                         SET_OBJECT_COORDINATES(wPickup, pos);
 
@@ -218,6 +232,15 @@ namespace WeapFuncs.ivsdk
 
                 if (pickupList.Count > 0)
                 {
+                    if (pickupList.Count > maxPickups)
+                    {
+                        int objDelete = pickupList[0];
+                        DELETE_OBJECT(ref objDelete);
+
+                        pWeaponList.RemoveAt(0);
+                        pAmmoList.RemoveAt(0);
+                        pickupList.RemoveAt(0);
+                    }
                     for (int i = 0; i < pickupList.Count; i++)
                     {
                         if (!DOES_OBJECT_EXIST(pickupList[i]))
@@ -240,6 +263,15 @@ namespace WeapFuncs.ivsdk
 
                             GET_DISTANCE_BETWEEN_COORDS_3D(Main.PlayerPos.X, Main.PlayerPos.Y, pGroundZ, objPos.X, objPos.Y, objGroundZ, out float pDist);
                             GET_WEAPONTYPE_SLOT(pWeaponList[pickupList.IndexOf(objID)], out int pSlot);
+
+                            if (DOES_OBJECT_EXIST(objID) && pDist >= despawnDist)
+                            {
+                                DELETE_OBJECT(ref objID);
+
+                                pWeaponList.RemoveAt(i);
+                                pAmmoList.RemoveAt(i);
+                                pickupList.RemoveAt(i);
+                            }    
 
                             if (DOES_OBJECT_EXIST(objID) && pDist < 0.75 && !IS_CHAR_IN_AIR(Main.PlayerHandle) && (objPos.Z - objGroundZ) < 0.2f && !Main.IsAimingAnimPlaying() && !IS_CHAR_SHOOTING(Main.PlayerHandle))
                             {
