@@ -31,6 +31,7 @@ namespace WeapFuncs.ivsdk
         private static GameKey dropKey;
         private static int maxPickups = 0;
         private static float despawnDist = 0;
+        private static uint fTimer = 0;
 
         // Lists
         private static List<int> pedList = new List<int>();
@@ -183,7 +184,7 @@ namespace WeapFuncs.ivsdk
 
                         GET_PED_BONE_POSITION(ped, (uint)eBone.BONE_RIGHT_HAND, Vector3.Zero, out Vector3 pos);
 
-                        veh = GET_CLOSEST_CAR(pos, 5, 0, 71);
+                        veh = GET_CLOSEST_CAR(pos, 10, 0, 71);
 
                         if (!IS_PED_A_MISSION_PED(ped))
                             SET_CHAR_AS_MISSION_CHAR(ped);
@@ -232,6 +233,7 @@ namespace WeapFuncs.ivsdk
 
                 if (pickupList.Count > 0)
                 {
+                    GET_GAME_TIMER(out uint gTimer);
                     if (pickupList.Count > maxPickups)
                     {
                         int objDelete = pickupList[0];
@@ -253,8 +255,11 @@ namespace WeapFuncs.ivsdk
                         {
                             int objID = pickupList[i];
                             SET_OBJECT_COLLISION(pickupList[i], true);
-                            if (IS_OBJECT_ATTACHED(pickupList[i]))
-                                DETACH_OBJECT(pickupList[i], true);
+                            DETACH_OBJECT(pickupList[i], true);
+
+                            GET_OBJECT_SPEED(objID, out float speed);
+                            if (speed < 0.1)
+                                APPLY_FORCE_TO_OBJECT(objID, 3, 0, 0.01f, 0, 0, 0, 0, 0, 1, 1, 1);
 
                             GET_OBJECT_COORDINATES(objID, out Vector3 objPos);
                             GET_GROUND_Z_FOR_3D_COORD(objPos, out float objGroundZ);
@@ -271,9 +276,9 @@ namespace WeapFuncs.ivsdk
                                 pWeaponList.RemoveAt(i);
                                 pAmmoList.RemoveAt(i);
                                 pickupList.RemoveAt(i);
-                            }    
+                            }
 
-                            if (DOES_OBJECT_EXIST(objID) && pDist < 0.75 && !IS_CHAR_IN_AIR(Main.PlayerHandle) && (objPos.Z - objGroundZ) < 0.2f && !Main.IsAimingAnimPlaying() && !IS_CHAR_SHOOTING(Main.PlayerHandle))
+                            if (DOES_OBJECT_EXIST(objID) && pDist < 0.75 && !IS_CHAR_IN_AIR(Main.PlayerHandle) && !Main.IsAimingAnimPlaying() && !IS_CHAR_SHOOTING(Main.PlayerHandle))
                             {
                                 if (!IS_THIS_HELP_MESSAGE_BEING_DISPLAYED("PU_CF1") && !HAS_CHAR_GOT_WEAPON(Main.PlayerHandle, pWeaponList[pickupList.IndexOf(objID)]))
                                     DISPLAY_HELP_TEXT_THIS_FRAME("PU_CF1", false);
@@ -293,24 +298,29 @@ namespace WeapFuncs.ivsdk
                                     {
                                         if (pSlot == slot)
                                         {
-                                            WeapPickSound = Main.wConfFile.GetValue(pWeaponList[pickupList.IndexOf(objID)].ToString(), "PickupSound", "");
-
-                                            if (!HAS_CHAR_GOT_WEAPON(Main.PlayerHandle, pWeaponList[pickupList.IndexOf(objID)]))
-                                                PLAY_SOUND(-1, WeapPickSound);
-                                            else
-                                                PLAY_SOUND(-1, "BODY_ARMOUR_BUY");
-
-                                            if (weapInSlot > 0 && HAS_CHAR_GOT_WEAPON(Main.PlayerHandle, weapInSlot) && weapInSlot != pWeaponList[pickupList.IndexOf(objID)])
+                                            if (gTimer >= (fTimer + 100))
                                             {
-                                                DropCurrWeap(weapInSlot);
+                                                GET_GAME_TIMER(out fTimer);
 
-                                                if (!sharedAmmo)
-                                                    REMOVE_WEAPON_FROM_CHAR(Main.PlayerHandle, weapInSlot);
+                                                WeapPickSound = Main.wConfFile.GetValue(pWeaponList[pickupList.IndexOf(objID)].ToString(), "PickupSound", "");
+
+                                                if (!HAS_CHAR_GOT_WEAPON(Main.PlayerHandle, pWeaponList[pickupList.IndexOf(objID)]))
+                                                    PLAY_SOUND(-1, WeapPickSound);
+                                                else
+                                                    PLAY_SOUND(-1, "BODY_ARMOUR_BUY");
+
+                                                if (weapInSlot > 0 && HAS_CHAR_GOT_WEAPON(Main.PlayerHandle, weapInSlot) && weapInSlot != pWeaponList[pickupList.IndexOf(objID)])
+                                                {
+                                                    DropCurrWeap(weapInSlot);
+
+                                                    if (!sharedAmmo)
+                                                        REMOVE_WEAPON_FROM_CHAR(Main.PlayerHandle, weapInSlot);
+                                                }
+
+                                                GIVE_DELAYED_WEAPON_TO_CHAR(Main.PlayerHandle, pWeaponList[pickupList.IndexOf(objID)], pAmmoList[pickupList.IndexOf(objID)], false);
+                                                DELETE_OBJECT(ref objID);
+                                                break;
                                             }
-
-                                            GIVE_DELAYED_WEAPON_TO_CHAR(Main.PlayerHandle, pWeaponList[pickupList.IndexOf(objID)], pAmmoList[pickupList.IndexOf(objID)], false);
-                                            DELETE_OBJECT(ref objID);
-                                            break;
                                         }
                                     }
                                 }
