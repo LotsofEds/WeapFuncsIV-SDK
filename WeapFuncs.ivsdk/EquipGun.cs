@@ -73,11 +73,8 @@ namespace WeapFuncs.ivsdk
                 
                 if (HAS_CHAR_GOT_WEAPON(Main.PlayerHandle, i))
                 {
-                    LoadConfig(i);
-                    LoadBone(weapSlot);
                     if (Main.currWeap == i)
                     {
-                        //IVGame.ShowSubtitleMessage(i.ToString() + "  " + weapIDA.ToString());
                         switch (weapSlot)
                         {
                             case 1:
@@ -100,8 +97,9 @@ namespace WeapFuncs.ivsdk
                     }
                     else
                     {
+                        LoadConfig(i);
+                        LoadBone(weapSlot);
                         weapModel = (int)IVWeaponInfo.GetWeaponInfo((uint)i).ModelHash;
-                        //IVGame.ShowSubtitleMessage(i.ToString() + weapModel.ToString());
                         switch (weapSlot)
                         {
                             case 1:

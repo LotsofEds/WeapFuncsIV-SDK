@@ -15,8 +15,8 @@ namespace WeapFuncs.ivsdk
 {
     internal class SelectFire
     {
-        private static bool CheckDateTime;
-        private static DateTime currentDateTime;
+        private static bool CheckTime;
+        private static uint fTimer;
 
         private static bool hasPressedButton;
         private static bool GotAmmo;
@@ -132,7 +132,6 @@ namespace WeapFuncs.ivsdk
                                     if (!getAccTime)
                                     {
                                         defaultAccTime = IVWeaponInfo.GetWeaponInfo((uint)pWeapon).AimingAccuracyTime;
-                                        //IVGame.ShowSubtitleMessage(defaultAccTime.ToString());
                                         if (accuracyTimeBurstNum > 0)
                                             IVWeaponInfo.GetWeaponInfo((uint)pWeapon).AimingAccuracyTime = accuracyTimeBurstNum;
                                         else
@@ -147,7 +146,6 @@ namespace WeapFuncs.ivsdk
                                     if (!getAccTime)
                                     {
                                         defaultAccTime = IVWeaponInfo.GetWeaponInfo((uint)pWeapon).AimingAccuracyTime;
-                                        //IVGame.ShowSubtitleMessage(defaultAccTime.ToString());
                                         if (accuracyTimeSemiNum > 0)
                                             IVWeaponInfo.GetWeaponInfo((uint)pWeapon).AimingAccuracyTime = accuracyTimeSemiNum;
                                         else
@@ -157,18 +155,17 @@ namespace WeapFuncs.ivsdk
                                     NumOfBullets = 1;
                                 }
 
-                                if (NativeControls.IsGameKeyPressed(0, GameKey.Attack) || NativeControls.IsGameKeyPressed(2, GameKey.Attack))
+                                if ((NativeControls.IsGameKeyPressed(0, GameKey.Attack) || NativeControls.IsGameKeyPressed(2, GameKey.Attack)) && Main.pAmmo > 0)
                                 {
                                     if ((!GotAmmo && Main.pAmmo != 0) || Main.pAmmo == pMaxAmmo)
                                     {
                                         lastAmmo = Main.pAmmo;
                                         GotAmmo = true;
 
-                                        CheckDateTime = false;
+                                        CheckTime = false;
                                     }
                                     if ((lastAmmo - Main.pAmmo) == NumOfBullets)
                                     {
-                                        //IVGame.ShowSubtitleMessage(Loop1[weapIndex].ToString());
                                         SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire", Loop1[weapIndex]);
                                         SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_alt", Loop1[weapIndex]);
                                         SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_up", Loop1[weapIndex]);
@@ -184,67 +181,21 @@ namespace WeapFuncs.ivsdk
                                         SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_high_corner", pBFAnim, Loop6[weapIndex]);
                                         SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_low_centre", pBFAnim, Loop7[weapIndex]);
                                         SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_low_corner", pBFAnim, Loop8[weapIndex]);
-                                        /*foreach (eWeaponType rifleType in BurstRifles)
-                                        {
-                                            if (Main.currWeap == (int)rifleType)
-                                            {
-                                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire", 0.88f);
-                                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_alt", 0.88f);
-                                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_up", 0.88f);
-                                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_down", 0.88f);
-                                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_crouch", 0.88f);
-                                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_crouch_alt", 0.88f);
-                                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "dbfire", 0.71f);
-                                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "dbfire_l", 0.71f);
-
-                                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_l_high_corner", pBFAnim, 0.81f);
-                                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_l_low_centre", pBFAnim, 0.83f);
-                                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_l_low_corner", pBFAnim, 0.81f);
-                                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_high_corner", pBFAnim, 0.8f);
-                                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_low_centre", pBFAnim, 0.87f);
-                                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_low_corner", pBFAnim, 0.9f);
-                                            }
-                                        }
-                                        foreach (eWeaponType pistolType in BurstPistols)
-                                        {
-                                            if (Main.currWeap == (int)pistolType)
-                                            {
-                                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire", 0.92f);
-                                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_alt", 0.92f);
-                                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_up", 0.92f);
-                                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_down", 0.92f);
-                                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_crouch", 0.92f);
-                                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_crouch_alt", 0.92f);
-                                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "dbfire", 0.71f);
-                                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "dbfire_l", 0.71f);
-
-                                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_l_high_corner", pBFAnim, 0.6f);
-                                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_l_low_centre", pBFAnim, 0.6f);
-                                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_l_low_corner", pBFAnim, 0.6f);
-                                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_high_corner", pBFAnim, 0.6f);
-                                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_low_centre", pBFAnim, 0.6f);
-                                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_low_corner", pBFAnim, 0.6f);
-                                            }
-                                        }*/
 
                                         if (!Main.PressToFire || IS_PED_IN_COVER(Main.PlayerHandle) || IS_CHAR_SITTING_IN_ANY_CAR(Main.PlayerHandle))
                                         {
-                                            if (CheckDateTime == false)
+                                            GET_GAME_TIMER(out uint gTimer);
+
+                                            if (CheckTime == false)
                                             {
-                                                currentDateTime = DateTime.Now;
-                                                CheckDateTime = true;
+                                                GET_GAME_TIMER(out fTimer);
+                                                CheckTime = true;
                                             }
-                                            if (DateTime.Now.Subtract(currentDateTime).TotalMilliseconds > timeBetBurst)
+
+                                            IVGame.ShowSubtitleMessage(gTimer.ToString() + "  " + fTimer.ToString());
+                                            if (gTimer >= (fTimer + timeBetBurst))
                                             {
-                                                CheckDateTime = false;
-
-                                                /*SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire", 0.82f);
-                                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_alt", 0.82f);
-                                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_up", 0.82f);
-                                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_down", 0.82f);
-                                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_crouch", 0.82f);
-                                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_crouch_alt", 0.82f);*/
-
+                                                CheckTime = false;
                                                 lastAmmo = Main.pAmmo;
                                             }
                                         }
@@ -253,9 +204,26 @@ namespace WeapFuncs.ivsdk
 
                                 else if (lastAmmo != Main.pAmmo)
                                 {
-                                    CheckDateTime = false;
+                                    CheckTime = false;
                                     lastAmmo = Main.pAmmo;
                                 }
+                                // This almost works if anim time is changed, just needs tweaking.
+                                /*else
+                                {
+                                    if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, pWeapAnim, "fire"))
+                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire", 0.9f);
+                                    if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, pWeapAnim, "fire_alt"))
+                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_alt", 0.9f);
+                                    if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, pWeapAnim, "fire_up"))
+                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_up", 0.9f);
+                                    if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, pWeapAnim, "fire_down"))
+                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_down", 0.9f);
+                                    if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, pWeapAnim, "fire_crouch"))
+                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_crouch", 0.9f);
+                                    if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, pWeapAnim, "fire_crouch_alt"))
+                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_crouch_alt", 0.9f);
+
+                                }*/
                             }
                             if (currFireType != fireType)
                             {
@@ -266,16 +234,9 @@ namespace WeapFuncs.ivsdk
                                 }
                                 currFireType = fireType;
                             }
-                            /*else if (getAccTime)
-                            {
-                                //IVGame.ShowSubtitleMessage("piss");
-                                IVWeaponInfo.GetWeaponInfo((uint)pWeapon).AimingAccuracyTime = defaultAccTime;
-                                getAccTime = false;
-                            }*/
                         }
                         else if (pWeapon != Main.currWeap)
                         {
-                            //IVGame.ShowSubtitleMessage("piss  " + defaultAccTime.ToString());
                             if (getAccTime)
                             {
                                 IVWeaponInfo.GetWeaponInfo((uint)pWeapon).AimingAccuracyTime = defaultAccTime;

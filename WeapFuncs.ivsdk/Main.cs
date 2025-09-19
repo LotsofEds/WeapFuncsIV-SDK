@@ -133,6 +133,8 @@ namespace WeapFuncs.ivsdk
             Pickups.Init(Settings);
             if (enableStun)
                 Flashbang.Init(Settings);
+            Recoil.Init(Settings);
+            TapFireSpreadFix.Init(Settings);
         }
         public static bool InitialChecks()
         {
@@ -196,6 +198,8 @@ namespace WeapFuncs.ivsdk
             Pickups.Tick();
             if (enableStun)
                 Flashbang.Tick();
+            Recoil.Tick();
+            TapFireSpreadFix.Tick();
             //Silence.Tick();
             //ObjectTest.Tick();
         }

@@ -64,6 +64,7 @@
     <Compile Include="Pickups.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RateOfFire.cs" />
+    <Compile Include="Recoil.cs" />
     <Compile Include="ReloadSpeed.cs" />
     <Compile Include="SelectFire.cs" />
     <Compile Include="ShotgunBlindfireFix.cs" />
@@ -71,6 +72,7 @@
     <Compile Include="ShottyHeadShot.cs" />
     <Compile Include="Silence.cs" />
     <Compile Include="SwitchWeapNoReload.cs" />
+    <Compile Include="TapFireSpreadFix.cs" />
     <Compile Include="WeapFuncs.cs" />
     <Compile Include="WeaponZoom.cs" />
   </ItemGroup>
