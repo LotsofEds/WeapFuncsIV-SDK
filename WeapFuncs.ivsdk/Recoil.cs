@@ -13,6 +13,7 @@ namespace WeapFuncs.ivsdk
     {
         private static bool enable;
         private static bool enableIncrease;
+        private static bool recoilDebug;
 
         private static float RecoilAmplitudeMin;
         private static float RecoilAmplitudeMax;
@@ -30,6 +31,7 @@ namespace WeapFuncs.ivsdk
         {
             enable = settings.GetBoolean("RECOIL & BULLETSPREAD", "WeaponRecoil", false);
             enableIncrease = settings.GetBoolean("RECOIL & BULLETSPREAD", "IncreasingRecoil", false);
+            recoilDebug = settings.GetBoolean("RECOIL & BULLETSPREAD", "RecoilDebug", false);
         }
 
         private static void LoadRecoilConf(int weapon)
@@ -72,7 +74,8 @@ namespace WeapFuncs.ivsdk
             if (enableIncrease)
                 CurrentRecoil = Math.Max(CurrentRecoil - DecayRate * frameTime, BaseRecoil);
 
-            //IVGame.ShowSubtitleMessage(Math.Truncate(AdditionalRecoil * frameTime * 100).ToString() + "  " + Math.Truncate(DecayRate * frameTime * 100).ToString() + "  " + Math.Truncate(CurrentRecoil * 1000).ToString() + "  " + (RecoilTime * 100) / (int)(frameTime * 6000));
+            if (recoilDebug)
+                IVGame.ShowSubtitleMessage(Math.Truncate(AdditionalRecoil * frameTime * 100).ToString() + "  " + Math.Truncate(DecayRate * frameTime * 100).ToString() + "  " + Math.Truncate(CurrentRecoil * 1000).ToString() + "  " + (RecoilTime * 100) / (int)(frameTime * 6000));
         }
 
         private static void ApplyRecoil(NativeCamera cam, int weapon, float appliedRecoil)

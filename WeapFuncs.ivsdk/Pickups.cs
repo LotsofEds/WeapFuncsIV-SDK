@@ -27,11 +27,14 @@ namespace WeapFuncs.ivsdk
         private static bool pickupEnable;
         private static bool enableDrop;
         private static bool sharedAmmo;
+        private static bool limitedLoadout;
         private static GameKey pickupKey;
         private static GameKey dropKey;
         private static int maxPickups = 0;
         private static float despawnDist = 0;
-        private static uint fTimer = 0;
+        private static int maxLoadout = 0;
+        private static string weapPickSound = "";
+        private static Color glowColor;
 
         // Lists
         private static List<int> pedList = new List<int>();
@@ -42,8 +45,13 @@ namespace WeapFuncs.ivsdk
         private static List<int> pAmmoList = new List<int>();
 
         // OtherShit
-        private static string WeapPickSound = "";
         private static int pWeapObj = 0;
+        private static uint aTimer = 0;
+        private static uint fTimer = 0;
+        private static uint alpha = 255;
+        private static int weaponSpace = 0;
+        private static int currWeaponSpace = 0;
+        private static int currLoadout = 0;
         public static void UnInit()
         {
             if (pickupList.Count > 0)
@@ -62,10 +70,13 @@ namespace WeapFuncs.ivsdk
             pickupEnable = settings.GetBoolean("PICKUPS", "RevampedPickups", false);
             enableDrop = settings.GetBoolean("PICKUPS", "DropWeapons", false);
             sharedAmmo = settings.GetBoolean("PICKUPS", "SharedAmmo", false);
+            limitedLoadout = settings.GetBoolean("PICKUPS", "LimitedLoadout", false);
+
             pickupKey = (GameKey)settings.GetInteger("PICKUPS", "PickupControlKey", 23);
             dropKey = (GameKey)settings.GetInteger("PICKUPS", "DropControlKey", 78);
             despawnDist = settings.GetFloat("PICKUPS", "DespawnDistance", 30);
             maxPickups = settings.GetInteger("PICKUPS", "MaxPickups", 20);
+            maxLoadout = settings.GetInteger("PICKUPS", "MaxLoadout", 32);
             ClearLists();
         }
 
@@ -106,7 +117,60 @@ namespace WeapFuncs.ivsdk
         }
         public static void Tick()
         {
-            if (enableDrop)
+            GET_GAME_TIMER(out uint gTimer);
+            if (limitedLoadout)
+            {
+                currLoadout = 0;
+                for (int i = 1; i < Main.numOfWeapIDs; i++)
+                {
+                    if (HAS_CHAR_GOT_WEAPON(Main.PlayerHandle, i))
+                    {
+                        currWeaponSpace = Main.wConfFile.GetInteger(i.ToString(), "WeaponSpace", 0);
+                        currLoadout += currWeaponSpace;
+
+                        if (currLoadout > maxLoadout && IS_PLAYER_CONTROL_ON((int)Main.PlayerIndex))
+                        {
+                            if (IVWeaponInfo.GetWeaponInfo((uint)i).WeaponFlags.Gun)
+                            {
+                                DropCurrWeap(i);
+
+                                REMOVE_WEAPON_FROM_CHAR(Main.PlayerHandle, i);
+                            }
+                        }
+                    }
+                }
+                if (IS_HUD_PREFERENCE_SWITCHED_ON() && gTimer > 0 && gTimer <= (aTimer + 5000))
+                {
+                    GET_FRAME_TIME(out float frameTime);
+
+                    if (gTimer > (aTimer + 4000))
+                        alpha -= ((uint)(frameTime * 250f));
+                    else
+                        alpha = 255;
+
+                    if (!IS_FONT_LOADED(4))
+                        LOAD_TEXT_FONT(4);
+
+                    SET_TEXT_SCALE(0.225f, 0.45f);
+                    if (IS_FONT_LOADED(4))
+                        SET_TEXT_FONT(4);
+
+                    SET_TEXT_PROPORTIONAL(true);
+                    SET_TEXT_DRAW_BEFORE_FADE(true);
+                    SET_TEXT_EDGE(true, 10, 10, 10, 5);
+                    SET_TEXT_CENTRE(true);
+
+                    SET_TEXT_COLOUR(255, 255, 255, alpha);
+
+                    DISPLAY_TEXT_WITH_NUMBER(0.914f, 0.24f, "NUMBER", currLoadout);
+                    USE_PREVIOUS_FONT_SETTINGS();
+                    DISPLAY_TEXT_WITH_NUMBER(0.944f, 0.24f, "NUMBER", maxLoadout);
+                }
+                else if (IS_FONT_LOADED(4))
+                    UNLOAD_TEXT_FONT();
+            }
+
+            if (enableDrop && IS_PLAYER_CONTROL_ON((int)Main.PlayerIndex))
             {
                 if (Main.currWeap > 0 && Main.IsPressingAimButton() && (Main.IsAimingAnimPlaying() || IVWeaponInfo.GetWeaponInfo((uint)Main.currWeap).WeaponSlot == 1 || IVWeaponInfo.GetWeaponInfo((uint)Main.currWeap).WeaponSlot == 8) && (IS_CONTROL_JUST_PRESSED(0, (int)dropKey) || IS_CONTROL_JUST_PRESSED(2, (int)dropKey)))
                 {
@@ -233,7 +297,6 @@ namespace WeapFuncs.ivsdk
 
                 if (pickupList.Count > 0)
                 {
-                    GET_GAME_TIMER(out uint gTimer);
                     if (pickupList.Count > maxPickups)
                     {
                         int objDelete = pickupList[0];
@@ -264,7 +327,9 @@ namespace WeapFuncs.ivsdk
                             GET_OBJECT_COORDINATES(objID, out Vector3 objPos);
                             GET_GROUND_Z_FOR_3D_COORD(objPos, out float objGroundZ);
 
-                            LightHelper.AddPointLight(objPos, Color.OrangeRed, 40.0f, 1.5f, false, UIntPtr.Zero);
+                            glowColor = Color.FromName(Main.wConfFile.GetValue(pWeaponList[pickupList.IndexOf(objID)].ToString(), "GlowColor", ""));
+                            //LightHelper.AddPointLight(objPos, Color.OrangeRed, 40.0f, 1.5f, false, UIntPtr.Zero);
+                            LightHelper.AddPointLight(objPos, glowColor, 40.0f, 1.5f, false, UIntPtr.Zero);
 
                             GET_DISTANCE_BETWEEN_COORDS_3D(Main.PlayerPos.X, Main.PlayerPos.Y, pGroundZ, objPos.X, objPos.Y, objGroundZ, out float pDist);
                             GET_WEAPONTYPE_SLOT(pWeaponList[pickupList.IndexOf(objID)], out int pSlot);
@@ -280,9 +345,22 @@ namespace WeapFuncs.ivsdk
 
                             if (DOES_OBJECT_EXIST(objID) && pDist < 0.75 && !IS_CHAR_IN_AIR(Main.PlayerHandle) && !Main.IsAimingAnimPlaying() && !IS_CHAR_SHOOTING(Main.PlayerHandle))
                             {
-                                if (!IS_THIS_HELP_MESSAGE_BEING_DISPLAYED("PU_CF1") && !HAS_CHAR_GOT_WEAPON(Main.PlayerHandle, pWeaponList[pickupList.IndexOf(objID)]))
-                                    DISPLAY_HELP_TEXT_THIS_FRAME("PU_CF1", false);
+                                if (limitedLoadout)
+                                    weaponSpace = Main.wConfFile.GetInteger(pWeaponList[pickupList.IndexOf(objID)].ToString(), "WeaponSpace", 0);
 
+                                if (IS_PLAYER_CONTROL_ON((int)Main.PlayerIndex))
+                                {
+                                    if (maxLoadout >= currLoadout + weaponSpace || !limitedLoadout)
+                                    {
+                                        if (!IS_HELP_MESSAGE_BEING_DISPLAYED() && !HAS_CHAR_GOT_WEAPON(Main.PlayerHandle, pWeaponList[pickupList.IndexOf(objID)]))
+                                            DISPLAY_HELP_TEXT_THIS_FRAME("PU_CF1", false);
+                                    }
+                                    else if (!IS_HELP_MESSAGE_BEING_DISPLAYED() && !HAS_CHAR_GOT_WEAPON(Main.PlayerHandle, pWeaponList[pickupList.IndexOf(objID)]))
+                                    {
+                                        IVText.TheIVText.ReplaceTextOfTextLabel("TM_17_3", "~r~ You cannot carry any more weapons.");
+                                        DISPLAY_HELP_TEXT_THIS_FRAME("TM_17_3", false);
+                                    }
+                                }
                                 for (int slot = 1; slot < 12; slot++)
                                 {
                                     GET_CHAR_WEAPON_IN_SLOT(Main.PlayerHandle, slot, out int weapInSlot, out int cAmmoInSlot, out int ammoInSlot);
@@ -296,16 +374,17 @@ namespace WeapFuncs.ivsdk
 
                                     else if (IS_CONTROL_JUST_PRESSED(0, (int)pickupKey) || IS_CONTROL_JUST_PRESSED(2, (int)pickupKey) || HAS_CHAR_GOT_WEAPON(Main.PlayerHandle, pWeaponList[pickupList.IndexOf(objID)]))
                                     {
-                                        if (pSlot == slot)
+                                        GET_GAME_TIMER(out aTimer);
+                                        if (pSlot == slot && ((maxLoadout >= currLoadout + weaponSpace) || !limitedLoadout || HAS_CHAR_GOT_WEAPON(Main.PlayerHandle, pWeaponList[pickupList.IndexOf(objID)])))
                                         {
                                             if (gTimer >= (fTimer + 100))
                                             {
                                                 GET_GAME_TIMER(out fTimer);
 
-                                                WeapPickSound = Main.wConfFile.GetValue(pWeaponList[pickupList.IndexOf(objID)].ToString(), "PickupSound", "");
+                                                weapPickSound = Main.wConfFile.GetValue(pWeaponList[pickupList.IndexOf(objID)].ToString(), "PickupSound", "");
 
                                                 if (!HAS_CHAR_GOT_WEAPON(Main.PlayerHandle, pWeaponList[pickupList.IndexOf(objID)]))
-                                                    PLAY_SOUND(-1, WeapPickSound);
+                                                    PLAY_SOUND(-1, weapPickSound);
                                                 else
                                                     PLAY_SOUND(-1, "BODY_ARMOUR_BUY");
 
