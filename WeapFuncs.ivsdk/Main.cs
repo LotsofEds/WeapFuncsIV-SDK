@@ -91,6 +91,7 @@ namespace WeapFuncs.ivsdk
             GLaunchAttachment.UnInit();
             EquipGun.UnInit();
             Pickups.UnInit();
+            SwitchWeapNoReload.UnInit();
             //Silence.UnInit();
         }
 

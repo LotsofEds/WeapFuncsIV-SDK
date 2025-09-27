@@ -4,6 +4,7 @@ using IVSDKDotNet.Enums;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 using static IVSDKDotNet.Native.Natives;
 
@@ -21,6 +22,12 @@ namespace WeapFuncs.ivsdk
         private static bool isReloading = false;
         private static List<eWeaponType> exceptionList = new List<eWeaponType>();  // List of lose ammo in mag exceptions
 
+        public static void UnInit()
+        {
+            gunList.Clear();
+            ammoList.Clear();
+            exceptionList.Clear();
+        }
         public static void Init(SettingsFile settings)
         {
             gunList.Clear();
@@ -54,7 +61,7 @@ namespace WeapFuncs.ivsdk
                     currClip = Main.pAmmo;
                 }
 
-                if (!gunList.Contains(Main.currWeap))
+                if (!gunList.Contains(currWeapon) && currWeapon > 0)
                 {
                     gunList.Add(currWeapon);
                     ammoList.Add(currClip);
