@@ -143,6 +143,7 @@ namespace WeapFuncs.ivsdk
 
                     GET_GAME_TIMER(out fTimer);
                     LoadGrenadeConfig(currWeap);
+                    CheckWitness(Main.PlayerPos, 30.0f, 1);
 
                     isReloading = true;
                     hasPressedButton = true;
@@ -150,6 +151,35 @@ namespace WeapFuncs.ivsdk
             }
             if (!(NativeControls.IsGameKeyPressed(0, GrndFireCtrl)) && hasPressedButton)
                 hasPressedButton = false;
+        }
+        private static void CheckWitness(Vector3 pos, float distance, uint wantedLvl)
+        {
+            foreach (var ped in PedHelper.PedHandles)
+            {
+                int pedHandle = ped.Value;
+
+                if (!DOES_CHAR_EXIST(pedHandle))
+                    continue;
+                if (IS_CHAR_DEAD(pedHandle))
+                    continue;
+
+                GET_CHAR_MODEL(pedHandle, out uint pedModel);
+                GET_CURRENT_BASIC_COP_MODEL(out uint copModel);
+
+                if (pedModel != copModel)
+                    continue;
+
+                GET_CHAR_COORDINATES(pedHandle, out Vector3 pedPos);
+                GET_DISTANCE_BETWEEN_COORDS_3D(pos.X, pos.Y, pos.Z, pedPos.X, pedPos.Y, pedPos.Z, out float dist);
+                if (dist > distance)
+                    continue;
+
+                if (!IS_WANTED_LEVEL_GREATER((int)Main.PlayerIndex, wantedLvl))
+                {
+                    ALTER_WANTED_LEVEL((int)Main.PlayerIndex, wantedLvl);
+                    APPLY_WANTED_LEVEL_CHANGE_NOW((int)Main.PlayerIndex);
+                }
+            }
         }
         public static void Tick()
         {
@@ -166,33 +196,13 @@ namespace WeapFuncs.ivsdk
                 attachmentUnlocks[Main.currWeap] = true;
                 grenadeAmmo[Main.currWeap] = gAmmo;
 
-                GET_WEAPONTYPE_MODEL(Main.currWeap, out wModel);
-                foreach (var obj in ObjectHelper.ObjHandles)
+                if (!DOES_OBJECT_EXIST(glAttachProp))
                 {
-                    int objHandle = obj.Value;
-
-                    GET_OBJECT_COORDINATES(objHandle, out float objX, out float objY, out float objZ);
-
-                    GET_DISTANCE_BETWEEN_COORDS_3D(Main.PlayerPos.X, Main.PlayerPos.Y, Main.PlayerPos.Z, objX, objY, objZ, out float Dist);
-                    if (Dist > 1)
-                        continue;
-
-                    GET_OBJECT_MODEL(objHandle, out pModel);
-
-                    if (!DOES_OBJECT_EXIST(objHandle) || pModel != wModel)
-                        weapInHand = false;
-
-                    if (pModel == wModel)
-                        weapInHand = true;
-                }
-                if (weapInHand)
-                {
-                    if (!DOES_OBJECT_EXIST(glAttachProp))
-                    {
-                        GET_PED_BONE_POSITION(Main.PlayerHandle, 1232, glModelOff, out attachPos);
-                        CREATE_OBJECT(GET_HASH_KEY(glModel), attachPos, out glAttachProp, true);
-                        ATTACH_OBJECT_TO_PED(glAttachProp, Main.PlayerHandle, 1232, glModelOff.X, glModelOff.Y, glModelOff.Z, glModelRot.X, glModelRot.Y, glModelRot.Z, 0);
-                    }
+                    SET_CHAR_CURRENT_WEAPON_VISIBLE(Main.PlayerHandle, true);
+                    //SET_CURRENT_CHAR_WEAPON(Main.PlayerHandle, wIndex, true);
+                    GET_PED_BONE_POSITION(Main.PlayerHandle, 1232, glModelOff, out attachPos);
+                    CREATE_OBJECT(GET_HASH_KEY(glModel), attachPos, out glAttachProp, true);
+                    ATTACH_OBJECT_TO_PED(glAttachProp, Main.PlayerHandle, 1232, glModelOff.X, glModelOff.Y, glModelOff.Z, glModelRot.X, glModelRot.Y, glModelRot.Z, 0);
                 }
                 wIndex = Main.currWeap;
                 OnButtonPress();
@@ -283,6 +293,7 @@ namespace WeapFuncs.ivsdk
                     cantFire = false;
                     GET_OBJECT_COORDINATES(grenObj, out Vector3 gPos);
                     ADD_EXPLOSION(gPos.X, gPos.Y, gPos.Z, expType, 15, true, false, 1.0f);
+                    CheckWitness(gPos, 30.0f, 2);
                     STOP_PTFX(trailFxID);
                     REMOVE_PTFX(trailFxID);
                     DELETE_OBJECT(ref grenObj);

@@ -172,7 +172,7 @@ namespace WeapFuncs.ivsdk
                 LoadWeaponConfig(currWeap);
 
             PedHelper.GrabAllPeds();
-            ObjectHelper.GrabAllObjs();
+            //ObjectHelper.GrabAllObjs();
             if (GlobalRateOfFire)
                 RateOfFire.Tick();
             ReloadSpeed.Tick();
@@ -201,6 +201,10 @@ namespace WeapFuncs.ivsdk
                 Flashbang.Tick();
             Recoil.Tick();
             TapFireSpreadFix.Tick();
+
+            if (Pickups.limitedLoadout)
+                Pickups.GetMaxLoadout(Settings);
+
             //Silence.Tick();
             //ObjectTest.Tick();
         }

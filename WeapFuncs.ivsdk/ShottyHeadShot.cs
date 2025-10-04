@@ -33,6 +33,9 @@ namespace WeapFuncs.ivsdk
             foreach (var ped in PedHelper.PedHandles)
             {
                 int pedHandle = ped.Value;
+
+                if (!DOES_CHAR_EXIST(pedHandle))
+                    continue;
                 if (IS_CHAR_DEAD(pedHandle) || IS_CHAR_INJURED(pedHandle))
                     continue;
 
@@ -43,10 +46,8 @@ namespace WeapFuncs.ivsdk
 
                 if (NativeWorld.GetPedInstanceFromHandle(pedHandle).PedFlags.NoHeadshots || NativeWorld.GetPedInstanceFromHandle(pedHandle).IsPlayer)
                     continue;
-
                 if (!HAS_CHAR_BEEN_DAMAGED_BY_WEAPON(pedHandle, 57))
                     continue;
-
                 GET_CHAR_ARMOUR(pedHandle, out uint pArmor);
                 if (pArmor > ArmorThresh)
                     continue;

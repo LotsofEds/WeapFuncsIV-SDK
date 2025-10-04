@@ -10,9 +10,6 @@ namespace WeapFuncs.ivsdk
     {
         private static bool hasAttachment;
         private static float weaponZoom;
-        private static GameKey scopeCtrl;
-        private static bool toggleScope;
-        private static bool enableScope;
 
         private static bool[] attachmentUnlocks;
 
@@ -23,14 +20,13 @@ namespace WeapFuncs.ivsdk
         private static bool isZoomOn;
         private static int pWeap;
         private static bool scopeOn;
-        private static bool hasPressedButton;
-        private static bool togglingScope;
+
+        private static IVCam cam;
+        private static NativeCamera gameCam;
         private static bool isAiming => (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "fire") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "fire_crouch") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "fire_alt") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "fire_crouch_alt") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "fire_up") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "fire_down") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload_crouch") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "p_load") || IS_PED_IN_COVER(Main.PlayerHandle));
         public static void Init(SettingsFile settings)
         {
             attachmentUnlocks = new bool[Main.numOfWeapIDs];
-            enableScope = settings.GetBoolean("OTHER", "ScopeToggle", false);
-            scopeCtrl = (GameKey)settings.GetInteger("OTHER", "ScopeToggleKey", 7);
         }
         public static void OnGameLoad()
         {
@@ -56,20 +52,21 @@ namespace WeapFuncs.ivsdk
                     else
                         weaponZoom = Main.wConfFile.GetFloat(weapon.ToString(), "Zoom", 1.0f);
 
-                    toggleScope = Main.wfAttachConfig.GetBoolean(weapon.ToString(), "FirstPerson", false);
+                    scopeOn = Main.wfAttachConfig.GetBoolean(weapon.ToString(), "FirstPerson", false);
                 }
                 else
                 {
                     weaponZoom = Main.wConfFile.GetFloat(weapon.ToString(), "Zoom", 1.0f);
-                    toggleScope = Main.wConfFile.GetBoolean(weapon.ToString(), "FirstPerson", false);
+                    scopeOn = false;
                 }
             }
             Main.wfAttachConfig.Load();
         }
         public static void Tick()
         {
-            IVCam cam = IVCamera.TheFinalCam;
-            NativeCamera gameCam = NativeCamera.GetGameCam();
+            cam = IVCamera.TheFinalCam;
+            gameCam = NativeCamera.GetGameCam();
+            GET_FRAME_TIME(out float frameTime);
 
             LoadWeaponConfig(Main.currWeap);
 
@@ -86,47 +83,15 @@ namespace WeapFuncs.ivsdk
                         isButtonPressed = false;
 
                     GET_MOUSE_WHEEL(out msWhl);
-                    if ((msWhl < 0 || isZoomOn || gameCam.FOV <= 35) && isAiming && zoomAmt != weaponZoom)
+                    if ((msWhl < 0 || isZoomOn || gameCam.FOV <= 40) && isAiming && zoomAmt != weaponZoom)
                     {
                         isZoomOn = true;
                         zoomAmt = weaponZoom;
                     }
-                    else if ((msWhl > 0 || !isZoomOn || (gameCam.FOV > 35 && IVWeaponInfo.GetWeaponInfo((uint)Main.currWeap).WeaponSlot != 3)) && zoomAmt != 1.0)
+                    else if ((msWhl > 0 || !isZoomOn || (gameCam.FOV > 40 && IVWeaponInfo.GetWeaponInfo((uint)Main.currWeap).WeaponSlot != 3)) && zoomAmt != 1.0)
                     {
                         isZoomOn = false;
                         zoomAmt = 1.0f;
-                    }
-
-                    if (toggleScope && enableScope)
-                    {
-                        if ((NativeControls.IsGameKeyPressed(0, scopeCtrl) || NativeControls.IsGameKeyPressed(2, scopeCtrl)) && !hasPressedButton && !togglingScope)
-                        {
-                            scopeOn = !scopeOn;
-                            hasPressedButton = true;
-                            togglingScope = true;
-                        }
-                        else if (!NativeControls.IsGameKeyPressed(0, scopeCtrl) && !NativeControls.IsGameKeyPressed(2, scopeCtrl))
-                            hasPressedButton = false;
-
-                        if (togglingScope)
-                        {
-                            // Copied from catsmackaroo's Liberty Tweaks mod. Credit to him for all the work
-                            if (scopeOn)
-                                IVWeaponInfo.GetWeaponInfo((uint)Main.currWeap).WeaponFlags.FirstPerson = true;
-                            else if (!scopeOn)
-                                IVWeaponInfo.GetWeaponInfo((uint)Main.currWeap).WeaponFlags.FirstPerson = false;
-
-                            SET_PLAYER_CONTROL((int)Main.PlayerIndex, false);
-
-                            IVWeaponInfo.GetWeaponInfo((uint)Main.currWeap).DamageFPS = IVWeaponInfo.GetWeaponInfo((uint)Main.currWeap).Damage;
-                            IVWeaponInfo.GetWeaponInfo((uint)Main.currWeap).AccuracyFPS = IVWeaponInfo.GetWeaponInfo((uint)Main.currWeap).Accuracy;
-
-                            Main.TheDelayedCaller.Add(TimeSpan.FromSeconds(0.08), "Main", () =>
-                            {
-                                SET_PLAYER_CONTROL((int)Main.PlayerIndex, true);
-                            });
-                            togglingScope = false;
-                        }
                     }
                 }
 
@@ -136,13 +101,20 @@ namespace WeapFuncs.ivsdk
                     isButtonPressed = false;
                     zoomAmt = 1.0f;
                 }
-                pWeap = Main.currWeap;
+
+                if (pWeap != Main.currWeap)
+                {
+                    pWeap = Main.currWeap;
+
+                    if (scopeOn)
+                        IVWeaponInfo.GetWeaponInfo((uint)pWeap).WeaponFlags.FirstPerson = true;
+                }
 
                 if (cam == null)
                     return;
 
                 //IVGame.ShowSubtitleMessage(gameCam.FOV.ToString() + "   " + zoomAmt.ToString());
-                currentFOV = Main.SmoothStep(currentFOV, zoomAmt, 0.5f);
+                currentFOV = Main.SmoothStep(currentFOV, zoomAmt, 10f * frameTime);
                 cam.FOV /= currentFOV;
             }
         }

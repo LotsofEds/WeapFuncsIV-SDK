@@ -63,6 +63,8 @@ namespace WeapFuncs.ivsdk
             foreach (var ped in PedHelper.PedHandles)
             {
                 int pedHandle = ped.Value;
+                if (!DOES_CHAR_EXIST(pedHandle))
+                    continue;
                 if (IS_CHAR_INJURED(pedHandle))
                     continue;
                 if (IS_CHAR_DEAD(pedHandle))

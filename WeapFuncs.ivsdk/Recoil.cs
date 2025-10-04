@@ -27,6 +27,9 @@ namespace WeapFuncs.ivsdk
         private static float DecayRate;
         private static float MaximumRecoil;
         private static float CrouchMultiplier;
+
+        private static NativeCamera cam;
+        private static float appliedRecoil;
         public static void Init(SettingsFile settings)
         {
             enable = settings.GetBoolean("RECOIL & BULLETSPREAD", "WeaponRecoil", false);
@@ -56,8 +59,8 @@ namespace WeapFuncs.ivsdk
             if (!enable)
                 return;
 
-            NativeCamera cam = NativeCamera.GetGameCam();
-            float appliedRecoil = CurrentRecoil;
+            cam = NativeCamera.GetGameCam();
+            appliedRecoil = CurrentRecoil;
             GET_FRAME_TIME(out float frameTime);
 
             if (IS_CHAR_DUCKING(Main.PlayerHandle))
