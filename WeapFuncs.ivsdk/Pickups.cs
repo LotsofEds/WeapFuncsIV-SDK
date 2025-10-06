@@ -306,15 +306,15 @@ namespace WeapFuncs.ivsdk
 
                     GET_KEY_FOR_CHAR_IN_ROOM(ped, out uint roomKey);
 
-                    if ((IS_CHAR_INJURED(ped) || IS_CHAR_DEAD(ped)) && !IS_CHAR_IN_ANY_CAR(ped) && weaponList[pedList.IndexOf(ped)] > 0)
+                    if ((IS_CHAR_INJURED(ped) || IS_CHAR_DEAD(ped)) && !IS_CHAR_IN_ANY_CAR(ped) && weaponList[pedList.IndexOf(ped)] > 0 && weaponList[pedList.IndexOf(ped)] < 46 && weaponList[pedList.IndexOf(ped)] > 57)
                     {
                         int wPickup;
                         int veh;
                         bool missionPed = false;
                         bool missionVeh = false;
 
-                        if (HAS_CHAR_GOT_WEAPON(ped, pWeap))
-                            REMOVE_WEAPON_FROM_CHAR(ped, pWeap);
+                        if (HAS_CHAR_GOT_WEAPON(ped, weaponList[pedList.IndexOf(ped)]))
+                            REMOVE_WEAPON_FROM_CHAR(ped, weaponList[pedList.IndexOf(ped)]);
 
                         GET_PED_BONE_POSITION(ped, (uint)eBone.BONE_RIGHT_HAND, Vector3.Zero, out Vector3 pos);
 
