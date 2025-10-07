@@ -21,6 +21,7 @@ namespace WeapFuncs.ivsdk
             bulletsFired = 0;                                      // Used to detect legitimate drops in clip ammo
         private static bool isReloading = false;
         private static List<eWeaponType> exceptionList = new List<eWeaponType>();  // List of lose ammo in mag exceptions
+        private static float animTime;
 
         public static void UnInit()
         {
@@ -108,29 +109,33 @@ namespace WeapFuncs.ivsdk
                     bulletsFired = GET_INT_STAT(287);
                 }
 
-                if ((IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "p_load") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload_crouch")) && Main.pAmmo != Main.mAmmo && !isReloading)
+                if ((IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "p_load") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload_crouch")) && ammoList[currWeaponIndex] != Main.mAmmo && Main.pAmmo != Main.mAmmo && !isReloading)
                 {
-                    bool dontLoseAmmo = false;
-                    foreach (eWeaponType weaponType in exceptionList)
+                    GetAnimTime();
+                    if (animTime < 0.9f)
                     {
-                        if (currWeapon == (int)weaponType)
-                            dontLoseAmmo = true;
-                    }
-                    if (!Main.LoseAmmoInMag || dontLoseAmmo)
-                        ammoList[currWeaponIndex] = Main.pAmmo;
-                    else
-                    {
-                        SET_AMMO_IN_CLIP(Main.PlayerHandle, currWeapon, 0);
-                        ammoList[currWeaponIndex] = 0;
-                    }
+                        bool dontLoseAmmo = false;
+                        foreach (eWeaponType weaponType in exceptionList)
+                        {
+                            if (currWeapon == (int)weaponType)
+                                dontLoseAmmo = true;
+                        }
+                        if (!Main.LoseAmmoInMag || dontLoseAmmo)
+                            ammoList[currWeaponIndex] = Main.pAmmo;
+                        else
+                        {
+                            SET_AMMO_IN_CLIP(Main.PlayerHandle, currWeapon, 0);
+                            ammoList[currWeaponIndex] = 0;
+                        }
 
-                    currClip = ammoList[currWeaponIndex];
-                    isReloading = true;
+                        currClip = ammoList[currWeaponIndex];
+                        isReloading = true;
+                    }
                 }
 
                 if (currWeapon == Main.currWeap && currClip != ammoList[currWeaponIndex] && IVWeaponInfo.GetWeaponInfo((uint)currWeapon).WeaponFlags.AnimReload)
                 {
-                    if ((IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "p_load") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload_crouch") || isReloading))
+                    if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "p_load") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload_crouch") || isReloading)
                     {
                         if (Main.pAmmo == Main.mAmmo)
                         {
@@ -149,6 +154,15 @@ namespace WeapFuncs.ivsdk
                         RevertAmmo();
                 }
             }
+        }
+        private static void GetAnimTime()
+        {
+            if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload"))
+                GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, Main.WeapAnim, "reload", out animTime);
+            else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "p_load"))
+                GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, Main.WeapAnim, "p_load", out animTime);
+            else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload_crouch"))
+                GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, Main.WeapAnim, "reload_crouch", out animTime);
         }
 
         // Sets the current weapon's clip ammo to the value last saved for it
