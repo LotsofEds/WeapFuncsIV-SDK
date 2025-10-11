@@ -49,6 +49,7 @@ namespace WeapFuncs.ivsdk
         public static int aAmmo;
         public static int mAmmo;
         public static int wSlot;
+        public static float frameTime;
         public static string WeapAnim = "";
         public static string BFAnim = "";
         public static float weapReload = 1.0f;
@@ -162,6 +163,7 @@ namespace WeapFuncs.ivsdk
             if (PlayerPed == null)
                 return;
 
+            GET_FRAME_TIME(out frameTime);
             TheDelayedCaller.Process();
             GET_CURRENT_CHAR_WEAPON(PlayerHandle, out currWeap);
             GET_AMMO_IN_CLIP(PlayerHandle, currWeap, out pAmmo);
@@ -173,6 +175,7 @@ namespace WeapFuncs.ivsdk
 
             PedHelper.GrabAllPeds();
             //ObjectHelper.GrabAllObjs();
+            //VehHelper.GrabAllVehs();
             if (GlobalRateOfFire)
                 RateOfFire.Tick();
             ReloadSpeed.Tick();
@@ -251,6 +254,25 @@ namespace WeapFuncs.ivsdk
             else
                 return false;
         }
+        public static bool IsReloadAnimPlaying()
+        {
+            if (IS_CHAR_PLAYING_ANIM(PlayerHandle, WeapAnim, "reload") || IS_CHAR_PLAYING_ANIM(PlayerHandle, WeapAnim, "p_load") || IS_CHAR_PLAYING_ANIM(PlayerHandle, WeapAnim, "reload_crouch"))
+                return true;
+            else
+                return false;
+        }
+        public static Vector3 DirectionToRotation(Vector3 dir, float roll)
+        {
+            dir = Vector3.Normalize(dir);
+            Vector3 result = default(Vector3);
+            result.Z = (float)(Math.Atan2(dir.X, dir.Y) * (-180.0 / Math.PI));
+            Vector3 vector = new Vector3(dir.X, dir.Y, 0f);
+            Vector3 vector2 = new Vector3(dir.Z, vector.Length(), 0f);
+            Vector3 vector3 = Vector3.Normalize(vector2);
+            result.X = (float)(Math.Atan2(vector3.X, vector3.Y) * (180.0 / Math.PI));
+            result.Y = roll;
+            return result;
+        }
         private void Main_ProcessCamera(object sender, EventArgs e)
         {
             if (!InitialChecks())
@@ -323,7 +345,7 @@ namespace WeapFuncs.ivsdk
             wConfFile = new SettingsFile(string.Format("{0}\\IVSDKDotNet\\scripts\\WeapFuncs\\WeaponConfigs.ini", IVGame.GameStartupPath));
             wConfFile.Load();
             numOfWeapIDs = settings.GetInteger("MAIN", "NumOfWeaponIDs", 60);
-            GlobalRateOfFire = settings.GetBoolean("OTHER", "GlobalROF", false);
+            GlobalRateOfFire = settings.GetBoolean("MAIN", "GlobalROF", false);
             ReloadInVehicles = settings.GetBoolean("RELOADS", "ReloadInVehicles", false);
             ReloadOnBikes = settings.GetBoolean("RELOADS", "ReloadOnBikes", false);
             CrouchRelFix = settings.GetBoolean("RELOADS", "MP5ReloadCrouchFix", false);

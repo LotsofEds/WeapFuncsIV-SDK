@@ -174,11 +174,8 @@ namespace WeapFuncs.ivsdk
                 if (dist > distance)
                     continue;
 
-                if (!IS_WANTED_LEVEL_GREATER((int)Main.PlayerIndex, wantedLvl))
-                {
-                    ALTER_WANTED_LEVEL((int)Main.PlayerIndex, wantedLvl);
-                    APPLY_WANTED_LEVEL_CHANGE_NOW((int)Main.PlayerIndex);
-                }
+                ALTER_WANTED_LEVEL_NO_DROP((int)Main.PlayerIndex, wantedLvl);
+                APPLY_WANTED_LEVEL_CHANGE_NOW((int)Main.PlayerIndex);
             }
         }
         public static void Tick()
@@ -215,10 +212,8 @@ namespace WeapFuncs.ivsdk
             }
             if (IS_HUD_PREFERENCE_SWITCHED_ON() && gTimer > 0 && gTimer <= (fTimer + 5000))
             {
-                GET_FRAME_TIME(out float frameTime);
-
                 if (gTimer > (fTimer + 4000))
-                    alpha -= ((uint)(frameTime * 250f));
+                    alpha -= ((uint)(Main.frameTime * 250f));
                 else
                     alpha = 255;
 

@@ -66,7 +66,6 @@ namespace WeapFuncs.ivsdk
         {
             cam = IVCamera.TheFinalCam;
             gameCam = NativeCamera.GetGameCam();
-            GET_FRAME_TIME(out float frameTime);
 
             LoadWeaponConfig(Main.currWeap);
 
@@ -114,7 +113,7 @@ namespace WeapFuncs.ivsdk
                     return;
 
                 //IVGame.ShowSubtitleMessage(gameCam.FOV.ToString() + "   " + zoomAmt.ToString());
-                currentFOV = Main.SmoothStep(currentFOV, zoomAmt, 10f * frameTime);
+                currentFOV = Main.SmoothStep(currentFOV, zoomAmt, 10f * Main.frameTime);
                 cam.FOV /= currentFOV;
             }
         }

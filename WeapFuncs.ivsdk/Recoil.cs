@@ -61,7 +61,6 @@ namespace WeapFuncs.ivsdk
 
             cam = NativeCamera.GetGameCam();
             appliedRecoil = CurrentRecoil;
-            GET_FRAME_TIME(out float frameTime);
 
             if (IS_CHAR_DUCKING(Main.PlayerHandle))
                 appliedRecoil *= CrouchMultiplier;
@@ -75,17 +74,16 @@ namespace WeapFuncs.ivsdk
             }
 
             if (enableIncrease)
-                CurrentRecoil = Math.Max(CurrentRecoil - DecayRate * frameTime, BaseRecoil);
+                CurrentRecoil = Math.Max(CurrentRecoil - DecayRate * Main.frameTime, BaseRecoil);
 
             if (recoilDebug)
-                IVGame.ShowSubtitleMessage(Math.Truncate(AdditionalRecoil * frameTime * 100).ToString() + "  " + Math.Truncate(DecayRate * frameTime * 100).ToString() + "  " + Math.Truncate(CurrentRecoil * 1000).ToString() + "  " + (RecoilTime * 100) / (int)(frameTime * 6000));
+                IVGame.ShowSubtitleMessage(Math.Truncate(AdditionalRecoil * Main.frameTime * 100).ToString() + "  " + Math.Truncate(DecayRate * Main.frameTime * 100).ToString() + "  " + Math.Truncate(CurrentRecoil * 1000).ToString() + "  " + (RecoilTime * 100) / (int)(Main.frameTime * 6000));
         }
 
         private static void ApplyRecoil(NativeCamera cam, int weapon, float appliedRecoil)
         {
-            GET_FRAME_TIME(out float frameTime);
             LoadRecoilConf(weapon);
-            ApplyCameraShake(cam, RecoilAmplitudeMin, RecoilAmplitudeMax, RecoilFrequencyMin, RecoilFrequencyMax, appliedRecoil, (RecoilTime * 100) / (int)(frameTime * 6000));
+            ApplyCameraShake(cam, RecoilAmplitudeMin, RecoilAmplitudeMax, RecoilFrequencyMin, RecoilFrequencyMax, appliedRecoil, (RecoilTime * 100) / (int)(Main.frameTime * 6000));
         }
 
         private static void ApplyCameraShake(NativeCamera cam, float amplitude1, float amplitude2, float frequency1, float frequency2, float appliedRecoil, int duration)

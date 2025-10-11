@@ -47,8 +47,6 @@ namespace WeapFuncs.ivsdk
             if (!enable)
                 return;
 
-            GET_FRAME_TIME(out float frameTime);
-
             bool tapFireException = false;
             foreach (eWeaponType weaponType in exceptionList)
             {
@@ -98,9 +96,9 @@ namespace WeapFuncs.ivsdk
                 pWeapon = (uint)Main.currWeap;
             }
 
-            AppliedSpread = Math.Max(AppliedSpread - SpreadDecayRate * frameTime, 1);
-            CurrentSpread = Math.Max(CurrentSpread - SpreadDecayRate * frameTime, 1);
-            //IVGame.ShowSubtitleMessage(Math.Truncate(AppliedSpread * 100).ToString() + "  " + Math.Truncate(CurrentSpread * 100).ToString() + "  " + Math.Truncate(SpreadDecayRate * frameTime * 100).ToString());
+            AppliedSpread = Math.Max(AppliedSpread - SpreadDecayRate * Main.frameTime, 1);
+            CurrentSpread = Math.Max(CurrentSpread - SpreadDecayRate * Main.frameTime, 1);
+            //IVGame.ShowSubtitleMessage(Math.Truncate(AppliedSpread * 100).ToString() + "  " + Math.Truncate(CurrentSpread * 100).ToString() + "  " + Math.Truncate(SpreadDecayRate * Main.frameTime * 100).ToString());
         }
     }
 }

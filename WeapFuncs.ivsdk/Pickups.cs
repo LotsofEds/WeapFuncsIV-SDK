@@ -200,7 +200,7 @@ namespace WeapFuncs.ivsdk
                         currWeaponSpace = Main.wConfFile.GetInteger(i.ToString(), "WeaponSpace", 0);
                         currLoadout += currWeaponSpace;
 
-                        if (currLoadout > maxLoadout && IS_PLAYER_CONTROL_ON((int)Main.PlayerIndex))
+                        if (currLoadout > maxLoadout && maxLoadout > 0 && IS_PLAYER_CONTROL_ON((int)Main.PlayerIndex))
                         {
                             if (IVWeaponInfo.GetWeaponInfo((uint)i).WeaponFlags.Gun)
                             {
@@ -213,10 +213,8 @@ namespace WeapFuncs.ivsdk
                 }
                 if (IS_HUD_PREFERENCE_SWITCHED_ON() && gTimer > 0 && gTimer <= (aTimer + 5000))
                 {
-                    GET_FRAME_TIME(out float frameTime);
-
                     if (gTimer > (aTimer + 4000))
-                        alpha -= ((uint)(frameTime * 250f));
+                        alpha -= ((uint)(Main.frameTime * 250f));
                     else
                         alpha = 255;
 
@@ -272,7 +270,7 @@ namespace WeapFuncs.ivsdk
 
                     GET_CURRENT_CHAR_WEAPON(pedHandle, out int pWeap);
 
-                    if (pWeap <= 0)
+                    if (pWeap <= 0 || (pWeap >= 46 && pWeap <= 57))
                         continue;
 
                     GET_MAX_AMMO_IN_CLIP(pedHandle, pWeap, out int pMaxAmmo);
@@ -288,10 +286,9 @@ namespace WeapFuncs.ivsdk
 
                     GET_CURRENT_CHAR_WEAPON(ped, out int pWeap);
 
-                    if (pWeap != weaponList[pedList.IndexOf(ped)] && pWeap > 0)
-                    {
+                    if (pWeap != weaponList[pedList.IndexOf(ped)] && pWeap > 0 && (pWeap < 46 || pWeap > 57))
                         weaponList[pedList.IndexOf(ped)] = pWeap;
-                    }
+
                     GET_MAX_AMMO_IN_CLIP(ped, weaponList[pedList.IndexOf(ped)], out int pMaxAmmo);
                     GET_WEAPONTYPE_MODEL(weaponList[pedList.IndexOf(ped)], out uint wModel);
 
@@ -306,7 +303,7 @@ namespace WeapFuncs.ivsdk
 
                     GET_KEY_FOR_CHAR_IN_ROOM(ped, out uint roomKey);
 
-                    if ((IS_CHAR_INJURED(ped) || IS_CHAR_DEAD(ped)) && !IS_CHAR_IN_ANY_CAR(ped) && weaponList[pedList.IndexOf(ped)] > 0 && weaponList[pedList.IndexOf(ped)] < 46 && weaponList[pedList.IndexOf(ped)] > 57)
+                    if ((IS_CHAR_INJURED(ped) || IS_CHAR_DEAD(ped)) && !IS_CHAR_IN_ANY_CAR(ped) && weaponList[pedList.IndexOf(ped)] > 0 && (weaponList[pedList.IndexOf(ped)] < 46 || weaponList[pedList.IndexOf(ped)] > 57))
                     {
                         int wPickup;
                         int veh;

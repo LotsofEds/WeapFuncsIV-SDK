@@ -51,10 +51,8 @@ namespace WeapFuncs.ivsdk
                 GET_GAME_TIMER(out uint gTimer);
                 if (IS_HUD_PREFERENCE_SWITCHED_ON() && gTimer > 0 && gTimer <= (fTimer + 5000))
                 {
-                    GET_FRAME_TIME(out float frameTime);
-
                     if (gTimer > (fTimer + 2000))
-                        alpha -= ((int)(frameTime * 120f));
+                        alpha -= ((int)(Main.frameTime * 120f));
                     else
                         alpha = 255;
 
