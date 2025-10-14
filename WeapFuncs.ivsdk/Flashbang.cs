@@ -39,8 +39,8 @@ namespace WeapFuncs.ivsdk
         }
         public static void Tick()
         {
-            GET_OFFSET_FROM_CHAR_IN_WORLD_COORDS(Main.PlayerHandle, new Vector3(0, blindRad, 0), out Vector3 plyrPos);
-            if (IS_EXPLOSION_IN_SPHERE(expID, plyrPos, blindRad))
+            GET_OFFSET_FROM_CHAR_IN_WORLD_COORDS(Main.PlayerHandle, new Vector3(0, blindRad * 0.5f, 0), out Vector3 plyrPos);
+            if (IS_EXPLOSION_IN_SPHERE(expID, plyrPos, blindRad * 0.5f))
             {
                 alpha = 255;
                 GET_GAME_TIMER(out fTimer);
@@ -71,8 +71,10 @@ namespace WeapFuncs.ivsdk
                 {
                     if (!IS_PED_RAGDOLL(pedHandle))
                     {
-                        SWITCH_PED_TO_RAGDOLL_WITH_FALL(pedHandle, ragdollDuration, ragdollDuration, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+                        SWITCH_PED_TO_RAGDOLL(pedHandle, 0, ragdollDuration, true, true, true, false);
+                        //SWITCH_PED_TO_RAGDOLL_WITH_FALL(pedHandle, ragdollDuration, ragdollDuration, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
+                        //Main.PlayerPed.ActivateDrunkRagdoll
                         if (pedHandle == Main.PlayerHandle)
                         {
                             GET_GAME_CAM(out int cam);
@@ -81,6 +83,14 @@ namespace WeapFuncs.ivsdk
                     }
                     if (IS_PED_RAGDOLL(pedHandle))
                     {
+                        CREATE_NM_MESSAGE(true, (int)eNaturalMotionMessageID.nm130_braceForImpact);
+                        SEND_NM_MESSAGE(pedHandle);
+                        CREATE_NM_MESSAGE(true, (int)eNaturalMotionMessageID.nm079_bodyBalance);
+                        SEND_NM_MESSAGE(pedHandle);
+                        CREATE_NM_MESSAGE(true, (int)eNaturalMotionMessageID.nm067_pedalLegs);
+                        SEND_NM_MESSAGE(pedHandle);
+                        CREATE_NM_MESSAGE(true, (int)eNaturalMotionMessageID.nm289_fallOverWall);
+                        SEND_NM_MESSAGE(pedHandle);
                         float randFloat = GENERATE_RANDOM_FLOAT_IN_RANGE(1f, 2f);
                         APPLY_FORCE_TO_PED(pedHandle, 3, randFloat, (2f - randFloat), -2f, 0, 0, 0, 0, 1, 1, 1);
                         CLEAR_CHAR_LAST_WEAPON_DAMAGE(pedHandle);

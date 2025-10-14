@@ -398,7 +398,7 @@ namespace WeapFuncs.ivsdk
                             //LightHelper.AddPointLight(objPos, Color.OrangeRed, 40.0f, 1.5f, false, UIntPtr.Zero);
                             LightHelper.AddPointLight(objPos, glowColor, 40.0f, 1.5f, false, UIntPtr.Zero);
 
-                            GET_DISTANCE_BETWEEN_COORDS_3D(Main.PlayerPos.X, Main.PlayerPos.Y, pGroundZ, objPos.X, objPos.Y, objGroundZ, out float pDist);
+                            GET_DISTANCE_BETWEEN_COORDS_3D(Main.PlayerPos.X, Main.PlayerPos.Y, pGroundZ, objPos.X, objPos.Y, objPos.Z, out float pDist);
                             GET_WEAPONTYPE_SLOT(pWeaponList[pickupList.IndexOf(objID)], out int pSlot);
 
                             if (DOES_OBJECT_EXIST(objID) && pDist >= despawnDist)
@@ -412,6 +412,7 @@ namespace WeapFuncs.ivsdk
 
                             if (DOES_OBJECT_EXIST(objID) && pDist < 0.75 && !IS_CHAR_IN_AIR(Main.PlayerHandle) && !Main.IsAimingAnimPlaying() && !IS_CHAR_SHOOTING(Main.PlayerHandle))
                             {
+                                //IVGame.ShowSubtitleMessage(pGroundZ.ToString() + "  " + objGroundZ.ToString());
                                 if (limitedLoadout)
                                     weaponSpace = Main.wConfFile.GetInteger(pWeaponList[pickupList.IndexOf(objID)].ToString(), "WeaponSpace", 0);
 
