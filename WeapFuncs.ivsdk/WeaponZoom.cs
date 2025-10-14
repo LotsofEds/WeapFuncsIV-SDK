@@ -113,7 +113,7 @@ namespace WeapFuncs.ivsdk
                     return;
 
                 //IVGame.ShowSubtitleMessage(gameCam.FOV.ToString() + "   " + zoomAmt.ToString());
-                currentFOV = Main.SmoothStep(currentFOV, zoomAmt, 10f * Main.frameTime);
+                currentFOV = Main.SmoothStep(currentFOV, zoomAmt, 15f * Main.frameTime);
                 cam.FOV /= currentFOV;
             }
         }

@@ -15,11 +15,17 @@ namespace WeapFuncs.ivsdk
     internal class RateOfFire
     {
         // Dont try to make the reload work with this, dumbass me
+        private static bool OverridePedROF;
         static string WeapAnim = "";
         static string BFAnim = "";
         static float FireRate;
         static float DbFireRate;
         static float BFFireRate;
+
+        public static void Init(SettingsFile settings)
+        {
+            OverridePedROF = settings.GetBoolean("MAIN", "OverridePedROF", false);
+        }
 
         public static void LoadWeaponConfig(int weapon)
         {
@@ -63,35 +69,50 @@ namespace WeapFuncs.ivsdk
             foreach (var ped in PedHelper.PedHandles)
             {
                 int pedHandle = ped.Value;
-                if (!DOES_CHAR_EXIST(pedHandle))
-                    continue;
-                if (IS_CHAR_INJURED(pedHandle))
-                    continue;
-                if (IS_CHAR_DEAD(pedHandle))
-                    continue;
-                if (!IS_CHAR_SHOOTING(pedHandle))
-                    continue;
+                if (!DOES_CHAR_EXIST(pedHandle)) continue;
+                if (IS_CHAR_INJURED(pedHandle)) continue;
+                if (IS_CHAR_DEAD(pedHandle)) continue;
+                if (!IS_CHAR_SHOOTING(pedHandle)) continue;
 
                 GET_CURRENT_CHAR_WEAPON(pedHandle, out int currWeap);
 
                 LoadWeaponConfig(currWeap);
-
-                SET_CHAR_ANIM_SPEED(pedHandle, WeapAnim, "fire", (FireRate));
-                SET_CHAR_ANIM_SPEED(pedHandle, WeapAnim, "fire_crouch", (FireRate));
-                SET_CHAR_ANIM_SPEED(pedHandle, WeapAnim, "fire_alt", (FireRate));
-                SET_CHAR_ANIM_SPEED(pedHandle, WeapAnim, "fire_crouch_alt", (FireRate));
-                SET_CHAR_ANIM_SPEED(pedHandle, WeapAnim, "fire_up", (FireRate));
-                SET_CHAR_ANIM_SPEED(pedHandle, WeapAnim, "fire_down", (FireRate));
-                SET_CHAR_ANIM_SPEED(pedHandle, WeapAnim, "dbfire", (DbFireRate));
-                SET_CHAR_ANIM_SPEED(pedHandle, WeapAnim, "dbfire_l", (DbFireRate));
-                if (pedHandle != Main.PlayerHandle)
+                if (OverridePedROF)
                 {
-                    SET_CHAR_ANIM_SPEED(pedHandle, "cover_l_high_corner", BFAnim, (BFFireRate));
-                    SET_CHAR_ANIM_SPEED(pedHandle, "cover_l_low_centre", BFAnim, (BFFireRate));
-                    SET_CHAR_ANIM_SPEED(pedHandle, "cover_l_low_corner", BFAnim, (BFFireRate));
-                    SET_CHAR_ANIM_SPEED(pedHandle, "cover_r_high_corner", BFAnim, (BFFireRate));
-                    SET_CHAR_ANIM_SPEED(pedHandle, "cover_r_low_centre", BFAnim, (BFFireRate));
-                    SET_CHAR_ANIM_SPEED(pedHandle, "cover_r_low_corner", BFAnim, (BFFireRate));
+                    SET_CHAR_ANIM_SPEED(pedHandle, WeapAnim, "fire", (FireRate));
+                    SET_CHAR_ANIM_SPEED(pedHandle, WeapAnim, "fire_crouch", (FireRate));
+                    SET_CHAR_ANIM_SPEED(pedHandle, WeapAnim, "fire_alt", (FireRate));
+                    SET_CHAR_ANIM_SPEED(pedHandle, WeapAnim, "fire_crouch_alt", (FireRate));
+                    SET_CHAR_ANIM_SPEED(pedHandle, WeapAnim, "fire_up", (FireRate));
+                    SET_CHAR_ANIM_SPEED(pedHandle, WeapAnim, "fire_down", (FireRate));
+                    SET_CHAR_ANIM_SPEED(pedHandle, WeapAnim, "dbfire", (DbFireRate));
+                    SET_CHAR_ANIM_SPEED(pedHandle, WeapAnim, "dbfire_l", (DbFireRate));
+                    if (pedHandle != Main.PlayerHandle)
+                    {
+                        SET_CHAR_ANIM_SPEED(pedHandle, "cover_l_high_corner", BFAnim, (BFFireRate));
+                        SET_CHAR_ANIM_SPEED(pedHandle, "cover_l_low_centre", BFAnim, (BFFireRate));
+                        SET_CHAR_ANIM_SPEED(pedHandle, "cover_l_low_corner", BFAnim, (BFFireRate));
+                        SET_CHAR_ANIM_SPEED(pedHandle, "cover_r_high_corner", BFAnim, (BFFireRate));
+                        SET_CHAR_ANIM_SPEED(pedHandle, "cover_r_low_centre", BFAnim, (BFFireRate));
+                        SET_CHAR_ANIM_SPEED(pedHandle, "cover_r_low_corner", BFAnim, (BFFireRate));
+                    }
+                }
+                else
+                {
+                    SET_CHAR_ANIM_SPEED(pedHandle, WeapAnim, "fire", IVWeaponInfo.GetWeaponInfo((uint)currWeap).FireRate);
+                    SET_CHAR_ANIM_SPEED(pedHandle, WeapAnim, "fire_crouch", IVWeaponInfo.GetWeaponInfo((uint)currWeap).FireRate);
+                    SET_CHAR_ANIM_SPEED(pedHandle, WeapAnim, "fire_alt", IVWeaponInfo.GetWeaponInfo((uint)currWeap).FireRate);
+                    SET_CHAR_ANIM_SPEED(pedHandle, WeapAnim, "fire_crouch_alt", IVWeaponInfo.GetWeaponInfo((uint)currWeap).FireRate);
+                    SET_CHAR_ANIM_SPEED(pedHandle, WeapAnim, "fire_up", IVWeaponInfo.GetWeaponInfo((uint)currWeap).FireRate);
+                    SET_CHAR_ANIM_SPEED(pedHandle, WeapAnim, "fire_down", IVWeaponInfo.GetWeaponInfo((uint)currWeap).FireRate);
+                    SET_CHAR_ANIM_SPEED(pedHandle, WeapAnim, "dbfire", (DbFireRate));
+                    SET_CHAR_ANIM_SPEED(pedHandle, WeapAnim, "dbfire_l", (DbFireRate));
+                    SET_CHAR_ANIM_SPEED(pedHandle, "cover_l_high_corner", BFAnim, IVWeaponInfo.GetWeaponInfo((uint)currWeap).BlindFireRate);
+                    SET_CHAR_ANIM_SPEED(pedHandle, "cover_l_low_centre", BFAnim, IVWeaponInfo.GetWeaponInfo((uint)currWeap).BlindFireRate);
+                    SET_CHAR_ANIM_SPEED(pedHandle, "cover_l_low_corner", BFAnim, IVWeaponInfo.GetWeaponInfo((uint)currWeap).BlindFireRate);
+                    SET_CHAR_ANIM_SPEED(pedHandle, "cover_r_high_corner", BFAnim, IVWeaponInfo.GetWeaponInfo((uint)currWeap).BlindFireRate);
+                    SET_CHAR_ANIM_SPEED(pedHandle, "cover_r_low_centre", BFAnim, IVWeaponInfo.GetWeaponInfo((uint)currWeap).BlindFireRate);
+                    SET_CHAR_ANIM_SPEED(pedHandle, "cover_r_low_corner", BFAnim, IVWeaponInfo.GetWeaponInfo((uint)currWeap).BlindFireRate);
                 }
             }
         }

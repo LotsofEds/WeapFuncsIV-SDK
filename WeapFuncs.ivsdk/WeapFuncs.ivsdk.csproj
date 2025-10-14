@@ -58,7 +58,7 @@
     <Compile Include="GLaunchAttachment.cs" />
     <Compile Include="LockOn.cs" />
     <Compile Include="Main.cs" />
-    <Compile Include="NPCSemiAutoShot.cs" />
+    <Compile Include="ShotgunBlindfireFix.cs" />
     <Compile Include="ObjectHelper.cs" />
     <Compile Include="ObjectTest.cs" />
     <Compile Include="PedHelper.cs" />
@@ -68,7 +68,6 @@
     <Compile Include="Recoil.cs" />
     <Compile Include="ReloadSpeed.cs" />
     <Compile Include="SelectFire.cs" />
-    <Compile Include="ShotgunBlindfireFix.cs" />
     <Compile Include="ShotgunRel.cs" />
     <Compile Include="ShottyHeadShot.cs" />
     <Compile Include="Silence.cs" />

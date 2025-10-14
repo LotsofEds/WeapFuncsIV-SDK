@@ -20,7 +20,6 @@ namespace WeapFuncs.ivsdk
         public static bool ReloadOnBikes;
         public static bool CrouchRelFix;
         public static bool SemiAutoShotgunBlindfire;
-        public static bool NPCSemiAutoShotgunBlindfire;
         public static bool ConsistentPistolBlindfireLoop;
         public static bool FullAutoPistol;
         public static bool FullAutoShotgun;
@@ -110,13 +109,11 @@ namespace WeapFuncs.ivsdk
             wfAttachConfig.Load();
 
             LoadSettings(Settings);
-            //if (GlobalRateOfFire)
-                //RateOfFire.LoadSettings(Settings);
+            if (GlobalRateOfFire)
+                RateOfFire.Init(Settings);
             BlindFireFixes.Init(Settings);
             if (SemiAutoShotgunBlindfire)
                 ShotgunBlindfireFix.Init(Settings);
-            if (NPCSemiAutoShotgunBlindfire)
-                NPCSemiAutoShot.Init(Settings);
             BlindFireFixes.Init(Settings);
             SwitchWeapNoReload.Init(Settings);
             if (AllRoundReload)
@@ -183,8 +180,6 @@ namespace WeapFuncs.ivsdk
             if (SemiAutoShotgunBlindfire)
                 ShotgunBlindfireFix.Tick();
             WeapFuncs.Tick();
-            if (NPCSemiAutoShotgunBlindfire)
-                NPCSemiAutoShot.Tick();
             if (SwitchWeaponNoReload)
                 SwitchWeapNoReload.Tick();
             if (AllRoundReload)
@@ -350,7 +345,6 @@ namespace WeapFuncs.ivsdk
             ReloadOnBikes = settings.GetBoolean("RELOADS", "ReloadOnBikes", false);
             CrouchRelFix = settings.GetBoolean("RELOADS", "MP5ReloadCrouchFix", false);
             SemiAutoShotgunBlindfire = settings.GetBoolean("BLINDFIRING", "SemiAutoShotgunBlindfire", false);
-            NPCSemiAutoShotgunBlindfire = settings.GetBoolean("BLINDFIRING", "NPCSemiAutoShotgunBlindfire", false);
             ConsistentPistolBlindfireLoop = settings.GetBoolean("BLINDFIRING", "ConsistentPistolBlindfireLoop", false);
             FullAutoPistol = settings.GetBoolean("BLINDFIRING", "FullAutoPistolBlindfire", false);
             FullAutoShotgun = settings.GetBoolean("BLINDFIRING", "FullAutoShotgunBlindfire", false);

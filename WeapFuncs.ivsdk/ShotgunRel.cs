@@ -72,7 +72,7 @@ namespace WeapFuncs.ivsdk
         {
             foreach (eWeaponType weaponType in AllRoundReloads)
             {
-                if (Main.currWeap == (int)weaponType)
+                if (Main.currWeap == (int)weaponType && !IS_CHAR_SITTING_IN_ANY_CAR(Main.PlayerHandle))
                 {
                     weapIndex = AllRoundReloads.IndexOf(weaponType);
                     wAnim = Main.WeapAnim;
