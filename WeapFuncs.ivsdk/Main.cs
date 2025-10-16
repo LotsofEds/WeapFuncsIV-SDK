@@ -115,9 +115,9 @@ namespace WeapFuncs.ivsdk
             if (SemiAutoShotgunBlindfire)
                 ShotgunBlindfireFix.Init(Settings);
             BlindFireFixes.Init(Settings);
-            SwitchWeapNoReload.Init(Settings);
             if (AllRoundReload)
                 ShotgunRel.Init(Settings);
+            SwitchWeapNoReload.Init(Settings);
             if (HeadShotty)
                 ShottyHeadShot.Init(Settings);
             WeaponZoom.Init(Settings);

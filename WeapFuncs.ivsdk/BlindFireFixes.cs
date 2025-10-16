@@ -356,38 +356,38 @@ namespace WeapFuncs.ivsdk
                         if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_l_high_corner", "rocket_blindfire"))
                         {
                             GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_l_high_corner", "rocket_blindfire", out AnimPointer);
-                            if (AnimPointer > 0.28 && AnimPointer < 0.5)
-                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_l_high_corner", "rocket_blindfire", 0.6f);
+                            if (AnimPointer > 0.2807 && AnimPointer < 0.5)
+                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_l_high_corner", "rocket_blindfire", 0.5965f);
                         }
                         else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_r_high_corner", "rocket_blindfire"))
                         {
                             GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_high_corner", "rocket_blindfire", out AnimPointer);
-                            if (AnimPointer > 0.37 && AnimPointer < 0.5)
-                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_high_corner", "rocket_blindfire", 0.65f);
+                            if (AnimPointer > 0.3673 && AnimPointer < 0.5)
+                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_high_corner", "rocket_blindfire", 0.65306f);
                         }
                         else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_l_low_corner", "rocket_blindfire"))
                         {
                             GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_l_low_corner", "rocket_blindfire", out AnimPointer);
-                            if (AnimPointer > 0.4 && AnimPointer < 0.5)
-                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_l_low_corner", "rocket_blindfire", 0.58f);
+                            if (AnimPointer > 0.3859 && AnimPointer < 0.5)
+                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_l_low_corner", "rocket_blindfire", 0.5789f);
                         }
                         else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_r_low_corner", "rocket_blindfire"))
                         {
                             GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_low_corner", "rocket_blindfire", out AnimPointer);
-                            if (AnimPointer > 0.34 && AnimPointer < 0.5)
-                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_low_corner", "rocket_blindfire", 0.61f);
+                            if (AnimPointer > 0.3333 && AnimPointer < 0.5)
+                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_low_corner", "rocket_blindfire", 0.6078f);
                         }
                         else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_l_low_centre", "rocket_blindfire"))
                         {
                             GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_l_low_centre", "rocket_blindfire", out AnimPointer);
-                            if (AnimPointer > 0.35 && AnimPointer < 0.5)
-                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_l_low_centre", "rocket_blindfire", 0.67f);
+                            if (AnimPointer > 0.3478 && AnimPointer < 0.5)
+                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_l_low_centre", "rocket_blindfire", 0.6739f);
                         }
                         else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_r_low_centre", "rocket_blindfire"))
                         {
                             GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_low_centre", "rocket_blindfire", out AnimPointer);
-                            if (AnimPointer > 0.39 && AnimPointer < 0.5)
-                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_low_centre", "rocket_blindfire", 0.61f);
+                            if (AnimPointer > 0.3877 && AnimPointer < 0.5)
+                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_low_centre", "rocket_blindfire", 0.6122f);
                         }
                     }
                 }

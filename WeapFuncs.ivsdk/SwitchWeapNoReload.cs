@@ -112,13 +112,16 @@ namespace WeapFuncs.ivsdk
                 if ((IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "p_load") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload_crouch")) && ammoList[currWeaponIndex] != Main.mAmmo && Main.pAmmo != Main.mAmmo && !isReloading)
                 {
                     GetAnimTime();
-                    if (animTime < 0.9f)
+                    if (animTime < 0.8f)
                     {
                         bool dontLoseAmmo = false;
                         foreach (eWeaponType weaponType in exceptionList)
                         {
                             if (currWeapon == (int)weaponType)
+                            {
                                 dontLoseAmmo = true;
+                                break;
+                            }
                         }
                         if (!Main.LoseAmmoInMag || dontLoseAmmo)
                             ammoList[currWeaponIndex] = Main.pAmmo;
@@ -137,12 +140,15 @@ namespace WeapFuncs.ivsdk
                 {
                     if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "p_load") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload_crouch") || isReloading)
                     {
-                        if (Main.pAmmo == Main.mAmmo)
+                        GetAnimTime();
+                        if (Main.pAmmo == Main.mAmmo && animTime >= 0.8f)
                         {
                             ammoList[currWeaponIndex] = Main.mAmmo;
                             currClip = ammoList[currWeaponIndex];
                             isReloading = false;
                         }
+                        else if (animTime < 0.8f && Main.pAmmo == Main.mAmmo)
+                            RevertAmmo();
                         else
                         {
                             ammoList[currWeaponIndex] = Main.pAmmo;

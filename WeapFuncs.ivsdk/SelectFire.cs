@@ -192,7 +192,7 @@ namespace WeapFuncs.ivsdk
                                                 CheckTime = true;
                                             }
 
-                                            IVGame.ShowSubtitleMessage(gTimer.ToString() + "  " + fTimer.ToString());
+                                            //IVGame.ShowSubtitleMessage(gTimer.ToString() + "  " + fTimer.ToString());
                                             if (gTimer >= (fTimer + timeBetBurst))
                                             {
                                                 CheckTime = false;

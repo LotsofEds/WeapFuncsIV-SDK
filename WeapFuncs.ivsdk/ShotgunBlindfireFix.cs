@@ -59,7 +59,20 @@ namespace WeapFuncs.ivsdk
             {
                 GET_CURRENT_CHAR_WEAPON(vped, out int thisWeapon);
                 GET_AMMO_IN_CLIP(vped, thisWeapon, out int currAmmo);
-                if (IS_CHAR_PLAYING_ANIM(vped, "cover_l_high_corner", "shotgun_blindfire"))
+
+                bool dontRemoveFromList = false;
+                foreach (eWeaponType weaponType in NotPump)
+                {
+                    if (thisWeapon == (int)weaponType)
+                    {
+                        dontRemoveFromList = true;
+                        break;
+                    }
+                }
+                if (!dontRemoveFromList)
+                    pedList.Remove(vped);
+
+                else if (IS_CHAR_PLAYING_ANIM(vped, "cover_l_high_corner", "shotgun_blindfire"))
                 {
                     GET_CHAR_ANIM_CURRENT_TIME(vped, "cover_l_high_corner", "shotgun_blindfire", out float ShotgunBF);
                     if (ShotgunBF > 0.3428 && ShotgunBF < 0.44)
