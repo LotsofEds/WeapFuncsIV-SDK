@@ -75,6 +75,8 @@ namespace WeapFuncs.ivsdk
                 {
                     if (Main.currWeap == i)
                     {
+                        LoadConfig(i);
+                        //IVGame.ShowSubtitleMessage(weapIDA.ToString() + "  " + weapIDB.ToString() + "  " + weapIDC.ToString() + "  " + weapIDD.ToString() + "  " + weapSlot.ToString());
                         switch (weapSlot)
                         {
                             case 1:
