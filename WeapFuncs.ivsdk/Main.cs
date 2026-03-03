@@ -33,34 +33,37 @@ namespace WeapFuncs.ivsdk
         public static GameKey SelectFireCtrl;
         public static bool AllRoundReload;
         public static bool HeadShotty;
+        public static bool TapFireFixEnable;
         public static bool GLaunchEnable;
         public static int numOfWeapIDs;
         public static bool flameOn;
         public static bool equipGun;
         public static bool enableStun;
+        public static bool enableHeatseeker;
+        public static bool recoilEnable;
 
         // Other variables n shit
         public static int gunModel;
         public static int Boolet;
-        public static uint CurrEp;
         public static int currWeap;
         public static int pAmmo;
         public static int aAmmo;
         public static int mAmmo;
         public static int wSlot;
+        public static uint CurrEp;
+        public static uint gTimer;
         public static float frameTime;
         public static string WeapAnim = "";
         public static string BFAnim = "";
         public static float weapReload = 1.0f;
         public static Vector3 WeapOffset = new Vector3(0, 0, 0);
-
-        public static DelayedCalling TheDelayedCaller;
         public static IVPed PlayerPed { get; set; }
         public static uint PlayerIndex { get; set; }
         public static int PlayerHandle { get; set; }
         public static Vector3 PlayerPos { get; set; }
 
         // SettingsFiles
+        public static SettingsFile wfConfig;
         public static SettingsFile attachmentConfig;
         public static SettingsFile wfAttachConfig;
         public Main()
@@ -70,33 +73,36 @@ namespace WeapFuncs.ivsdk
             GameLoad += Main_GameLoad;
             Tick += Main_Tick;
             ProcessCamera += Main_ProcessCamera;
-            TheDelayedCaller = new DelayedCalling();
             //TheWeaponHandler = new WeaponHandling();
         }
 
         private void Main_GameLoad(object sender, EventArgs e)
         {
+            currWeap = 0;
+            WeapAnim = "";
+            BFAnim = "";
+
+            DELETE_OBJECT(ref gunModel);
             GLaunchAttachment.OnGameLoad();
             WeaponZoom.OnGameLoad();
+            Pickups.OnGameLoad();
         }
 
         private void Main_Uninitialize(object sender, EventArgs e)
         {
-            if (TheDelayedCaller != null)
-            {
-                TheDelayedCaller.ClearAll();
-                TheDelayedCaller = null;
-            }
             WeapFuncs.UnInit();
             GLaunchAttachment.UnInit();
             EquipGun.UnInit();
             Pickups.UnInit();
             SwitchWeapNoReload.UnInit();
+            SelectFire.UnInit();
             //Silence.UnInit();
         }
 
         private void Main_Initialized(object sender, EventArgs e)
         {
+            wfConfig = new SettingsFile(string.Format("{0}\\IVSDKDotNet\\scripts\\WeapFuncs.ini", IVGame.GameStartupPath));
+            wfConfig.Load();
             if (System.IO.File.Exists(string.Format("{0}\\IVSDKDotNet\\scripts\\ImprovedGunStores\\Attachments.ini", IVGame.GameStartupPath)))
             {
                 attachmentConfig = new SettingsFile(string.Format("{0}\\IVSDKDotNet\\scripts\\ImprovedGunStores\\Attachments.ini", IVGame.GameStartupPath));
@@ -122,7 +128,10 @@ namespace WeapFuncs.ivsdk
                 ShottyHeadShot.Init(Settings);
             WeaponZoom.Init(Settings);
             if (FireMode)
+            {
                 SelectFire.Init(Settings);
+                PumpToSemi.Init(Settings);
+            }
             if (GLaunchEnable)
                 GLaunchAttachment.Init(Settings);
             if (flameOn)
@@ -132,8 +141,12 @@ namespace WeapFuncs.ivsdk
             Pickups.Init(Settings);
             if (enableStun)
                 Flashbang.Init(Settings);
-            Recoil.Init(Settings);
-            TapFireSpreadFix.Init(Settings);
+            if (recoilEnable)
+                Recoil.Init(Settings);
+            if (TapFireFixEnable)
+                TapFireSpreadFix.Init(Settings);
+            if (enableHeatseeker)
+                LockOn.Init(Settings);
         }
         public static bool InitialChecks()
         {
@@ -155,24 +168,25 @@ namespace WeapFuncs.ivsdk
             PlayerIndex = GET_PLAYER_ID();
             PlayerPos = PlayerPed.Matrix.Pos;
 
+            GET_GAME_TIMER(out gTimer);
+
             if (!InitialChecks())
                 return;
             if (PlayerPed == null)
                 return;
 
             GET_FRAME_TIME(out frameTime);
-            TheDelayedCaller.Process();
             GET_CURRENT_CHAR_WEAPON(PlayerHandle, out currWeap);
             GET_AMMO_IN_CLIP(PlayerHandle, currWeap, out pAmmo);
             GET_AMMO_IN_CHAR_WEAPON(PlayerHandle, currWeap, out aAmmo);
             GET_MAX_AMMO_IN_CLIP(PlayerHandle, currWeap, out mAmmo);
             GET_WEAPONTYPE_SLOT(currWeap, out wSlot);
+            CurrEp = GET_CURRENT_EPISODE();
             if (currWeap > 0)
                 LoadWeaponConfig(currWeap);
 
             PedHelper.GrabAllPeds();
-            //ObjectHelper.GrabAllObjs();
-            //VehHelper.GrabAllVehs();
+            ObjectHelper.GrabAllObjs();
             if (GlobalRateOfFire)
                 RateOfFire.Tick();
             ReloadSpeed.Tick();
@@ -187,21 +201,26 @@ namespace WeapFuncs.ivsdk
             if (HeadShotty)
                 ShottyHeadShot.Tick();
             if (FireMode)
+            {
                 SelectFire.Tick();
+                PumpToSemi.Tick();
+            }
             if (GLaunchEnable)
                 GLaunchAttachment.Tick();
             if (flameOn)
                 Flames.Tick();
             if (equipGun)
                 EquipGun.Tick();
+
             Pickups.Tick();
             if (enableStun)
                 Flashbang.Tick();
-            Recoil.Tick();
-            TapFireSpreadFix.Tick();
-
-            if (Pickups.limitedLoadout)
-                Pickups.GetMaxLoadout(Settings);
+            if (recoilEnable)
+                Recoil.Tick();
+            if (TapFireFixEnable)
+                TapFireSpreadFix.Tick();
+            if (enableHeatseeker)
+                LockOn.Tick();
 
             //Silence.Tick();
             //ObjectTest.Tick();
@@ -255,6 +274,37 @@ namespace WeapFuncs.ivsdk
                 return true;
             else
                 return false;
+        }
+        public static Vector3 QuaternionToRotation(float X, float Y, float Z, float W)
+        {
+            double num = W;
+            double num2 = X;
+            double num3 = Y;
+            double num4 = Z;
+            double y = ((double)Z * (double)Y + (double)X * (double)W) * 2.0;
+            double num5 = num;
+            double num6 = num5 * num5;
+            double num7 = num2;
+            double num8 = num6 - num7 * num7;
+            double num9 = num3;
+            double num10 = num8 - num9 * num9;
+            double num11 = num4;
+            float radians = (float)Math.Atan2(y, num10 + num11 * num11);
+            num2 = X;
+            num = W;
+            num3 = Y;
+            num4 = Z;
+            double y2 = ((double)Y * (double)X + (double)Z * (double)W) * 2.0;
+            double num12 = num2;
+            double num13 = num12 * num12;
+            double num14 = num;
+            double num15 = num13 + num14 * num14;
+            double num16 = num3;
+            double num17 = num15 - num16 * num16;
+            double num18 = num4;
+            float radians2 = (float)Math.Atan2(y2, num17 - num18 * num18);
+            float radians3 = (float)Math.Asin(((double)Z * (double)X - (double)Y * (double)W) * -2.0);
+            return new Vector3(Helper.RadianToDegree(radians), Helper.RadianToDegree(radians3), Helper.RadianToDegree(radians2));
         }
         public static Vector3 DirectionToRotation(Vector3 dir, float roll)
         {
@@ -358,10 +408,13 @@ namespace WeapFuncs.ivsdk
             SelectFireCtrl = (GameKey)settings.GetInteger("SELECT FIRE", "SelectFireControl", 23);
             AllRoundReload = settings.GetBoolean("RELOADS", "AllRoundReload", false);
             HeadShotty = settings.GetBoolean("OTHER", "LethalShotgunHeadshot", false);
+            TapFireFixEnable = settings.GetBoolean("RECOIL & BULLETSPREAD", "TapFireBulletspreadFix", false);
             GLaunchEnable = settings.GetBoolean("ATTACHMENTS", "GrenadeLauncherAttachment", false);
             flameOn = settings.GetBoolean("OTHER", "FlameEnable", false);
             equipGun = settings.GetBoolean("OTHER", "HolsteredWeaponsOnPlayer", false);
             enableStun = settings.GetBoolean("OTHER", "StunGrenadeEnable", false);
+            enableHeatseeker = settings.GetBoolean("HEATSEEKER", "HeatseekerEnable", false);
+            recoilEnable = settings.GetBoolean("RECOIL & BULLETSPREAD", "WeaponRecoil", false);
         }
     }
 }

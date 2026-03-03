@@ -24,6 +24,46 @@ namespace WeapFuncs.ivsdk
                 NotPump.Add(weaponType);
             }
         }
+
+        public static void FixShotgunBF(int ped)
+        {
+            if (IS_CHAR_PLAYING_ANIM(ped, "cover_l_high_corner", "shotgun_blindfire"))
+            {
+                GET_CHAR_ANIM_CURRENT_TIME(ped, "cover_l_high_corner", "shotgun_blindfire", out float ShotgunBF);
+                if (ShotgunBF > 0.3428 && ShotgunBF < 0.44)
+                    SET_CHAR_ANIM_CURRENT_TIME(ped, "cover_l_high_corner", "shotgun_blindfire", 0.7f);
+            }
+            else if (IS_CHAR_PLAYING_ANIM(ped, "cover_r_high_corner", "shotgun_blindfire"))
+            {
+                GET_CHAR_ANIM_CURRENT_TIME(ped, "cover_r_high_corner", "shotgun_blindfire", out float ShotgunBF);
+                if (ShotgunBF > 0.3676 && ShotgunBF < 0.51)
+                    SET_CHAR_ANIM_CURRENT_TIME(ped, "cover_r_high_corner", "shotgun_blindfire", 0.7353f);
+            }
+            else if (IS_CHAR_PLAYING_ANIM(ped, "cover_l_low_centre", "shotgun_blindfire"))
+            {
+                GET_CHAR_ANIM_CURRENT_TIME(ped, "cover_l_low_centre", "shotgun_blindfire", out float ShotgunBF);
+                if (ShotgunBF > 0.3875 && ShotgunBF < 0.51)
+                    SET_CHAR_ANIM_CURRENT_TIME(ped, "cover_l_low_centre", "shotgun_blindfire", 0.7f);
+            }
+            else if (IS_CHAR_PLAYING_ANIM(ped, "cover_r_low_centre", "shotgun_blindfire"))
+            {
+                GET_CHAR_ANIM_CURRENT_TIME(ped, "cover_r_low_centre", "shotgun_blindfire", out float ShotgunBF);
+                if (ShotgunBF > 0.3239 && ShotgunBF < 0.51)
+                    SET_CHAR_ANIM_CURRENT_TIME(ped, "cover_r_low_centre", "shotgun_blindfire", 0.676f);
+            }
+            else if (IS_CHAR_PLAYING_ANIM(ped, "cover_l_low_corner", "shotgun_blindfire"))
+            {
+                GET_CHAR_ANIM_CURRENT_TIME(ped, "cover_l_low_corner", "shotgun_blindfire", out float ShotgunBF);
+                if (ShotgunBF > 0.3589 && ShotgunBF < 0.51)
+                    SET_CHAR_ANIM_CURRENT_TIME(ped, "cover_l_low_corner", "shotgun_blindfire", 0.6794f);
+            }
+            else if (IS_CHAR_PLAYING_ANIM(ped, "cover_r_low_corner", "shotgun_blindfire"))
+            {
+                GET_CHAR_ANIM_CURRENT_TIME(ped, "cover_r_low_corner", "shotgun_blindfire", out float ShotgunBF);
+                if (ShotgunBF > 0.3285 && ShotgunBF < 0.51)
+                    SET_CHAR_ANIM_CURRENT_TIME(ped, "cover_r_low_corner", "shotgun_blindfire", 0.6857f);
+            }
+        }
         public static void Tick()
         {
             foreach (var ped in PedHelper.PedHandles)
@@ -36,46 +76,10 @@ namespace WeapFuncs.ivsdk
                 foreach (eWeaponType weaponType in NotPump)
                 {
                     GET_CURRENT_CHAR_WEAPON(pedHandle, out int currentWeapon);
-                    GET_AMMO_IN_CLIP(pedHandle, currentWeapon, out int pAmmo);
 
                     if (currentWeapon == (int)weaponType)
                     {
-                        if (IS_CHAR_PLAYING_ANIM(pedHandle, "cover_l_high_corner", "shotgun_blindfire"))
-                        {
-                            GET_CHAR_ANIM_CURRENT_TIME(pedHandle, "cover_l_high_corner", "shotgun_blindfire", out float ShotgunBF);
-                            if (ShotgunBF > 0.3428 && ShotgunBF < 0.44)
-                                SET_CHAR_ANIM_CURRENT_TIME(pedHandle, "cover_l_high_corner", "shotgun_blindfire", 0.7f);
-                        }
-                        else if (IS_CHAR_PLAYING_ANIM(pedHandle, "cover_r_high_corner", "shotgun_blindfire"))
-                        {
-                            GET_CHAR_ANIM_CURRENT_TIME(pedHandle, "cover_r_high_corner", "shotgun_blindfire", out float ShotgunBF);
-                            if (ShotgunBF > 0.3676 && ShotgunBF < 0.51)
-                                SET_CHAR_ANIM_CURRENT_TIME(pedHandle, "cover_r_high_corner", "shotgun_blindfire", 0.7353f);
-                        }
-                        else if (IS_CHAR_PLAYING_ANIM(pedHandle, "cover_l_low_centre", "shotgun_blindfire"))
-                        {
-                            GET_CHAR_ANIM_CURRENT_TIME(pedHandle, "cover_l_low_centre", "shotgun_blindfire", out float ShotgunBF);
-                            if (ShotgunBF > 0.3875 && ShotgunBF < 0.51)
-                                SET_CHAR_ANIM_CURRENT_TIME(pedHandle, "cover_l_low_centre", "shotgun_blindfire", 0.7f);
-                        }
-                        else if (IS_CHAR_PLAYING_ANIM(pedHandle, "cover_r_low_centre", "shotgun_blindfire"))
-                        {
-                            GET_CHAR_ANIM_CURRENT_TIME(pedHandle, "cover_r_low_centre", "shotgun_blindfire", out float ShotgunBF);
-                            if (ShotgunBF > 0.3239 && ShotgunBF < 0.51)
-                                SET_CHAR_ANIM_CURRENT_TIME(pedHandle, "cover_r_low_centre", "shotgun_blindfire", 0.676f);
-                        }
-                        else if (IS_CHAR_PLAYING_ANIM(pedHandle, "cover_l_low_corner", "shotgun_blindfire"))
-                        {
-                            GET_CHAR_ANIM_CURRENT_TIME(pedHandle, "cover_l_low_corner", "shotgun_blindfire", out float ShotgunBF);
-                            if (ShotgunBF > 0.3589 && ShotgunBF < 0.51)
-                                SET_CHAR_ANIM_CURRENT_TIME(pedHandle, "cover_l_low_corner", "shotgun_blindfire", 0.6794f);
-                        }
-                        else if (IS_CHAR_PLAYING_ANIM(pedHandle, "cover_r_low_corner", "shotgun_blindfire"))
-                        {
-                            GET_CHAR_ANIM_CURRENT_TIME(pedHandle, "cover_r_low_corner", "shotgun_blindfire", out float ShotgunBF);
-                            if (ShotgunBF > 0.3285 && ShotgunBF < 0.51)
-                                SET_CHAR_ANIM_CURRENT_TIME(pedHandle, "cover_r_low_corner", "shotgun_blindfire", 0.6857f);
-                        }
+                        FixShotgunBF(pedHandle);
                     }
                 }
             }

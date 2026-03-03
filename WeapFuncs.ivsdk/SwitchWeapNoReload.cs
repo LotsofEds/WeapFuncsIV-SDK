@@ -112,7 +112,7 @@ namespace WeapFuncs.ivsdk
                 if ((IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "p_load") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload_crouch")) && ammoList[currWeaponIndex] != Main.mAmmo && Main.pAmmo != Main.mAmmo && !isReloading)
                 {
                     GetAnimTime();
-                    if (animTime < 0.8f)
+                    if (animTime < 0.6f)
                     {
                         bool dontLoseAmmo = false;
                         foreach (eWeaponType weaponType in exceptionList)
@@ -141,13 +141,13 @@ namespace WeapFuncs.ivsdk
                     if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "p_load") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload_crouch") || isReloading)
                     {
                         GetAnimTime();
-                        if (Main.pAmmo == Main.mAmmo && animTime >= 0.8f)
+                        if (Main.pAmmo == Main.mAmmo && animTime >= 0.6f)
                         {
                             ammoList[currWeaponIndex] = Main.mAmmo;
                             currClip = ammoList[currWeaponIndex];
                             isReloading = false;
                         }
-                        else if (animTime < 0.8f && Main.pAmmo == Main.mAmmo)
+                        else if (animTime < 0.6f && Main.pAmmo == Main.mAmmo)
                             RevertAmmo();
                         else
                         {

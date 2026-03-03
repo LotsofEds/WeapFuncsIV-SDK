@@ -27,7 +27,7 @@ namespace WeapFuncs.ivsdk
         }
         public static void Tick()
         {
-            if (!DOES_OBJECT_EXIST(dummyObj))
+            /*if (!DOES_OBJECT_EXIST(dummyObj))
             {
                 //GET_GAME_CAM(out int cam);
                 //GET_CAM_ROT(cam, out Vector3 cRot);
@@ -38,7 +38,7 @@ namespace WeapFuncs.ivsdk
                 SET_OBJECT_HEADING(dummyObj, pHdng);
                 SET_OBJECT_COORDINATES(dummyObj, pos);
                 ATTACH_OBJECT_TO_PED(dummyObj, Main.PlayerHandle, (uint)eBone.BONE_RIGHT_HAND, 0.12f, 0f, 0f, 0, 0, 0, 0);
-            }
+            }*/
             /*else
             {
                 GET_GAME_CAM(out int cam);
@@ -53,7 +53,7 @@ namespace WeapFuncs.ivsdk
                 //GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, Main.WeapAnim, "fire", out float wTime);
                 //if (wTime > 0.02 && wTime < 0.82)
                 //{
-                if (IS_CONTROL_JUST_PRESSED(0, (int)GameKey.RadarZoom))
+                /*if (IS_CONTROL_JUST_PRESSED(0, (int)GameKey.RadarZoom))
                 //if (NativeControls.IsGameKeyPressed(0, GameKey.EnterCar))
                 {
                     SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, Main.WeapAnim, "fire", 0.82f);
@@ -61,7 +61,7 @@ namespace WeapFuncs.ivsdk
                     GET_OFFSET_FROM_OBJECT_IN_WORLD_COORDS(dummyObj, new Vector3(0.0f, 20.0f, -0.0f), out Vector3 pOffB);
                     FIRE_SINGLE_BULLET(pOffA, pOffB, 7);
                     PLAY_SOUND_FROM_OBJECT(soundID, "SILENCED_PISTOL_FIRE", dummyObj);
-                }
+                }*/
                 /*if (wTime < 0.82)
                 SET_AMMO_IN_CLIP(Main.PlayerHandle, Main.currWeap, 0);
                 else if (NativeControls.IsGameKeyPressed(0, GameKey.Attack) || wTime >= 0.82)
@@ -69,6 +69,31 @@ namespace WeapFuncs.ivsdk
                     SET_AMMO_IN_CLIP(Main.PlayerHandle, Main.currWeap, 15);
                 }*/
                 //}
+
+                SET_PLAYER_INVISIBLE_TO_AI(true);
+                SET_EVERYONE_IGNORE_PLAYER((int)Main.PlayerIndex, true);
+                GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "gun@handgun", "fire", out float animTime);
+                if (IS_CHAR_SHOOTING(Main.PlayerHandle) || (animTime < 0.99 && animTime > 0.8))
+                {
+                    IVGame.ShowSubtitleMessage(animTime.ToString());
+                    foreach (var ped in PedHelper.PedHandles)
+                    {
+                        int pedHandle = ped.Value;
+                        if (pedHandle == Main.PlayerHandle)
+                            continue;
+
+                        //SET_PED_HEEDS_THE_EVERYONE_IGNORE_PLAYER_FLAG(pedHandle, true);
+                        if (!DOES_CHAR_EXIST(pedHandle) || IS_CHAR_DEAD(pedHandle))
+                            continue;
+
+                        GET_CHAR_COORDINATES(pedHandle, out Vector3 pedPos);
+                        GET_DISTANCE_BETWEEN_COORDS_3D(Main.PlayerPos.X, Main.PlayerPos.Y, Main.PlayerPos.Z, pedPos.X, pedPos.Y, pedPos.Z, out float dist);
+                        if (dist > 15)
+                            continue;
+
+                        SET_EVERYONE_IGNORE_PLAYER((int)Main.PlayerIndex, false);
+                    }
+                }
             }
         }
     }

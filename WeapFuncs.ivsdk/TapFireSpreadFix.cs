@@ -10,8 +10,6 @@ namespace WeapFuncs.ivsdk
 {
     internal class TapFireSpreadFix
     {
-        private static bool enable;
-
         private static bool getAccuracy;
         private static bool isFiring;
         private static float defaultAccuracy;
@@ -28,8 +26,6 @@ namespace WeapFuncs.ivsdk
         public static void Init(SettingsFile settings)
         {
             exceptionList.Clear();
-            enable = settings.GetBoolean("RECOIL & BULLETSPREAD", "TapFireBulletspreadFix", false);
-
             AdditionalSpread = settings.GetFloat("RECOIL & BULLETSPREAD", "TapFireAccuracyPenalty", 3.0f);
             SpreadDecayRate = settings.GetFloat("RECOIL & BULLETSPREAD", "AccuracyPenaltyDecayRate", 15.0f);
             MaxSpread = settings.GetFloat("RECOIL & BULLETSPREAD", "MaxPenaltyMultiplier", 17.5f);
@@ -44,9 +40,6 @@ namespace WeapFuncs.ivsdk
 
         public static void Tick()
         {
-            if (!enable)
-                return;
-
             bool tapFireException = false;
             foreach (eWeaponType weaponType in exceptionList)
             {

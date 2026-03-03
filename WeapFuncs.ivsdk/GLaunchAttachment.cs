@@ -24,6 +24,8 @@ namespace WeapFuncs.ivsdk
         private static string glModel;
         private static Vector3 glModelOff;
         private static Vector3 glModelRot;
+        private static Vector3 glModelReloadOff;
+        private static Vector3 glModelReloadRot;
         private static string projModel;
         private static string reloadAnim = "";
         private static Vector3 grndOffset;
@@ -53,7 +55,6 @@ namespace WeapFuncs.ivsdk
         // Some Other Shit
         private static int currWeap;
         private static uint fTimer;
-        private static uint gTimer;
         private static int glAttachProp;
         private static int grenObj;
         private static Vector3 attachPos;
@@ -65,6 +66,8 @@ namespace WeapFuncs.ivsdk
         private static int trailFxID = -1;
         private static uint pModel;
         private static uint wModel;
+
+        private static int wObj;
         public static void Init(SettingsFile settings)
         {
             attachmentUnlocks = new bool[Main.numOfWeapIDs];
@@ -107,6 +110,8 @@ namespace WeapFuncs.ivsdk
                 reloadAnim = Main.wfAttachConfig.GetValue(weapon.ToString(), "GrenadeLauncherReloadAnim", "");
                 glModelOff = Main.wfAttachConfig.GetVector3(weapon.ToString(), "GrenadeLauncherOffset", Vector3.Zero);
                 glModelRot = Main.wfAttachConfig.GetVector3(weapon.ToString(), "GrenadeLauncherRot", Vector3.Zero);
+                glModelReloadOff = Main.wfAttachConfig.GetVector3(weapon.ToString(), "GrenadeLauncherReloadOffset", Vector3.Zero);
+                glModelReloadRot = Main.wfAttachConfig.GetVector3(weapon.ToString(), "GrenadeLauncherReloadRot", Vector3.Zero);
                 grndOffset = Main.wfAttachConfig.GetVector3(weapon.ToString(), "GrenadeOffset", Vector3.Zero);
                 grndRot = Main.wfAttachConfig.GetVector3(weapon.ToString(), "GrenadeRot", Vector3.Zero);
                 gAmmo = Main.wfAttachConfig.GetInteger(IVGenericGameStorage.ValidSaveName, weapon.ToString() + "GrenadeAmmo", 0);
@@ -163,10 +168,9 @@ namespace WeapFuncs.ivsdk
                 if (IS_CHAR_DEAD(pedHandle))
                     continue;
 
-                GET_CHAR_MODEL(pedHandle, out uint pedModel);
-                GET_CURRENT_BASIC_COP_MODEL(out uint copModel);
+                GET_PED_TYPE(pedHandle, out uint pedType);
 
-                if (pedModel != copModel)
+                if (pedType != (uint)ePedType.PED_TYPE_COP)
                     continue;
 
                 GET_CHAR_COORDINATES(pedHandle, out Vector3 pedPos);
@@ -180,8 +184,6 @@ namespace WeapFuncs.ivsdk
         }
         public static void Tick()
         {
-            GET_GAME_TIMER(out gTimer);
-
             LoadWeaponConfig((int)Main.currWeap);
             if (hasAttachment && wIndex == Main.currWeap && !isReloading)
             {
@@ -193,7 +195,47 @@ namespace WeapFuncs.ivsdk
                 attachmentUnlocks[Main.currWeap] = true;
                 grenadeAmmo[Main.currWeap] = gAmmo;
 
-                if (!DOES_OBJECT_EXIST(glAttachProp))
+                GET_WEAPONTYPE_MODEL(Main.currWeap, out wModel);
+
+                foreach (var obj in ObjectHelper.ObjHandles)
+                {
+                    int objHandle = obj.Value;
+
+                    GET_OBJECT_COORDINATES(objHandle, out float objX, out float objY, out float objZ);
+
+                    GET_DISTANCE_BETWEEN_COORDS_3D(Main.PlayerPos.X, Main.PlayerPos.Y, Main.PlayerPos.Z, objX, objY, objZ, out float Dist);
+                    if (Dist > 1)
+                        continue;
+
+                    GET_OBJECT_MODEL(objHandle, out pModel);
+                    
+                    if (pModel == wModel && !weapInHand)
+                    {
+                        wObj = objHandle;
+                        weapInHand = true;
+                    }
+                }
+                if (weapInHand)
+                {
+                    if (!DOES_OBJECT_EXIST(glAttachProp))
+                    {
+                        GET_PED_BONE_POSITION(Main.PlayerHandle, 1232, glModelOff, out attachPos);
+                        CREATE_OBJECT(GET_HASH_KEY(glModel), attachPos, out glAttachProp, true);
+                        //SET_OBJECT_CCD(glAttachProp, false);
+                        //SET_OBJECT_PHYSICS_PARAMS(glAttachProp, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0);
+                        //ATTACH_OBJECT_TO_PED(glAttachProp, Main.PlayerHandle, 1232, glModelOff.X, glModelOff.Y, glModelOff.Z, glModelRot.X, glModelRot.Y, glModelRot.Z, 0);
+                    }
+                    else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload_crouch") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "p_load"))
+                        ATTACH_OBJECT_TO_OBJECT(glAttachProp, wObj, 0, glModelReloadOff.X, glModelReloadOff.Y, glModelReloadOff.Z, glModelReloadRot.X, glModelReloadRot.Y, glModelReloadRot.Z);
+                    else
+                        ATTACH_OBJECT_TO_PED(glAttachProp, Main.PlayerHandle, 1232, glModelOff.X, glModelOff.Y, glModelOff.Z, glModelRot.X, glModelRot.Y, glModelRot.Z, 0);
+                        //ATTACH_OBJECT_TO_OBJECT(glAttachProp, wObj, 0, glModelOff.X, glModelOff.Y, glModelOff.Z, glModelRot.X, glModelRot.Y, glModelRot.Z);
+                }
+                wIndex = Main.currWeap;
+                OnButtonPress();
+            }
+
+            /*if (!DOES_OBJECT_EXIST(glAttachProp))
                 {
                     SET_CHAR_CURRENT_WEAPON_VISIBLE(Main.PlayerHandle, true);
                     //SET_CURRENT_CHAR_WEAPON(Main.PlayerHandle, wIndex, true);
@@ -203,16 +245,21 @@ namespace WeapFuncs.ivsdk
                 }
                 wIndex = Main.currWeap;
                 OnButtonPress();
-            }
-            else if (wIndex != Main.currWeap || pModel != wModel)
+            }*/
+            else if (wIndex != Main.currWeap)
             {
                 hasAttachment = false;
-                DELETE_OBJECT(ref glAttachProp);
                 wIndex = Main.currWeap;
             }
-            if (IS_HUD_PREFERENCE_SWITCHED_ON() && gTimer > 0 && gTimer <= (fTimer + 5000))
+
+            if (!DOES_OBJECT_EXIST(wObj))
             {
-                if (gTimer > (fTimer + 4000))
+                DELETE_OBJECT(ref glAttachProp);
+                weapInHand = false;
+            }
+            if (IS_HUD_PREFERENCE_SWITCHED_ON() && Main.gTimer > 0 && Main.gTimer <= (fTimer + 5000))
+            {
+                if (Main.gTimer > (fTimer + 4000))
                     alpha -= ((uint)(Main.frameTime * 250f));
                 else
                     alpha = 255;
@@ -283,7 +330,7 @@ namespace WeapFuncs.ivsdk
                     }
                 }
 
-                if (HAS_OBJECT_COLLIDED_WITH_ANYTHING(grenObj) || (gTimer >= (fTimer + fuseTime)))
+                if (HAS_OBJECT_COLLIDED_WITH_ANYTHING(grenObj) || (Main.gTimer >= (fTimer + fuseTime)))
                 {
                     cantFire = false;
                     GET_OBJECT_COORDINATES(grenObj, out Vector3 gPos);

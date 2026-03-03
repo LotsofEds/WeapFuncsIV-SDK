@@ -36,7 +36,7 @@ namespace WeapFuncs.ivsdk
         {
             flameWeapon = settings.GetInteger("OTHER", "FlameWeaponID", 19);
             flameOffset = settings.GetVector3("OTHER", "FlameOffset", Vector3.Zero);
-            flameExplosion = settings.GetInteger("OTHER", "FlameExplosion", 23);
+            flameExplosion = settings.GetInteger("OTHER", "FlameExplosionID", 23);
             flameSpeed = settings.GetFloat("OTHER", "FlameSpeed", 8);
         }
         public static void Tick()

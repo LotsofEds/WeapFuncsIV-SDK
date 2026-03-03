@@ -30,6 +30,7 @@ namespace WeapFuncs.ivsdk
         }
         public static void OnGameLoad()
         {
+            pWeap = 0;
             for (int i = 0; i < Main.numOfWeapIDs; i++)
             {
                 if (Main.attachmentConfig.DoesSectionExists(i.ToString()))

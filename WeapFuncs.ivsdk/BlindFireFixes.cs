@@ -33,8 +33,6 @@ namespace WeapFuncs.ivsdk
         {
             if (!IS_CHAR_DEAD(Main.PlayerHandle) && !IS_PED_RAGDOLL(Main.PlayerHandle) && !IS_CHAR_GETTING_UP(Main.PlayerHandle))
             {
-                Main.CurrEp = GET_CURRENT_EPISODE();
-
                 foreach (eWeaponType weaponType in Automatics)
                 {
                     if (Main.currWeap == (int)weaponType)

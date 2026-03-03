@@ -48,10 +48,9 @@ namespace WeapFuncs.ivsdk
             }
             if (faceExplosion)
             {
-                GET_GAME_TIMER(out uint gTimer);
-                if (IS_HUD_PREFERENCE_SWITCHED_ON() && gTimer > 0 && gTimer <= (fTimer + 5000))
+                if (Main.gTimer > 0 && Main.gTimer <= (fTimer + 5000))
                 {
-                    if (gTimer > (fTimer + 2000))
+                    if (Main.gTimer > (fTimer + 2000))
                         alpha -= ((int)(Main.frameTime * 120f));
                     else
                         alpha = 255;

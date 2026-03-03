@@ -11,7 +11,6 @@ namespace WeapFuncs.ivsdk
 {
     internal class Recoil
     {
-        private static bool enable;
         private static bool enableIncrease;
         private static bool recoilDebug;
 
@@ -32,7 +31,6 @@ namespace WeapFuncs.ivsdk
         private static float appliedRecoil;
         public static void Init(SettingsFile settings)
         {
-            enable = settings.GetBoolean("RECOIL & BULLETSPREAD", "WeaponRecoil", false);
             enableIncrease = settings.GetBoolean("RECOIL & BULLETSPREAD", "IncreasingRecoil", false);
             recoilDebug = settings.GetBoolean("RECOIL & BULLETSPREAD", "RecoilDebug", false);
         }
@@ -56,9 +54,6 @@ namespace WeapFuncs.ivsdk
         }
         public static void Tick()
         {
-            if (!enable)
-                return;
-
             cam = NativeCamera.GetGameCam();
             appliedRecoil = CurrentRecoil;
 

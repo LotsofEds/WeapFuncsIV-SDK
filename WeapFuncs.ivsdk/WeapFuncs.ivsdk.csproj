@@ -51,13 +51,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BlindFireFixes.cs" />
-    <Compile Include="DelayedCaller.cs" />
     <Compile Include="EquipGun.cs" />
     <Compile Include="Flames.cs" />
     <Compile Include="Flashbang.cs" />
     <Compile Include="GLaunchAttachment.cs" />
     <Compile Include="LockOn.cs" />
     <Compile Include="Main.cs" />
+    <Compile Include="PumpToSemi.cs" />
     <Compile Include="ShotgunBlindfireFix.cs" />
     <Compile Include="ObjectHelper.cs" />
     <Compile Include="ObjectTest.cs" />

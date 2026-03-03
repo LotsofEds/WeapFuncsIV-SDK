@@ -19,10 +19,15 @@ namespace WeapFuncs.ivsdk
         private static uint fTimer;
 
         private static bool hasPressedButton;
-        private static bool GotAmmo;
         private static bool getAccTime;
 
+        private static float totalTime;
+        private static float animTime = -1;
+        private static float frameSkipTime;
+
         private static int weapIndex;
+        private static int frameTimeSkip;
+
         private static float accuracyTimeBurstNum;
         private static float accuracyTimeBurstMult;
         private static float accuracyTimeSemiNum;
@@ -39,15 +44,8 @@ namespace WeapFuncs.ivsdk
         private static string pBFAnim = "";
 
         private static readonly List<eWeaponType> BurstWeaps = new List<eWeaponType>();
+        private static List<float> AnimLoopEnd = new List<float>();
 
-        private static List<float> Loop1 = new List<float>();
-        private static List<float> Loop2 = new List<float>();
-        private static List<float> Loop3 = new List<float>();
-        private static List<float> Loop4 = new List<float>();
-        private static List<float> Loop5 = new List<float>();
-        private static List<float> Loop6 = new List<float>();
-        private static List<float> Loop7 = new List<float>();
-        private static List<float> Loop8 = new List<float>();
         public static void Init(SettingsFile settings)
         {
             timeBetBurst = settings.GetInteger("SELECT FIRE", "TimeBetweenShots", 250);
@@ -55,7 +53,9 @@ namespace WeapFuncs.ivsdk
             accuracyTimeBurstMult = settings.GetFloat("SELECT FIRE", "BurstAccuracyMult", 8);
             accuracyTimeSemiNum = settings.GetFloat("SELECT FIRE", "SemiAutoAccuracyTime", 0);
             accuracyTimeSemiMult = settings.GetFloat("SELECT FIRE", "SemiAutoAccuracyMult", 16);
-            string weaponString = settings.GetValue("SELECT FIRE", "SelectFireWeapons", "");
+            frameTimeSkip = settings.GetInteger("SELECT FIRE", "FrameCheckRate", 200);
+
+            string weaponString = settings.GetValue("SELECT FIRE", "BurstSemiWeapons", "");
             BurstWeaps.Clear();
             foreach (var weaponName in weaponString.Split(','))
             {
@@ -63,30 +63,14 @@ namespace WeapFuncs.ivsdk
                 BurstWeaps.Add(weaponType);
             }
 
-            Loop1.Clear();
-            Loop2.Clear();
-            Loop3.Clear();
-            Loop4.Clear();
-            Loop5.Clear();
-            Loop6.Clear();
-            Loop7.Clear();
-            Loop8.Clear();
-            string wLoop1 = settings.GetValue("SELECT FIRE", "SelectFireLoopNormal", "");
-            Loop1 = wLoop1.Split(',').Select(float.Parse).ToList();
-            string wLoop2 = settings.GetValue("SELECT FIRE", "SelectFireLoopDriveBy", "");
-            Loop2 = wLoop2.Split(',').Select(float.Parse).ToList();
-            string wLoop3 = settings.GetValue("SELECT FIRE", "SelectFireLoopBlindFireLHigh", "");
-            Loop3 = wLoop3.Split(',').Select(float.Parse).ToList();
-            string wLoop4 = settings.GetValue("SELECT FIRE", "SelectFireLoopBlindFireLCntr", "");
-            Loop4 = wLoop4.Split(',').Select(float.Parse).ToList();
-            string wLoop5 = settings.GetValue("SELECT FIRE", "SelectFireLoopBlindFireLCrnr", "");
-            Loop5 = wLoop5.Split(',').Select(float.Parse).ToList();
-            string wLoop6 = settings.GetValue("SELECT FIRE", "SelectFireLoopBlindFireRHigh", "");
-            Loop6 = wLoop6.Split(',').Select(float.Parse).ToList();
-            string wLoop7 = settings.GetValue("SELECT FIRE", "SelectFireLoopBlindFireRCntr", "");
-            Loop7 = wLoop7.Split(',').Select(float.Parse).ToList();
-            string wLoop8 = settings.GetValue("SELECT FIRE", "SelectFireLoopBlindFireRCrnr", "");
-            Loop8 = wLoop8.Split(',').Select(float.Parse).ToList();
+            AnimLoopEnd.Clear();
+            string wLoop = settings.GetValue("SELECT FIRE", "BurstSemiAnimEnd", "");
+            AnimLoopEnd = wLoop.Split(',').Select(float.Parse).ToList();
+
+        }
+        public static void UnInit()
+        {
+            IVWeaponInfo.GetWeaponInfo((uint)pWeapon).AimingAccuracyTime = defaultAccTime;
         }
         public static void Tick()
         {
@@ -100,6 +84,7 @@ namespace WeapFuncs.ivsdk
                     if (Main.currWeap == (int)weaponType)
                     {
                         weapIndex = BurstWeaps.IndexOf(weaponType);
+
                         GET_MAX_AMMO_IN_CLIP(Main.PlayerHandle, Main.currWeap, out int pMaxAmmo);
                         if (Main.IsPressingAimButton() && (NativeControls.IsGameKeyPressed(0, Main.SelectFireCtrl) || NativeControls.IsGameKeyPressed(2, Main.SelectFireCtrl)) && !NativeControls.IsGameKeyPressed(0, GameKey.Attack) && !NativeControls.IsGameKeyPressed(2, GameKey.Attack) && !hasPressedButton)
                         {
@@ -157,35 +142,100 @@ namespace WeapFuncs.ivsdk
 
                                 if ((NativeControls.IsGameKeyPressed(0, GameKey.Attack) || NativeControls.IsGameKeyPressed(2, GameKey.Attack)) && Main.pAmmo > 0)
                                 {
-                                    if ((!GotAmmo && Main.pAmmo != 0) || Main.pAmmo == pMaxAmmo)
+                                    if (IS_CHAR_SHOOTING(Main.PlayerHandle) && animTime == -1)
                                     {
-                                        lastAmmo = Main.pAmmo;
-                                        GotAmmo = true;
+                                        if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, pWeapAnim, "fire"))
+                                        {
+                                            GET_CHAR_ANIM_TOTAL_TIME(Main.PlayerHandle, pWeapAnim, "fire", out totalTime);
+                                            GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire", out animTime);
+                                        }
+                                        else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, pWeapAnim, "fire_alt"))
+                                        {
+                                            GET_CHAR_ANIM_TOTAL_TIME(Main.PlayerHandle, pWeapAnim, "fire_alt", out totalTime);
+                                            GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_alt", out animTime);
+                                        }
+                                        else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, pWeapAnim, "fire_up"))
+                                        {
+                                            GET_CHAR_ANIM_TOTAL_TIME(Main.PlayerHandle, pWeapAnim, "fire_up", out totalTime);
+                                            GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_up", out animTime);
+                                        }
+                                        else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, pWeapAnim, "fire_down"))
+                                        {
+                                            GET_CHAR_ANIM_TOTAL_TIME(Main.PlayerHandle, pWeapAnim, "fire_down", out totalTime);
+                                            GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_down", out animTime);
+                                        }
+                                        else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, pWeapAnim, "fire_crouch"))
+                                        {
+                                            GET_CHAR_ANIM_TOTAL_TIME(Main.PlayerHandle, pWeapAnim, "fire_crouch", out totalTime);
+                                            GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_crouch", out animTime);
+                                        }
+                                        else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, pWeapAnim, "fire_crouch_alt"))
+                                        {
+                                            GET_CHAR_ANIM_TOTAL_TIME(Main.PlayerHandle, pWeapAnim, "fire_crouch_alt", out totalTime);
+                                            GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_crouch_alt", out animTime);
+                                        }
+                                        else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_l_high_corner", pBFAnim))
+                                        {
+                                            GET_CHAR_ANIM_TOTAL_TIME(Main.PlayerHandle, "cover_l_high_corner", pBFAnim, out totalTime);
+                                            GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_l_high_corner", pBFAnim, out animTime);
+                                        }
+                                        else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_l_low_centre", pBFAnim))
+                                        {
+                                            GET_CHAR_ANIM_TOTAL_TIME(Main.PlayerHandle, "cover_l_low_centre", pBFAnim, out totalTime);
+                                            GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_l_low_centre", pBFAnim, out animTime);
+                                        }
+                                        else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_l_low_corner", pBFAnim))
+                                        {
+                                            GET_CHAR_ANIM_TOTAL_TIME(Main.PlayerHandle, "cover_l_low_corner", pBFAnim, out totalTime);
+                                            GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_l_low_corner", pBFAnim, out animTime);
+                                        }
+                                        else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_r_high_corner", pBFAnim))
+                                        {
+                                            GET_CHAR_ANIM_TOTAL_TIME(Main.PlayerHandle, "cover_r_high_corner", pBFAnim, out totalTime);
+                                            GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_high_corner", pBFAnim, out animTime);
+                                        }
+                                        else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_r_low_centre", pBFAnim))
+                                        {
+                                            GET_CHAR_ANIM_TOTAL_TIME(Main.PlayerHandle, "cover_r_low_centre", pBFAnim, out totalTime);
+                                            GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_low_centre", pBFAnim, out animTime);
+                                        }
+                                        else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_r_low_corner", pBFAnim))
+                                        {
+                                            GET_CHAR_ANIM_TOTAL_TIME(Main.PlayerHandle, "cover_r_low_corner", pBFAnim, out totalTime);
+                                            GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_low_corner", pBFAnim, out animTime);
+                                        }
+                                        lastAmmo = Main.pAmmo + 1;
 
                                         CheckTime = false;
                                     }
                                     if ((lastAmmo - Main.pAmmo) == NumOfBullets)
                                     {
-                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire", Loop1[weapIndex]);
-                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_alt", Loop1[weapIndex]);
-                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_up", Loop1[weapIndex]);
-                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_down", Loop1[weapIndex]);
-                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_crouch", Loop1[weapIndex]);
-                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_crouch_alt", Loop1[weapIndex]);
-                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "dbfire", Loop2[weapIndex]);
-                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "dbfire_l", Loop2[weapIndex]);
+                                        if ((frameTimeSkip * Main.frameTime) < 4)
+                                            frameSkipTime = ((int)Math.Floor(totalTime * 0.03f * animTime) - 4) / (totalTime * 0.03f);
+                                        else
+                                            frameSkipTime = ((int)Math.Floor(totalTime * 0.03f * animTime) - (int)Math.Ceiling(frameTimeSkip * Main.frameTime)) / (totalTime * 0.03f);
 
-                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_l_high_corner", pBFAnim, Loop3[weapIndex]);
-                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_l_low_centre", pBFAnim, Loop4[weapIndex]);
-                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_l_low_corner", pBFAnim, Loop5[weapIndex]);
-                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_high_corner", pBFAnim, Loop6[weapIndex]);
-                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_low_centre", pBFAnim, Loop7[weapIndex]);
-                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_low_corner", pBFAnim, Loop8[weapIndex]);
+                                        if (IS_PED_IN_COVER(Main.PlayerHandle))
+                                            FREEZE_CHAR_POSITION(Main.PlayerHandle, true);
+
+                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire", frameSkipTime);
+                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_alt", frameSkipTime);
+                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_up", frameSkipTime);
+                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_down", frameSkipTime);
+                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_crouch", frameSkipTime);
+                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_crouch_alt", frameSkipTime);
+                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "dbfire", 0);
+                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "dbfire_l", 0);
+
+                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_l_high_corner", pBFAnim, frameSkipTime);
+                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_l_low_centre", pBFAnim, frameSkipTime);
+                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_l_low_corner", pBFAnim, frameSkipTime);
+                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_high_corner", pBFAnim, frameSkipTime);
+                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_low_centre", pBFAnim, frameSkipTime);
+                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_low_corner", pBFAnim, frameSkipTime);
 
                                         if (!Main.PressToFire || IS_PED_IN_COVER(Main.PlayerHandle) || IS_CHAR_SITTING_IN_ANY_CAR(Main.PlayerHandle))
                                         {
-                                            GET_GAME_TIMER(out uint gTimer);
-
                                             if (CheckTime == false)
                                             {
                                                 GET_GAME_TIMER(out fTimer);
@@ -193,8 +243,10 @@ namespace WeapFuncs.ivsdk
                                             }
 
                                             //IVGame.ShowSubtitleMessage(gTimer.ToString() + "  " + fTimer.ToString());
-                                            if (gTimer >= (fTimer + timeBetBurst))
+                                            if (Main.gTimer >= (fTimer + timeBetBurst))
                                             {
+                                                if (IS_PED_IN_COVER(Main.PlayerHandle))
+                                                    FREEZE_CHAR_POSITION(Main.PlayerHandle, false);
                                                 CheckTime = false;
                                                 lastAmmo = Main.pAmmo;
                                             }
@@ -202,28 +254,31 @@ namespace WeapFuncs.ivsdk
                                     }
                                 }
 
-                                else if (lastAmmo != Main.pAmmo)
+                                else
                                 {
-                                    CheckTime = false;
-                                    lastAmmo = Main.pAmmo;
+                                    if (IS_PED_IN_COVER(Main.PlayerHandle))
+                                        FREEZE_CHAR_POSITION(Main.PlayerHandle, false);
+                                    if (lastAmmo != Main.pAmmo)
+                                    {
+                                        animTime = -1;
+                                        CheckTime = false;
+                                        lastAmmo = Main.pAmmo;
+
+                                        //IVGame.ShowSubtitleMessage(animTime.ToString() + "  " + totalTime.ToString() + "  " + ((totalTime * 0.03f * animTime) - 3) / (totalTime * 0.03f) + "  " + (frameTimeSkip * Main.frameTime).ToString());
+
+                                        //CLEAR_CHAR_TASKS(Main.PlayerHandle);
+                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire", AnimLoopEnd[weapIndex]);
+                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_alt", AnimLoopEnd[weapIndex]);
+                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_up", AnimLoopEnd[weapIndex]);
+                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_down", AnimLoopEnd[weapIndex]);
+                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_crouch", AnimLoopEnd[weapIndex]);
+                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_crouch_alt", AnimLoopEnd[weapIndex]);
+                                    }
                                 }
                                 // This almost works if anim time is changed, just needs tweaking.
-                                /*else
-                                {
-                                    if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, pWeapAnim, "fire"))
-                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire", 0.9f);
-                                    if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, pWeapAnim, "fire_alt"))
-                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_alt", 0.9f);
-                                    if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, pWeapAnim, "fire_up"))
-                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_up", 0.9f);
-                                    if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, pWeapAnim, "fire_down"))
-                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_down", 0.9f);
-                                    if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, pWeapAnim, "fire_crouch"))
-                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_crouch", 0.9f);
-                                    if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, pWeapAnim, "fire_crouch_alt"))
-                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_crouch_alt", 0.9f);
-
-                                }*/
+                                //else
+                                //{
+                                //}
                             }
                             if (currFireType != fireType)
                             {

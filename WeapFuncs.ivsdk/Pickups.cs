@@ -80,8 +80,12 @@ namespace WeapFuncs.ivsdk
             }
             ClearLists();
         }
+        public static void OnGameLoad()
+        {
+            GetLoadoutSettings(Main.wfConfig);
+        }
 
-        public static void GetMaxLoadout(SettingsFile settings)
+        private static void GetLoadoutSettings(SettingsFile settings)
         {
             if (Main.CurrEp == 0)
             {
@@ -119,17 +123,23 @@ namespace WeapFuncs.ivsdk
                 level4Req = settings.GetFloat("PICKUPS", "TBOGTLoadoutLevel4Unlock", 70);
                 level5Req = settings.GetFloat("PICKUPS", "TBOGTLoadoutLevel5Unlock", 100);
             }
+        }
 
-            if (level5Prog >= level5Req)
-                maxLoadout = settings.GetInteger("PICKUPS", "MaxLoadoutLevel5", 36);
-            if (level4Prog >= level4Req)
-                maxLoadout = settings.GetInteger("PICKUPS", "MaxLoadoutLevel4", 32);
-            else if (level3Prog >= level3Req)
-                maxLoadout = settings.GetInteger("PICKUPS", "MaxLoadoutLevel3", 24);
-            else if (level2Prog >= level2Req)
-                maxLoadout = settings.GetInteger("PICKUPS", "MaxLoadoutLevel2", 18);
-            else
-                maxLoadout = settings.GetInteger("PICKUPS", "MaxLoadoutLevel1", 12);
+        private static void GetMaxLoadout(SettingsFile settings)
+        {
+            if (IS_PLAYER_CONTROL_ON((int)Main.PlayerIndex) && IS_SCREEN_FADED_IN())
+            {
+                if (level5Prog >= level5Req)
+                    maxLoadout = settings.GetInteger("PICKUPS", "MaxLoadoutLevel5", 36);
+                else if (level4Prog >= level4Req)
+                    maxLoadout = settings.GetInteger("PICKUPS", "MaxLoadoutLevel4", 32);
+                else if (level3Prog >= level3Req)
+                    maxLoadout = settings.GetInteger("PICKUPS", "MaxLoadoutLevel3", 24);
+                else if (level2Prog >= level2Req)
+                    maxLoadout = settings.GetInteger("PICKUPS", "MaxLoadoutLevel2", 18);
+                else
+                    maxLoadout = settings.GetInteger("PICKUPS", "MaxLoadoutLevel1", 12);
+            }
         }
 
         public static void Init(SettingsFile settings)
@@ -183,14 +193,14 @@ namespace WeapFuncs.ivsdk
         }
         public static void Tick()
         {
-            GET_GAME_TIMER(out uint gTimer);
-
             if (limitedLoadout)
             {
                 level2Prog = GET_FLOAT_STAT(level2Stat);
                 level3Prog = GET_FLOAT_STAT(level3Stat);
                 level4Prog = GET_FLOAT_STAT(level4Stat);
                 level5Prog = GET_FLOAT_STAT(level5Stat);
+                
+                GetMaxLoadout(Main.wfConfig);
 
                 currLoadout = 0;
                 for (int i = 1; i < Main.numOfWeapIDs; i++)
@@ -211,9 +221,9 @@ namespace WeapFuncs.ivsdk
                         }
                     }
                 }
-                if (IS_HUD_PREFERENCE_SWITCHED_ON() && gTimer > 0 && gTimer <= (aTimer + 5000))
+                if (IS_HUD_PREFERENCE_SWITCHED_ON() && Main.gTimer > 0 && Main.gTimer <= (aTimer + 5000))
                 {
-                    if (gTimer > (aTimer + 4000))
+                    if (Main.gTimer > (aTimer + 4000))
                         alpha -= ((uint)(Main.frameTime * 250f));
                     else
                         alpha = 255;
@@ -410,7 +420,7 @@ namespace WeapFuncs.ivsdk
                                 pickupList.RemoveAt(i);
                             }
 
-                            if (DOES_OBJECT_EXIST(objID) && pDist < 0.75 && !IS_CHAR_IN_AIR(Main.PlayerHandle) && !Main.IsAimingAnimPlaying() && !IS_CHAR_SHOOTING(Main.PlayerHandle))
+                            if (DOES_OBJECT_EXIST(objID) && pDist < 0.75 && !IS_CHAR_IN_ANY_CAR(Main.PlayerHandle) && !IS_CHAR_IN_AIR(Main.PlayerHandle) && !Main.IsAimingAnimPlaying() && !IS_CHAR_SHOOTING(Main.PlayerHandle))
                             {
                                 //IVGame.ShowSubtitleMessage(pGroundZ.ToString() + "  " + objGroundZ.ToString());
                                 if (limitedLoadout)
@@ -425,7 +435,7 @@ namespace WeapFuncs.ivsdk
                                     }
                                     else if (!IS_HELP_MESSAGE_BEING_DISPLAYED() && !HAS_CHAR_GOT_WEAPON(Main.PlayerHandle, pWeaponList[pickupList.IndexOf(objID)]))
                                     {
-                                        IVText.TheIVText.ReplaceTextOfTextLabel("TM_17_3", "~r~ You cannot carry any more weapons.");
+                                        IVText.TheIVText.ReplaceTextOfTextLabel("TM_17_3", "~r~You cannot carry any more weapons.");
                                         DISPLAY_HELP_TEXT_THIS_FRAME("TM_17_3", false);
                                     }
                                 }
@@ -445,7 +455,7 @@ namespace WeapFuncs.ivsdk
                                         GET_GAME_TIMER(out aTimer);
                                         if (pSlot == slot && ((maxLoadout >= currLoadout + weaponSpace) || !limitedLoadout || HAS_CHAR_GOT_WEAPON(Main.PlayerHandle, pWeaponList[pickupList.IndexOf(objID)])))
                                         {
-                                            if (gTimer >= (fTimer + 100))
+                                            if (Main.gTimer >= (fTimer + 100))
                                             {
                                                 GET_GAME_TIMER(out fTimer);
 
