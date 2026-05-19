@@ -80,7 +80,7 @@ namespace WeapFuncs.ivsdk
             }
             ClearLists();
         }
-        public static void OnGameLoad()
+        public static void IngameStart()
         {
             GetLoadoutSettings(Main.wfConfig);
         }

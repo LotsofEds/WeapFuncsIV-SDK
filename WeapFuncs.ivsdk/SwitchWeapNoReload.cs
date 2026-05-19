@@ -22,6 +22,7 @@ namespace WeapFuncs.ivsdk
         private static bool isReloading = false;
         private static List<eWeaponType> exceptionList = new List<eWeaponType>();  // List of lose ammo in mag exceptions
         private static float animTime;
+        private static bool cancelReload;
 
         public static void UnInit()
         {
@@ -41,6 +42,7 @@ namespace WeapFuncs.ivsdk
                 eWeaponType weaponType = (eWeaponType)Enum.Parse(typeof(eWeaponType), weaponName.Trim(), true);
                 exceptionList.Add(weaponType);
             }
+            cancelReload = settings.GetBoolean("RELOADS", "FillMagImmediately", false);
         }
         public static void Tick()
         {
@@ -112,7 +114,7 @@ namespace WeapFuncs.ivsdk
                 if ((IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "p_load") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload_crouch")) && ammoList[currWeaponIndex] != Main.mAmmo && Main.pAmmo != Main.mAmmo && !isReloading)
                 {
                     GetAnimTime();
-                    if (animTime < 0.6f)
+                    if (animTime < 0.8f)
                     {
                         bool dontLoseAmmo = false;
                         foreach (eWeaponType weaponType in exceptionList)
@@ -141,13 +143,13 @@ namespace WeapFuncs.ivsdk
                     if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "p_load") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload_crouch") || isReloading)
                     {
                         GetAnimTime();
-                        if (Main.pAmmo == Main.mAmmo && animTime >= 0.6f)
+                        if (Main.pAmmo == Main.mAmmo && (animTime >= 0.8f || cancelReload))
                         {
                             ammoList[currWeaponIndex] = Main.mAmmo;
                             currClip = ammoList[currWeaponIndex];
                             isReloading = false;
                         }
-                        else if (animTime < 0.6f && Main.pAmmo == Main.mAmmo)
+                        else if (animTime < 0.8f && Main.pAmmo == Main.mAmmo)
                             RevertAmmo();
                         else
                         {

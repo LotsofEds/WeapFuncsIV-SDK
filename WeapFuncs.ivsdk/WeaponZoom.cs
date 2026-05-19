@@ -23,12 +23,11 @@ namespace WeapFuncs.ivsdk
 
         private static IVCam cam;
         private static NativeCamera gameCam;
-        private static bool isAiming => (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "fire") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "fire_crouch") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "fire_alt") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "fire_crouch_alt") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "fire_up") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "fire_down") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload_crouch") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "p_load") || IS_PED_IN_COVER(Main.PlayerHandle));
         public static void Init(SettingsFile settings)
         {
             attachmentUnlocks = new bool[Main.numOfWeapIDs];
         }
-        public static void OnGameLoad()
+        public static void IngameStart()
         {
             pWeap = 0;
             for (int i = 0; i < Main.numOfWeapIDs; i++)
@@ -83,7 +82,7 @@ namespace WeapFuncs.ivsdk
                         isButtonPressed = false;
 
                     GET_MOUSE_WHEEL(out msWhl);
-                    if ((msWhl < 0 || isZoomOn || gameCam.FOV <= 40) && isAiming && zoomAmt != weaponZoom)
+                    if ((msWhl < 0 || isZoomOn || gameCam.FOV <= 40) && Main.IsAimingAnimPlaying() && zoomAmt != weaponZoom)
                     {
                         isZoomOn = true;
                         zoomAmt = weaponZoom;
@@ -95,7 +94,7 @@ namespace WeapFuncs.ivsdk
                     }
                 }
 
-                else if (!isAiming || IS_CHAR_SITTING_IN_ANY_CAR(Main.PlayerHandle) || !Main.IsPressingAimButton())
+                else if (!Main.IsAimingAnimPlaying() || IS_CHAR_SITTING_IN_ANY_CAR(Main.PlayerHandle) || !Main.IsPressingAimButton())
                 {
                     isZoomOn = false;
                     isButtonPressed = false;
@@ -109,12 +108,19 @@ namespace WeapFuncs.ivsdk
                     if (scopeOn)
                         IVWeaponInfo.GetWeaponInfo((uint)pWeap).WeaponFlags.FirstPerson = true;
                 }
+            }
+        }
 
-                if (cam == null)
-                    return;
+        public static void ProcessCam()
+        {
+            if (cam == null)
+                return;
 
+            if (Main.IsHoldingGun())
+            {
                 //IVGame.ShowSubtitleMessage(gameCam.FOV.ToString() + "   " + zoomAmt.ToString());
                 currentFOV = Main.SmoothStep(currentFOV, zoomAmt, 15f * Main.frameTime);
+
                 cam.FOV /= currentFOV;
             }
         }

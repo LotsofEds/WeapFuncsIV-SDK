@@ -16,11 +16,8 @@ namespace WeapFuncs.ivsdk
 
         private static float RecoilAmplitudeMin;
         private static float RecoilAmplitudeMax;
-        private static float RecoilFrequencyMin;
-        private static float RecoilFrequencyMax;
-        private static int RecoilTime;
+        public static int RecoilTime;
 
-        private static float BaseRecoil;
         private static float AdditionalRecoil;
         private static float CurrentRecoil;
         private static float DecayRate;
@@ -41,11 +38,8 @@ namespace WeapFuncs.ivsdk
             {
                 RecoilAmplitudeMin = Main.wConfFile.GetFloat(weapon.ToString(), "RecoilAmpMin", 0.0f);
                 RecoilAmplitudeMax = Main.wConfFile.GetFloat(weapon.ToString(), "RecoilAmpMax", 0.0f);
-                RecoilFrequencyMin = Main.wConfFile.GetFloat(weapon.ToString(), "RecoilFreqMin", 0.0f);
-                RecoilFrequencyMax = Main.wConfFile.GetFloat(weapon.ToString(), "RecoilFreqMax", 0.0f);
                 RecoilTime = Main.wConfFile.GetInteger(weapon.ToString(), "RecoilTime", 0);
 
-                BaseRecoil = Main.wConfFile.GetFloat(weapon.ToString(), "BaseRecoil", 0.0f);
                 AdditionalRecoil = Main.wConfFile.GetFloat(weapon.ToString(), "AdditionalRecoil", 0.0f);
                 DecayRate = Main.wConfFile.GetFloat(weapon.ToString(), "DecayRate", 0.0f);
                 MaximumRecoil = Main.wConfFile.GetFloat(weapon.ToString(), "MaximumRecoil", 0.0f);
@@ -69,7 +63,7 @@ namespace WeapFuncs.ivsdk
             }
 
             if (enableIncrease)
-                CurrentRecoil = Math.Max(CurrentRecoil - DecayRate * Main.frameTime, BaseRecoil);
+                CurrentRecoil = Math.Max(CurrentRecoil - DecayRate * Main.frameTime, 0);
 
             if (recoilDebug)
                 IVGame.ShowSubtitleMessage(Math.Truncate(AdditionalRecoil * Main.frameTime * 100).ToString() + "  " + Math.Truncate(DecayRate * Main.frameTime * 100).ToString() + "  " + Math.Truncate(CurrentRecoil * 1000).ToString() + "  " + (RecoilTime * 100) / (int)(Main.frameTime * 6000));
@@ -78,21 +72,19 @@ namespace WeapFuncs.ivsdk
         private static void ApplyRecoil(NativeCamera cam, int weapon, float appliedRecoil)
         {
             LoadRecoilConf(weapon);
-            ApplyCameraShake(cam, RecoilAmplitudeMin, RecoilAmplitudeMax, RecoilFrequencyMin, RecoilFrequencyMax, appliedRecoil, (RecoilTime * 100) / (int)(Main.frameTime * 6000));
+            ApplyCameraShake(cam, RecoilAmplitudeMin, RecoilAmplitudeMax, appliedRecoil, RecoilTime);
         }
 
-        private static void ApplyCameraShake(NativeCamera cam, float amplitude1, float amplitude2, float frequency1, float frequency2, float appliedRecoil, int duration)
+        private static void ApplyCameraShake(NativeCamera cam, float amplitude1, float amplitude2, float appliedRecoil, int duration)
         {
             cam.Shake(CameraShakeType.PITCH_UP_DOWN, CameraShakeBehaviour.CONSTANT_PLUS_FADE_IN_OUT, duration,
-                GENERATE_RANDOM_FLOAT_IN_RANGE(amplitude1, amplitude2) + appliedRecoil,
-                GENERATE_RANDOM_FLOAT_IN_RANGE(frequency1, frequency2), 0f);
+                GENERATE_RANDOM_FLOAT_IN_RANGE(amplitude1, amplitude2) + appliedRecoil, 0.2f, 0f);
 
             float randomLeftRightAmplitude = GENERATE_RANDOM_FLOAT_IN_RANGE(-amplitude1, amplitude1);
             float randomIncreasingleftRightRecoil = GENERATE_RANDOM_FLOAT_IN_RANGE(-appliedRecoil, appliedRecoil);
 
             cam.Shake(CameraShakeType.ROLL_LEFT_RIGHT, CameraShakeBehaviour.CONSTANT_PLUS_FADE_IN_OUT, duration,
-                randomLeftRightAmplitude + randomIncreasingleftRightRecoil,
-                GENERATE_RANDOM_FLOAT_IN_RANGE(frequency1, frequency2), 0f);
+                randomLeftRightAmplitude + randomIncreasingleftRightRecoil, 0.2f, 0f);
         }
     }
 }

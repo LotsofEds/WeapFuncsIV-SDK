@@ -12,8 +12,6 @@ namespace WeapFuncs.ivsdk
 {
     public class Main : Script
     {
-        public static SettingsFile wConfFile;
-
         // IniShit
         public static bool GlobalRateOfFire;
         public static bool ReloadInVehicles;
@@ -63,6 +61,7 @@ namespace WeapFuncs.ivsdk
         public static Vector3 PlayerPos { get; set; }
 
         // SettingsFiles
+        public static SettingsFile wConfFile;
         public static SettingsFile wfConfig;
         public static SettingsFile attachmentConfig;
         public static SettingsFile wfAttachConfig;
@@ -70,24 +69,24 @@ namespace WeapFuncs.ivsdk
         {
             Uninitialize += Main_Uninitialize;
             Initialized += Main_Initialized;
-            GameLoad += Main_GameLoad;
+            IngameStartup += Main_IngameStartup;
             Tick += Main_Tick;
             ProcessCamera += Main_ProcessCamera;
             //TheWeaponHandler = new WeaponHandling();
         }
 
-        private void Main_GameLoad(object sender, EventArgs e)
+        private void Main_IngameStartup(object sender, EventArgs e)
         {
             currWeap = 0;
             WeapAnim = "";
             BFAnim = "";
 
-            DELETE_OBJECT(ref gunModel);
-            GLaunchAttachment.OnGameLoad();
-            WeaponZoom.OnGameLoad();
-            Pickups.OnGameLoad();
+            if (DOES_OBJECT_EXIST(gunModel))
+                DELETE_OBJECT(ref gunModel);
+            GLaunchAttachment.IngameStart();
+            WeaponZoom.IngameStart();
+            Pickups.IngameStart();
         }
-
         private void Main_Uninitialize(object sender, EventArgs e)
         {
             WeapFuncs.UnInit();
@@ -98,21 +97,21 @@ namespace WeapFuncs.ivsdk
             SelectFire.UnInit();
             //Silence.UnInit();
         }
-
         private void Main_Initialized(object sender, EventArgs e)
         {
             wfConfig = new SettingsFile(string.Format("{0}\\IVSDKDotNet\\scripts\\WeapFuncs.ini", IVGame.GameStartupPath));
             wfConfig.Load();
+
+            wfAttachConfig = new SettingsFile(string.Format("{0}\\IVSDKDotNet\\scripts\\WeapFuncs\\Attachments.ini", IVGame.GameStartupPath));
+            wfAttachConfig.Load();
+
             if (System.IO.File.Exists(string.Format("{0}\\IVSDKDotNet\\scripts\\ImprovedGunStores\\Attachments.ini", IVGame.GameStartupPath)))
             {
                 attachmentConfig = new SettingsFile(string.Format("{0}\\IVSDKDotNet\\scripts\\ImprovedGunStores\\Attachments.ini", IVGame.GameStartupPath));
             }
             else
-                attachmentConfig = new SettingsFile(string.Format("{0}\\IVSDKDotNet\\scripts\\WeapFuncs\\Attachments.ini", IVGame.GameStartupPath));
+                attachmentConfig = wfAttachConfig;
             attachmentConfig.Load();
-
-            wfAttachConfig = new SettingsFile(string.Format("{0}\\IVSDKDotNet\\scripts\\WeapFuncs\\Attachments.ini", IVGame.GameStartupPath));
-            wfAttachConfig.Load();
 
             LoadSettings(Settings);
             if (GlobalRateOfFire)
@@ -147,6 +146,8 @@ namespace WeapFuncs.ivsdk
                 TapFireSpreadFix.Init(Settings);
             if (enableHeatseeker)
                 LockOn.Init(Settings);
+
+            AimCamShake.Init(Settings);
         }
         public static bool InitialChecks()
         {
@@ -221,6 +222,10 @@ namespace WeapFuncs.ivsdk
                 TapFireSpreadFix.Tick();
             if (enableHeatseeker)
                 LockOn.Tick();
+
+            WeaponZoom.Tick();
+            AimCamShake.Tick();
+            //NightVision.Tick();
 
             //Silence.Tick();
             //ObjectTest.Tick();
@@ -322,7 +327,7 @@ namespace WeapFuncs.ivsdk
         {
             if (!InitialChecks())
                 return;
-            WeaponZoom.Tick();
+            WeaponZoom.ProcessCam();
         }
         public static bool IsAimKeyPressedOnController()
         {

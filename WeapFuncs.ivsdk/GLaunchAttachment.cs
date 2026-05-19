@@ -80,11 +80,11 @@ namespace WeapFuncs.ivsdk
         {
             DELETE_OBJECT(ref glAttachProp);
         }
-        public static void OnGameLoad()
+        public static void IngameStart()
         {
             for (int i = 0; i < Main.numOfWeapIDs; i++)
             {
-                if (Main.attachmentConfig.DoesSectionExists(i.ToString()))
+                if (Main.wfAttachConfig.DoesSectionExists(i.ToString()))
                 {
                     Main.wfAttachConfig.SetBoolean(IVGenericGameStorage.ValidSaveName, i.ToString() + "HasGrenadeLauncherAttachment", Main.attachmentConfig.GetBoolean(IVGenericGameStorage.ValidSaveName, i.ToString() + "HasGrenadeLauncherAttachment", false));
                     Main.wfAttachConfig.SetInteger(IVGenericGameStorage.ValidSaveName, i.ToString() + "GrenadeAmmo", Main.attachmentConfig.GetInteger(IVGenericGameStorage.ValidSaveName, i.ToString() + "GrenadeAmmo", 0));
@@ -204,7 +204,7 @@ namespace WeapFuncs.ivsdk
                     GET_OBJECT_COORDINATES(objHandle, out float objX, out float objY, out float objZ);
 
                     GET_DISTANCE_BETWEEN_COORDS_3D(Main.PlayerPos.X, Main.PlayerPos.Y, Main.PlayerPos.Z, objX, objY, objZ, out float Dist);
-                    if (Dist > 1)
+                    if (Dist > 1.0f)
                         continue;
 
                     GET_OBJECT_MODEL(objHandle, out pModel);
@@ -229,7 +229,7 @@ namespace WeapFuncs.ivsdk
                         ATTACH_OBJECT_TO_OBJECT(glAttachProp, wObj, 0, glModelReloadOff.X, glModelReloadOff.Y, glModelReloadOff.Z, glModelReloadRot.X, glModelReloadRot.Y, glModelReloadRot.Z);
                     else
                         ATTACH_OBJECT_TO_PED(glAttachProp, Main.PlayerHandle, 1232, glModelOff.X, glModelOff.Y, glModelOff.Z, glModelRot.X, glModelRot.Y, glModelRot.Z, 0);
-                        //ATTACH_OBJECT_TO_OBJECT(glAttachProp, wObj, 0, glModelOff.X, glModelOff.Y, glModelOff.Z, glModelRot.X, glModelRot.Y, glModelRot.Z);
+                    //ATTACH_OBJECT_TO_OBJECT(glAttachProp, wObj, 0, glModelOff.X, glModelOff.Y, glModelOff.Z, glModelRot.X, glModelRot.Y, glModelRot.Z);
                 }
                 wIndex = Main.currWeap;
                 OnButtonPress();
@@ -252,7 +252,19 @@ namespace WeapFuncs.ivsdk
                 wIndex = Main.currWeap;
             }
 
-            if (!DOES_OBJECT_EXIST(wObj))
+            if (DOES_OBJECT_EXIST(wObj))
+            {
+                GET_OBJECT_COORDINATES(wObj, out float objX, out float objY, out float objZ);
+
+                GET_DISTANCE_BETWEEN_COORDS_3D(Main.PlayerPos.X, Main.PlayerPos.Y, Main.PlayerPos.Z, objX, objY, objZ, out float Dist);
+                if (Dist > 1.0f)
+                {
+                    DELETE_OBJECT(ref glAttachProp);
+                    weapInHand = false;
+                }
+            }
+
+            else
             {
                 DELETE_OBJECT(ref glAttachProp);
                 weapInHand = false;
