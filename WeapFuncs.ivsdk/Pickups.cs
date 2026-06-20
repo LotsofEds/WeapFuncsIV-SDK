@@ -80,6 +80,11 @@ namespace WeapFuncs.ivsdk
             }
             ClearLists();
         }
+
+        public static void GameLoad()
+        {
+            IVText.TheIVText.ReplaceTextOfTextLabel("TM_17_3", "~r~You cannot carry any more weapons.");
+        }
         public static void IngameStart()
         {
             GetLoadoutSettings(Main.wfConfig);
@@ -199,6 +204,8 @@ namespace WeapFuncs.ivsdk
                 level3Prog = GET_FLOAT_STAT(level3Stat);
                 level4Prog = GET_FLOAT_STAT(level4Stat);
                 level5Prog = GET_FLOAT_STAT(level5Stat);
+
+                //IVGame.ShowSubtitleMessage(level2Prog.ToString() + "  " + level3Prog.ToString() + "  " + level4Prog.ToString() + "  " + level5Prog.ToString());
                 
                 GetMaxLoadout(Main.wfConfig);
 
@@ -435,7 +442,6 @@ namespace WeapFuncs.ivsdk
                                     }
                                     else if (!IS_HELP_MESSAGE_BEING_DISPLAYED() && !HAS_CHAR_GOT_WEAPON(Main.PlayerHandle, pWeaponList[pickupList.IndexOf(objID)]))
                                     {
-                                        IVText.TheIVText.ReplaceTextOfTextLabel("TM_17_3", "~r~You cannot carry any more weapons.");
                                         DISPLAY_HELP_TEXT_THIS_FRAME("TM_17_3", false);
                                     }
                                 }

@@ -41,6 +41,7 @@ namespace WeapFuncs.ivsdk
         public static bool recoilEnable;
 
         // Other variables n shit
+        public static bool resetShit;
         public static int gunModel;
         public static int Boolet;
         public static int currWeap;
@@ -70,13 +71,20 @@ namespace WeapFuncs.ivsdk
             Uninitialize += Main_Uninitialize;
             Initialized += Main_Initialized;
             IngameStartup += Main_IngameStartup;
+            GameLoad += Main_GameLoad;
             Tick += Main_Tick;
             ProcessCamera += Main_ProcessCamera;
             //TheWeaponHandler = new WeaponHandling();
         }
 
+        private void Main_GameLoad(object sender, EventArgs e)
+        {
+            Pickups.GameLoad();
+        }
+
         private void Main_IngameStartup(object sender, EventArgs e)
         {
+            resetShit = false;
             currWeap = 0;
             WeapAnim = "";
             BFAnim = "";
@@ -176,13 +184,29 @@ namespace WeapFuncs.ivsdk
             if (PlayerPed == null)
                 return;
 
+            CurrEp = GET_CURRENT_EPISODE();
+
+            if (!resetShit)
+            {
+                currWeap = 0;
+                WeapAnim = "";
+                BFAnim = "";
+
+                if (DOES_OBJECT_EXIST(gunModel))
+                    DELETE_OBJECT(ref gunModel);
+                GLaunchAttachment.IngameStart();
+                WeaponZoom.IngameStart();
+                Pickups.IngameStart();
+                resetShit = true;
+            }
+
             GET_FRAME_TIME(out frameTime);
             GET_CURRENT_CHAR_WEAPON(PlayerHandle, out currWeap);
             GET_AMMO_IN_CLIP(PlayerHandle, currWeap, out pAmmo);
             GET_AMMO_IN_CHAR_WEAPON(PlayerHandle, currWeap, out aAmmo);
             GET_MAX_AMMO_IN_CLIP(PlayerHandle, currWeap, out mAmmo);
             GET_WEAPONTYPE_SLOT(currWeap, out wSlot);
-            CurrEp = GET_CURRENT_EPISODE();
+
             if (currWeap > 0)
                 LoadWeaponConfig(currWeap);
 

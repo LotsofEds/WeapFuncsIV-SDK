@@ -87,7 +87,7 @@ namespace WeapFuncs.ivsdk
                 if (Main.wfAttachConfig.DoesSectionExists(i.ToString()))
                 {
                     Main.wfAttachConfig.SetBoolean(IVGenericGameStorage.ValidSaveName, i.ToString() + "HasGrenadeLauncherAttachment", Main.attachmentConfig.GetBoolean(IVGenericGameStorage.ValidSaveName, i.ToString() + "HasGrenadeLauncherAttachment", false));
-                    Main.wfAttachConfig.SetInteger(IVGenericGameStorage.ValidSaveName, i.ToString() + "GrenadeAmmo", Main.attachmentConfig.GetInteger(IVGenericGameStorage.ValidSaveName, i.ToString() + "GrenadeAmmo", 0));
+                    Main.wfAttachConfig.SetInteger(IVGenericGameStorage.ValidSaveName, i.ToString() + "GrenadeLauncherAmmo", Main.attachmentConfig.GetInteger(IVGenericGameStorage.ValidSaveName, i.ToString() + "GrenadeLauncherAmmo", 0));
                 }
             }
             Main.wfAttachConfig.Save();
@@ -95,7 +95,7 @@ namespace WeapFuncs.ivsdk
         }
         private static void SaveAmmo(int weapon)
         {
-            Main.wfAttachConfig.SetInteger(IVGenericGameStorage.ValidSaveName, weapon.ToString() + "GrenadeAmmo", gAmmo);
+            Main.wfAttachConfig.SetInteger(IVGenericGameStorage.ValidSaveName, weapon.ToString() + "GrenadeLauncherAmmo", gAmmo);
             Main.wfAttachConfig.Save();
         }
         private static void LoadWeaponConfig(int weapon)
@@ -114,7 +114,7 @@ namespace WeapFuncs.ivsdk
                 glModelReloadRot = Main.wfAttachConfig.GetVector3(weapon.ToString(), "GrenadeLauncherReloadRot", Vector3.Zero);
                 grndOffset = Main.wfAttachConfig.GetVector3(weapon.ToString(), "GrenadeOffset", Vector3.Zero);
                 grndRot = Main.wfAttachConfig.GetVector3(weapon.ToString(), "GrenadeRot", Vector3.Zero);
-                gAmmo = Main.wfAttachConfig.GetInteger(IVGenericGameStorage.ValidSaveName, weapon.ToString() + "GrenadeAmmo", 0);
+                gAmmo = Main.wfAttachConfig.GetInteger(IVGenericGameStorage.ValidSaveName, weapon.ToString() + "GrenadeLauncherAmmo", 0);
                 fireSound = Main.wfAttachConfig.GetValue(weapon.ToString(), "FireSound", "");
                 muzFxName = Main.wfAttachConfig.GetValue(weapon.ToString(), "MuzzleFx", "");
                 muzFxOff = Main.wfAttachConfig.GetVector3(weapon.ToString(), "MuzzleFxOffset", Vector3.Zero);
@@ -360,12 +360,12 @@ namespace WeapFuncs.ivsdk
                     if (Main.wfAttachConfig.DoesSectionExists(i.ToString()))
                     {
                         Main.WriteBooleanToINI(Main.wfAttachConfig, i.ToString() + "HasGrenadeLauncherAttachment", attachmentUnlocks[i]);
-                        Main.WriteIntToINI(Main.wfAttachConfig, i.ToString() + "GrenadeAmmo", grenadeAmmo[i]);
+                        Main.WriteIntToINI(Main.wfAttachConfig, i.ToString() + "GrenadeLauncherAmmo", grenadeAmmo[i]);
                     }
                     if (Main.attachmentConfig.DoesSectionExists(i.ToString()))
                     {
                         Main.WriteBooleanToINI(Main.attachmentConfig, i.ToString() + "HasGrenadeLauncherAttachment", attachmentUnlocks[i]);
-                        Main.WriteIntToINI(Main.attachmentConfig, i.ToString() + "GrenadeAmmo", grenadeAmmo[i]);
+                        Main.WriteIntToINI(Main.attachmentConfig, i.ToString() + "GrenadeLauncherAmmo", grenadeAmmo[i]);
                     }
                 }
                 Main.wfAttachConfig.Save();
