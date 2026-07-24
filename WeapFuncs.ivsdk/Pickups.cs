@@ -79,14 +79,19 @@ namespace WeapFuncs.ivsdk
                 }
             }
             ClearLists();
+            IVText.TheIVText.ReplaceTextOfTextLabel("TM_17_3", "PLACEHOLDER");
+
+            aTimer = 0;
+            fTimer = 0;
         }
 
         public static void GameLoad()
         {
-            IVText.TheIVText.ReplaceTextOfTextLabel("TM_17_3", "~r~You cannot carry any more weapons.");
+            //IVText.TheIVText.ReplaceTextOfTextLabel("TM_17_3", "~r~You cannot carry any more weapons.");
         }
         public static void IngameStart()
         {
+            UnInit();
             GetLoadoutSettings(Main.wfConfig);
         }
 
@@ -274,8 +279,9 @@ namespace WeapFuncs.ivsdk
 
             if (pickupEnable)
             {
+                //GET_DEAD_CHAR_PICKUP_COORDS()
                 SET_DEAD_PEDS_DROP_WEAPONS(false);
-                GET_GROUND_Z_FOR_3D_COORD(Main.PlayerPos, out float pGroundZ);
+                //GET_GROUND_Z_FOR_3D_COORD(Main.PlayerPos, out float pGroundZ);
 
                 foreach (var ped in PedHelper.PedHandles)
                 {
@@ -409,13 +415,13 @@ namespace WeapFuncs.ivsdk
                                 APPLY_FORCE_TO_OBJECT(objID, 3, 0, 0.01f, 0, 0, 0, 0, 0, 1, 1, 1);
 
                             GET_OBJECT_COORDINATES(objID, out Vector3 objPos);
-                            GET_GROUND_Z_FOR_3D_COORD(objPos, out float objGroundZ);
+                            //GET_GROUND_Z_FOR_3D_COORD(objPos, out float objGroundZ);
 
                             glowColor = Color.FromName(Main.wConfFile.GetValue(pWeaponList[pickupList.IndexOf(objID)].ToString(), "GlowColor", ""));
                             //LightHelper.AddPointLight(objPos, Color.OrangeRed, 40.0f, 1.5f, false, UIntPtr.Zero);
                             LightHelper.AddPointLight(objPos, glowColor, 40.0f, 1.5f, false, UIntPtr.Zero);
 
-                            GET_DISTANCE_BETWEEN_COORDS_3D(Main.PlayerPos.X, Main.PlayerPos.Y, pGroundZ, objPos.X, objPos.Y, objPos.Z, out float pDist);
+                            GET_DISTANCE_BETWEEN_COORDS_3D(Main.PlayerPos.X, Main.PlayerPos.Y, Main.PlayerPos.Z, objPos.X, objPos.Y, objPos.Z, out float pDist);
                             GET_WEAPONTYPE_SLOT(pWeaponList[pickupList.IndexOf(objID)], out int pSlot);
 
                             if (DOES_OBJECT_EXIST(objID) && pDist >= despawnDist)
@@ -427,7 +433,7 @@ namespace WeapFuncs.ivsdk
                                 pickupList.RemoveAt(i);
                             }
 
-                            if (DOES_OBJECT_EXIST(objID) && pDist < 0.75 && !IS_CHAR_IN_ANY_CAR(Main.PlayerHandle) && !IS_CHAR_IN_AIR(Main.PlayerHandle) && !Main.IsAimingAnimPlaying() && !IS_CHAR_SHOOTING(Main.PlayerHandle))
+                            if (DOES_OBJECT_EXIST(objID) && LOCATE_CHAR_ON_FOOT_3D(Main.PlayerHandle, objPos.X, objPos.Y, objPos.Z, 0.75f, 0.75f, 1.0f, false) && !IS_CHAR_IN_ANY_CAR(Main.PlayerHandle) && !IS_CHAR_IN_AIR(Main.PlayerHandle) && !Main.IsAimingAnimPlaying() && !IS_CHAR_SHOOTING(Main.PlayerHandle))
                             {
                                 //IVGame.ShowSubtitleMessage(pGroundZ.ToString() + "  " + objGroundZ.ToString());
                                 if (limitedLoadout)
@@ -438,11 +444,12 @@ namespace WeapFuncs.ivsdk
                                     if (maxLoadout >= currLoadout + weaponSpace || !limitedLoadout)
                                     {
                                         if (!IS_HELP_MESSAGE_BEING_DISPLAYED() && !HAS_CHAR_GOT_WEAPON(Main.PlayerHandle, pWeaponList[pickupList.IndexOf(objID)]))
-                                            DISPLAY_HELP_TEXT_THIS_FRAME("PU_CF1", false);
+                                            PRINT_HELP_FOREVER_WITH_STRING_NO_SOUND("PU_CF1", "");
                                     }
                                     else if (!IS_HELP_MESSAGE_BEING_DISPLAYED() && !HAS_CHAR_GOT_WEAPON(Main.PlayerHandle, pWeaponList[pickupList.IndexOf(objID)]))
                                     {
-                                        DISPLAY_HELP_TEXT_THIS_FRAME("TM_17_3", false);
+                                        IVText.TheIVText.ReplaceTextOfTextLabel("TM_17_3", "~r~You cannot carry any more weapons.");
+                                        PRINT_HELP_FOREVER_WITH_STRING_NO_SOUND("PU_CF1", "");
                                     }
                                 }
                                 for (int slot = 1; slot < 12; slot++)
@@ -456,7 +463,7 @@ namespace WeapFuncs.ivsdk
                                         pAmmoList[pickupList.IndexOf(objID)] = 0;
                                     }
 
-                                    else if (IS_CONTROL_JUST_PRESSED(0, (int)pickupKey) || IS_CONTROL_JUST_PRESSED(2, (int)pickupKey) || HAS_CHAR_GOT_WEAPON(Main.PlayerHandle, pWeaponList[pickupList.IndexOf(objID)]))
+                                    else if (IS_CONTROL_JUST_PRESSED(0, (int)pickupKey) || HAS_CHAR_GOT_WEAPON(Main.PlayerHandle, pWeaponList[pickupList.IndexOf(objID)]))
                                     {
                                         GET_GAME_TIMER(out aTimer);
                                         if (pSlot == slot && ((maxLoadout >= currLoadout + weaponSpace) || !limitedLoadout || HAS_CHAR_GOT_WEAPON(Main.PlayerHandle, pWeaponList[pickupList.IndexOf(objID)])))
@@ -488,9 +495,14 @@ namespace WeapFuncs.ivsdk
                                     }
                                 }
                             }
+
+                            else if (IS_THIS_HELP_MESSAGE_BEING_DISPLAYED("PU_CF1") || IS_THIS_HELP_MESSAGE_BEING_DISPLAYED("TM_17_3"))
+                                CLEAR_HELP();
                         }
                     }
                 }
+                else if (IS_THIS_HELP_MESSAGE_BEING_DISPLAYED("PU_CF1") || IS_THIS_HELP_MESSAGE_BEING_DISPLAYED("TM_17_3"))
+                    CLEAR_HELP();
             }
         }
     }

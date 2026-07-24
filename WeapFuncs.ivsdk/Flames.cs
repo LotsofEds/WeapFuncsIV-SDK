@@ -19,113 +19,175 @@ namespace WeapFuncs.ivsdk
 {
     internal class Flames
     {
+        // IniShit
         private static int flameWeapon;
         private static Vector3 flameOffset;
+        private static float flameFxScale;
+        private static float maxRange;
         private static int flameExplosion;
         private static float flameSpeed;
 
-        private static Int32 flameFx = -1;
-        private static int currClip = 0;
-        private static int soundID = -1;
-        private static bool FlameKeyHeldDown;
-        private static bool gotAmmo;
-        private static bool soundPlaying;
-        private static int ObjHandle = 0;
+        // ListShit
+        private static List<FlamethrowerData> flameList = new List<FlamethrowerData>();
 
         public static void Init(SettingsFile settings)
         {
             flameWeapon = settings.GetInteger("OTHER", "FlameWeaponID", 19);
+            flameFxScale = settings.GetFloat("OTHER", "FlameFxScale", 2.0f);
             flameOffset = settings.GetVector3("OTHER", "FlameOffset", Vector3.Zero);
+            maxRange = settings.GetFloat("OTHER", "FlameMaxRange", 7.5f);
             flameExplosion = settings.GetInteger("OTHER", "FlameExplosionID", 23);
             flameSpeed = settings.GetFloat("OTHER", "FlameSpeed", 8);
         }
         public static void Tick()
         {
-            if (NativeControls.IsGameKeyPressed(0, GameKey.Attack) && !FlameKeyHeldDown)
-                FlameKeyHeldDown = true;
-
-            else if (!NativeControls.IsGameKeyPressed(0, GameKey.Attack) && FlameKeyHeldDown)
-                FlameKeyHeldDown = false;
-
-            if (FlameKeyHeldDown == true && Main.currWeap == flameWeapon)
+            foreach (var ped in PedHelper.PedHandles)
             {
-                //IVGame.ShowSubtitleMessage(flameFx.ToString());
-                GET_PED_BONE_POSITION(Main.PlayerHandle, (uint)eBone.BONE_RIGHT_HAND, flameOffset, out Vector3 bonePos);
-                if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "fire") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "fire_alt") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "fire_crouch") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "fire_crouch_alt") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_l_high_corner", Main.BFAnim) || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_r_high_corner", Main.BFAnim) || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_l_low_centre", Main.BFAnim) || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_r_low_centre", Main.BFAnim) || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_l_low_corner", Main.BFAnim) || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_r_low_corner", Main.BFAnim) || IS_PED_RAGDOLL(Main.PlayerHandle))
+                int pedHandle = ped.Value;
+                if (!DOES_CHAR_EXIST(pedHandle)) continue;
+                if (IS_CHAR_INJURED(pedHandle)) continue;
+                if (IS_CHAR_DEAD(pedHandle)) continue;
+
+                if (flameList.Find(x => x.Ped == pedHandle) != null) continue;
+
+                GET_CURRENT_CHAR_WEAPON(pedHandle, out int pedWeap);
+                if (pedWeap == flameWeapon)
                 {
-                    if (soundID == -1)
-                        soundID = GET_SOUND_ID();
+                    flameList.Add(new FlamethrowerData(pedHandle));
+                }
+            }
+            //IVGame.ShowSubtitleMessage(flameList.Count().ToString());
 
-                    if (currClip > Main.pAmmo)
+            for (int i = 0; i < flameList.Count(); i++)
+            {
+                if (Main.gTimer >= flameList[i].FlameTime + 250)
+                {
+                    PLAY_SOUND_FROM_POSITION(flameList[i].SoundID, "PAYPHONE_PICK_UP_A", Main.PlayerPos.X, Main.PlayerPos.Y, Main.PlayerPos.Z + 500);
+                    RELEASE_SOUND_ID(flameList[i].SoundID);
+                    flameList[i].SoundID = -1;
+                }
+                for (int p = 0; p < flameList[i].PTFXTime.Count(); p++)
+                {
+                    if (Main.gTimer >= flameList[i].PTFXTime[p] + 150)
                     {
-                        if (flameFx == -1)
+                        STOP_PTFX(flameList[i].PTFX[p]);
+                        if (Main.gTimer >= flameList[i].PTFXTime[p] + 1150)
                         {
-                            STOP_PTFX(flameFx);
-                            REMOVE_PTFX(flameFx);
-                            flameFx = START_PTFX_ON_PED_BONE("shot_directed_flame", Main.PlayerHandle, flameOffset.X, flameOffset.Y, flameOffset.Z, 0.0f, 90.0f, 0, 0x4D0, 1.0f);
-                        }
-                        
-                        if (ObjHandle == 0)
-                            CREATE_OBJECT(GET_HASH_KEY("bm_cluckin_burg"), Main.PlayerPos.X, Main.PlayerPos.Y, Main.PlayerPos.Z, out ObjHandle, true);
-                        else if (ObjHandle != 0)
-                        {
-                            SET_OBJECT_VISIBLE(ObjHandle, false);
-                            ATTACH_OBJECT_TO_PED(ObjHandle, Main.PlayerHandle, (uint)eBone.BONE_RIGHT_HAND, flameOffset.X, flameOffset.Y, flameOffset.Z, 0f, 0f, 0f, 0);
-                            SET_OBJECT_COLLISION(ObjHandle, true);
-                            SET_OBJECT_RECORDS_COLLISIONS(ObjHandle, true);
-                            EXTINGUISH_OBJECT_FIRE(ObjHandle);
-
-                            if (!soundPlaying)
-                            {
-                                PLAY_SOUND_FROM_POSITION(soundID, "FIRE_GAS_BURNER", bonePos.X, bonePos.Y, bonePos.Z);
-                                soundPlaying = true;
-                            }
-
-                            gotAmmo = false;
+                            REMOVE_PTFX(flameList[i].PTFX[p]);
+                            flameList[i].PTFX.RemoveAt(p);
+                            flameList[i].PTFXTime.RemoveAt(p);
                         }
                     }
-                    else if (!gotAmmo)
+                }
+                if (!DOES_CHAR_EXIST(flameList[i].Ped) || IS_CHAR_INJURED(flameList[i].Ped))
+                {
+                    for (int p = 0; p < flameList[i].Projectile.Count(); p++)
                     {
-                        if (ObjHandle != 0)
+                        if (DOES_OBJECT_EXIST(flameList[i].Projectile[p]))
                         {
-                            GET_OBJECT_COORDINATES(ObjHandle, out Vector3 ObjPos);
-                            DETACH_OBJECT(ObjHandle, false);
-                            GET_OBJECT_SPEED(ObjHandle, out float objSpd);
-                            if (objSpd <= 0)
-                                APPLY_FORCE_TO_OBJECT(ObjHandle, 3u, new Vector3(flameSpeed, 0, 0), new Vector3(0, 0, 0), 0, 1, 1, 1);
-                            GET_DISTANCE_BETWEEN_COORDS_3D(Main.PlayerPos.X, Main.PlayerPos.Y, Main.PlayerPos.Z, ObjPos.X, ObjPos.Y, ObjPos.Z, out float Dist);
-                            GET_OFFSET_FROM_OBJECT_IN_WORLD_COORDS(ObjHandle, new Vector3(0.0f, 0.1f, 0.0f), out Vector3 clsOff);
-                            if ((HAS_OBJECT_COLLIDED_WITH_ANYTHING(ObjHandle) || (Dist > 4)) && DOES_OBJECT_EXIST(ObjHandle))
+                            int proj = flameList[i].Projectile[p];
+                            DELETE_OBJECT(ref proj);
+                        }
+                    }
+                    for (int p = 0; p < flameList[i].Projectile.Count(); p++)
+                    {
+                        REMOVE_PTFX(flameList[i].PTFX[p]);
+                    }
+                    PLAY_SOUND_FROM_POSITION(flameList[i].SoundID, "PAYPHONE_PICK_UP_A", Main.PlayerPos.X, Main.PlayerPos.Y, Main.PlayerPos.Z + 500);
+                    RELEASE_SOUND_ID(flameList[i].SoundID);
+                    flameList.RemoveAt(i);
+                }
+                else
+                {
+                    //IVGame.ShowSubtitleMessage(flameList[i].Projectile.Count.ToString() + "  " + flameList[i].PTFX.Count.ToString() + "  " + flameList[i].PTFXTime.Count.ToString());
+                    GET_CURRENT_CHAR_WEAPON(flameList[i].Ped, out int pWeap);
+                    if (pWeap == flameWeapon)
+                    {
+                        if (IS_CHAR_SHOOTING(flameList[i].Ped))
+                        {
+                            GET_PED_BONE_POSITION(flameList[i].Ped, (uint)eBone.BONE_RIGHT_HAND, flameOffset, out Vector3 bonePos);
+
+                            if (flameList[i].SoundID == -1)
                             {
-                                ADD_EXPLOSION(clsOff.X, clsOff.Y, clsOff.Z, flameExplosion, 1.0f, false, true, 0.0f);
-                                SET_OBJECT_RECORDS_COLLISIONS(ObjHandle, false);
-                                MARK_OBJECT_AS_NO_LONGER_NEEDED(ObjHandle);
-                                DELETE_OBJECT(ref ObjHandle);
+                                flameList[i].SoundID = GET_SOUND_ID();
+                                PLAY_SOUND_FROM_POSITION(flameList[i].SoundID, "FIRE_GAS_BURNER", bonePos.X, bonePos.Y, bonePos.Z);
+                            }
+                            flameList[i].PTFX.Add(START_PTFX_ON_PED_BONE("shot_directed_flame", flameList[i].Ped, flameOffset.X, flameOffset.Y, flameOffset.Z, 0.0f, 90.0f, 0, 0x4D0, flameFxScale));
+
+                            CREATE_OBJECT(GET_HASH_KEY("bm_cluckin_burg"), 0, 0, 0, out int proj, true);
+                            flameList[i].Projectile.Add(proj);
+                            SET_OBJECT_VISIBLE(proj, false);
+                            ATTACH_OBJECT_TO_PED(proj, flameList[i].Ped, (uint)eBone.BONE_RIGHT_HAND, flameOffset.X, flameOffset.Y, flameOffset.Z, 0f, 0f, 0f, 0);
+                            SET_OBJECT_COLLISION(proj, true);
+                            SET_OBJECT_RECORDS_COLLISIONS(proj, true);
+                            EXTINGUISH_OBJECT_FIRE(proj);
+
+                            GET_GAME_TIMER(out uint flameTime);
+                            flameList[i].FlameTime = flameTime;
+                            flameList[i].PTFXTime.Add(flameTime);
+                        }
+                        else
+                        {
+                            for (int p = 0; p < flameList[i].Projectile.Count(); p++)
+                            {
+                                if (DOES_OBJECT_EXIST(flameList[i].Projectile[p]))
+                                {
+                                    GET_CHAR_COORDINATES(flameList[i].Ped, out Vector3 pos);
+                                    GET_OBJECT_COORDINATES(flameList[i].Projectile[p], out Vector3 objPos);
+                                    DETACH_OBJECT(flameList[i].Projectile[p], false);
+                                    GET_OBJECT_SPEED(flameList[i].Projectile[p], out float objSpd);
+                                    if (objSpd <= 0)
+                                        APPLY_FORCE_TO_OBJECT(flameList[i].Projectile[p], 3u, new Vector3(flameSpeed, 0, 0), new Vector3(0, 0, 0), 0, 1, 1, 1);
+                                    GET_DISTANCE_BETWEEN_COORDS_3D(pos.X, pos.Y, pos.Z, objPos.X, objPos.Y, objPos.Z, out float Dist);
+                                    GET_OFFSET_FROM_OBJECT_IN_WORLD_COORDS(flameList[i].Projectile[p], new Vector3(0.0f, 0.1f, 0.0f), out Vector3 clsOff);
+                                    if (HAS_OBJECT_COLLIDED_WITH_ANYTHING(flameList[i].Projectile[p]) || (Dist > maxRange))
+                                    {
+                                        ADD_EXPLOSION(clsOff.X, clsOff.Y, clsOff.Z, flameExplosion, 1.0f, false, true, 0.0f);
+                                        SET_OBJECT_RECORDS_COLLISIONS(flameList[i].Projectile[p], false);
+                                        int proj = flameList[i].Projectile[p];
+                                        DELETE_OBJECT(ref proj);
+                                    }
+                                }
+                                else
+                                {
+                                    flameList[i].Projectile.RemoveAt(p);
+                                }
                             }
                         }
-                        currClip = Main.pAmmo;
+                    }
+                    else
+                    {
+                        for (int p = 0; p < flameList[i].Projectile.Count(); p++)
+                        {
+                            if (DOES_OBJECT_EXIST(flameList[i].Projectile[p]))
+                            {
+                                int proj = flameList[i].Projectile[p];
+                                DELETE_OBJECT(ref proj);
+                            }
+                        }
+                        for (int p = 0; p < flameList[i].Projectile.Count(); p++)
+                        {
+                            REMOVE_PTFX(flameList[i].PTFX[p]);
+                        }
+                        PLAY_SOUND_FROM_POSITION(flameList[i].SoundID, "PAYPHONE_PICK_UP_A", Main.PlayerPos.X, Main.PlayerPos.Y, Main.PlayerPos.Z + 500);
+                        RELEASE_SOUND_ID(flameList[i].SoundID);
+                        flameList.RemoveAt(i);
                     }
                 }
             }
-            else if (FlameKeyHeldDown == false || Main.currWeap != flameWeapon)
-            {
-                //IVGame.ShowSubtitleMessage(flameFx.ToString());
-                STOP_PTFX(flameFx);
-                REMOVE_PTFX(flameFx);
-                if (soundPlaying)
-                {
-                    PLAY_SOUND_FROM_PED(soundID, "PAYPHONE_PICK_UP_A", Main.PlayerHandle);
-                    soundPlaying = false;
-                }
-                RELEASE_SOUND_ID(soundID);
-                soundID = -1;
-                flameFx = -1;
-                if (ObjHandle != 0)
-                {
-                    MARK_OBJECT_AS_NO_LONGER_NEEDED(ObjHandle);
-                    DELETE_OBJECT(ref ObjHandle);
-                }
-            }
+        }
+    }
+    public class FlamethrowerData
+    {
+        public int Ped { get; set; }
+        public List<int> Projectile = new List<int>();
+        public int SoundID { get; set; }
+        public List<int> PTFX = new List<int>();
+        public uint FlameTime { get; set; }
+        public List<uint> PTFXTime = new List<uint>();
+        public FlamethrowerData(int ped)
+        {
+            Ped = ped;
         }
     }
 }

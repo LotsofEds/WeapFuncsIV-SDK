@@ -24,16 +24,19 @@ namespace WeapFuncs.ivsdk
         private static float animTime;
         private static bool cancelReload;
 
-        public static void UnInit()
+        public static void IngameStart()
         {
             gunList.Clear();
             ammoList.Clear();
+        }
+        public static void UnInit()
+        {
+            IngameStart();
             exceptionList.Clear();
         }
         public static void Init(SettingsFile settings)
         {
-            gunList.Clear();
-            ammoList.Clear();
+            IngameStart();
             exceptionList.Clear();
 
             string weaponsString = settings.GetValue("RELOADS", "LoseAmmoInMagExceptions", "");
@@ -46,6 +49,9 @@ namespace WeapFuncs.ivsdk
         }
         public static void Tick()
         {
+            if (IS_CHAR_DEAD(Main.PlayerHandle))
+                IngameStart();
+
             // Prune guns that are no longer present
             for (int i = 0; i < gunList.Count; i++)
             {
@@ -113,28 +119,36 @@ namespace WeapFuncs.ivsdk
 
                 if ((IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "p_load") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload_crouch")) && ammoList[currWeaponIndex] != Main.mAmmo && Main.pAmmo != Main.mAmmo && !isReloading)
                 {
-                    GetAnimTime();
-                    if (animTime < 0.8f)
-                    {
-                        bool dontLoseAmmo = false;
-                        foreach (eWeaponType weaponType in exceptionList)
-                        {
-                            if (currWeapon == (int)weaponType)
-                            {
-                                dontLoseAmmo = true;
-                                break;
-                            }
-                        }
-                        if (!Main.LoseAmmoInMag || dontLoseAmmo)
-                            ammoList[currWeaponIndex] = Main.pAmmo;
-                        else
-                        {
-                            SET_AMMO_IN_CLIP(Main.PlayerHandle, currWeapon, 0);
-                            ammoList[currWeaponIndex] = 0;
-                        }
+                    GET_AMMO_IN_CHAR_WEAPON(Main.PlayerHandle, currWeapon, out int aAmmo);
+                    //IVGame.ShowSubtitleMessage("ass " + currWeapon.ToString() + "  " + aAmmo.ToString());
+                    if (aAmmo == 0)
+                        REMOVE_WEAPON_FROM_CHAR(Main.PlayerHandle, currWeapon);
 
-                        currClip = ammoList[currWeaponIndex];
-                        isReloading = true;
+                    else
+                    {
+                        GetAnimTime();
+                        if (animTime < 0.8f)
+                        {
+                            bool dontLoseAmmo = false;
+                            foreach (eWeaponType weaponType in exceptionList)
+                            {
+                                if (currWeapon == (int)weaponType)
+                                {
+                                    dontLoseAmmo = true;
+                                    break;
+                                }
+                            }
+                            if (!Main.LoseAmmoInMag || dontLoseAmmo)
+                                ammoList[currWeaponIndex] = Main.pAmmo;
+                            else
+                            {
+                                SET_AMMO_IN_CLIP(Main.PlayerHandle, currWeapon, 0);
+                                ammoList[currWeaponIndex] = 0;
+                            }
+
+                            currClip = ammoList[currWeaponIndex];
+                            isReloading = true;
+                        }
                     }
                 }
 

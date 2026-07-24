@@ -81,7 +81,6 @@ namespace WeapFuncs.ivsdk
         {
             Pickups.GameLoad();
         }
-
         private void Main_IngameStartup(object sender, EventArgs e)
         {
             resetShit = false;
@@ -94,6 +93,7 @@ namespace WeapFuncs.ivsdk
             GLaunchAttachment.IngameStart();
             WeaponZoom.IngameStart();
             Pickups.IngameStart();
+            SwitchWeapNoReload.IngameStart();
         }
         private void Main_Uninitialize(object sender, EventArgs e)
         {
@@ -377,6 +377,11 @@ namespace WeapFuncs.ivsdk
                 return true;
             else
                 return false;
+        }
+        public static int PlayerAmmo()
+        {
+            GET_AMMO_IN_CLIP(PlayerHandle, currWeap, out int currAmmo);
+            return currAmmo;
         }
         public static void LoadWeaponConfig(int weapon)
         {
