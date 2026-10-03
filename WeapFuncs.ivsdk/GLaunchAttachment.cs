@@ -14,6 +14,7 @@ using CCL.GTAIV;
 using System.Net.Sockets;
 using System.Net.NetworkInformation;
 using System.Linq;
+using WeapFuncs.ivsdk.Helpers;
 
 namespace WeapFuncs.ivsdk
 {
@@ -131,7 +132,10 @@ namespace WeapFuncs.ivsdk
         }
         public static void OnButtonPress()
         {
-            if (!IS_PED_RAGDOLL(Main.PlayerHandle) && gAmmo > 0 && !IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload") && !IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "p_load") && !IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload_crouch") && (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "fire") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "fire_crouch") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "fire_alt") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "fire_crouch_alt") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "fire_up") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "fire_down") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "dbfire") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "dbfire_l")))
+            if (!IS_PED_RAGDOLL(Main.PlayerHandle) && gAmmo > 0 && !IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.wAnim, "reload") && !IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.wAnim, "p_load")
+                && !IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.wAnim, "reload_crouch") && (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.wAnim, "fire") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.wAnim, "fire_crouch")
+                || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.wAnim, "fire_alt") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.wAnim, "fire_crouch_alt") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.wAnim, "fire_up")
+                || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.wAnim, "fire_down") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.wAnim, "dbfire") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.wAnim, "dbfire_l")))
             {
                 if (!cantFire && (NativeControls.IsGameKeyPressed(0, GrndFireCtrl)) && !hasPressedButton)
                 {
@@ -225,7 +229,7 @@ namespace WeapFuncs.ivsdk
                         //SET_OBJECT_PHYSICS_PARAMS(glAttachProp, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0);
                         //ATTACH_OBJECT_TO_PED(glAttachProp, Main.PlayerHandle, 1232, glModelOff.X, glModelOff.Y, glModelOff.Z, glModelRot.X, glModelRot.Y, glModelRot.Z, 0);
                     }
-                    else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "reload_crouch") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.WeapAnim, "p_load"))
+                    else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.wAnim, "reload") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.wAnim, "reload_crouch") || IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, Main.wAnim, "p_load"))
                         ATTACH_OBJECT_TO_OBJECT(glAttachProp, wObj, 0, glModelReloadOff.X, glModelReloadOff.Y, glModelReloadOff.Z, glModelReloadRot.X, glModelReloadRot.Y, glModelReloadRot.Z);
                     else
                         ATTACH_OBJECT_TO_PED(glAttachProp, Main.PlayerHandle, 1232, glModelOff.X, glModelOff.Y, glModelOff.Z, glModelRot.X, glModelRot.Y, glModelRot.Z, 0);
@@ -359,13 +363,13 @@ namespace WeapFuncs.ivsdk
                 {
                     if (Main.wfAttachConfig.DoesSectionExists(i.ToString()))
                     {
-                        Main.WriteBooleanToINI(Main.wfAttachConfig, i.ToString() + "HasGrenadeLauncherAttachment", attachmentUnlocks[i]);
-                        Main.WriteIntToINI(Main.wfAttachConfig, i.ToString() + "GrenadeLauncherAmmo", grenadeAmmo[i]);
+                        GenHelp.WriteBooleanToINI(Main.wfAttachConfig, i.ToString() + "HasGrenadeLauncherAttachment", attachmentUnlocks[i]);
+                        GenHelp.WriteIntToINI(Main.wfAttachConfig, i.ToString() + "GrenadeLauncherAmmo", grenadeAmmo[i]);
                     }
                     if (Main.attachmentConfig.DoesSectionExists(i.ToString()))
                     {
-                        Main.WriteBooleanToINI(Main.attachmentConfig, i.ToString() + "HasGrenadeLauncherAttachment", attachmentUnlocks[i]);
-                        Main.WriteIntToINI(Main.attachmentConfig, i.ToString() + "GrenadeLauncherAmmo", grenadeAmmo[i]);
+                        GenHelp.WriteBooleanToINI(Main.attachmentConfig, i.ToString() + "HasGrenadeLauncherAttachment", attachmentUnlocks[i]);
+                        GenHelp.WriteIntToINI(Main.attachmentConfig, i.ToString() + "GrenadeLauncherAmmo", grenadeAmmo[i]);
                     }
                 }
                 Main.wfAttachConfig.Save();

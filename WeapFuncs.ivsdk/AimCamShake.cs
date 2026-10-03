@@ -3,6 +3,7 @@ using IVSDKDotNet;
 using IVSDKDotNet.Attributes;
 using IVSDKDotNet.Enums;
 using System;
+using WeapFuncs.ivsdk.Helpers;
 using static IVSDKDotNet.Native.Natives;
 
 namespace WeapFuncs.ivsdk
@@ -41,9 +42,9 @@ namespace WeapFuncs.ivsdk
         public static void Tick()
         {
             cam = NativeCamera.GetGameCam();
-            if (!IS_CAM_SHAKING() && (Main.IsAimingAnimPlaying() || (Main.IsReloadAnimPlaying() && Main.IsPressingAimButton())))
+            if (!IS_CAM_SHAKING() && (WeaponHelper.IsAimingAnimPlaying() || (WeaponHelper.IsReloadAnimPlaying() && WeaponHelper.IsPressingAimButton())))
             {
-                if (!IS_CHAR_SHOOTING(Main.PlayerHandle) && (Main.IsReloadAnimPlaying() || (!NativeControls.IsGameKeyPressed(0, GameKey.Attack) && !NativeControls.IsGameKeyPressed(2, GameKey.Attack))))
+                if (!IS_CHAR_SHOOTING(Main.PlayerHandle) && (WeaponHelper.IsReloadAnimPlaying() || (!NativeControls.IsGameKeyPressed(0, GameKey.Attack) && !NativeControls.IsGameKeyPressed(2, GameKey.Attack))))
                 {
                     if (Main.gTimer >= fTimer + 100)
                     {
@@ -72,7 +73,6 @@ namespace WeapFuncs.ivsdk
                 }
             }
         }
-
         private static void ApplyCameraShake(NativeCamera cam, float amplitude1, float amplitude2, float appliedRecoil, int duration)
         {
             cam.Shake(CameraShakeType.PITCH_UP_DOWN, CameraShakeBehaviour.CONSTANT_PLUS_FADE_IN_OUT, duration,

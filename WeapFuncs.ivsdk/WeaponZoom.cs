@@ -1,14 +1,16 @@
 ﻿using CCL.GTAIV;
 using IVSDKDotNet;
+using IVSDKDotNet.Enums;
+using IVSDKDotNet.Hooking;
 using System;
 using System.Numerics;
+using WeapFuncs.ivsdk.Helpers;
 using static IVSDKDotNet.Native.Natives;
 
 namespace WeapFuncs.ivsdk
 {
     internal class WeaponZoom
     {
-        private static bool hasAttachment;
         private static float weaponZoom;
 
         private static bool[] attachmentUnlocks;
@@ -42,7 +44,7 @@ namespace WeapFuncs.ivsdk
         }
         public static void LoadWeaponConfig(int weapon)
         {
-            if (Main.wConfFile.DoesSectionExists(weapon.ToString()))
+            /*if (Main.wConfFile.DoesSectionExists(weapon.ToString()))
             {
                 if (Main.wfAttachConfig.DoesSectionExists(weapon.ToString()))
                 {
@@ -60,7 +62,29 @@ namespace WeapFuncs.ivsdk
                     scopeOn = false;
                 }
             }
+            Main.wfAttachConfig.Load();*/
+
+            int weapIndex = Main.weaponData.FindIndex(w => w.ID == weapon);
             Main.wfAttachConfig.Load();
+            if (Main.wfAttachConfig.DoesSectionExists(weapon.ToString()))
+            {
+                bool hasAttachment = Main.wfAttachConfig.GetBoolean(IVGenericGameStorage.ValidSaveName, weapon.ToString() + "HasScopeAttachment", false);
+                if (hasAttachment)
+                    weaponZoom = Main.wfAttachConfig.GetFloat(weapon.ToString(), "ScopeMagnification", 1.0f);
+                else
+                {
+                    if (weapIndex >= 0)
+                        weaponZoom = Main.weaponData[weapIndex].Zoom;
+                }
+
+                scopeOn = Main.wfAttachConfig.GetBoolean(weapon.ToString(), "FirstPerson", false);
+            }
+            else
+            {
+                if (weapIndex >= 0)
+                    weaponZoom = Main.weaponData[weapIndex].Zoom;
+                scopeOn = false;
+            }
         }
         public static void Tick()
         {
@@ -69,9 +93,9 @@ namespace WeapFuncs.ivsdk
 
             LoadWeaponConfig(Main.currWeap);
 
-            if (Main.IsHoldingGun())
+            if (WeaponHelper.IsHoldingGun())
             {
-                if (pWeap == Main.currWeap && !IS_PED_RAGDOLL(Main.PlayerHandle) && !IS_CHAR_SWIMMING(Main.PlayerHandle) && !IS_CHAR_SITTING_IN_ANY_CAR(Main.PlayerHandle) && Main.IsPressingAimButton())
+                if (pWeap == Main.currWeap && !IS_PED_RAGDOLL(Main.PlayerHandle) && !IS_CHAR_SWIMMING(Main.PlayerHandle) && !IS_CHAR_SITTING_IN_ANY_CAR(Main.PlayerHandle) && WeaponHelper.IsPressingAimButton())
                 {
                     if ((NativeControls.IsGameKeyPressed(0, GameKey.LookBehind) || NativeControls.IsGameKeyPressed(2, GameKey.LookBehind)) && !isButtonPressed)
                     {
@@ -82,7 +106,7 @@ namespace WeapFuncs.ivsdk
                         isButtonPressed = false;
 
                     GET_MOUSE_WHEEL(out msWhl);
-                    if ((msWhl < 0 || isZoomOn || gameCam.FOV <= 40) && Main.IsAimingAnimPlaying() && zoomAmt != weaponZoom)
+                    if ((msWhl < 0 || isZoomOn || gameCam.FOV <= 40) && WeaponHelper.IsAimingAnimPlaying() && zoomAmt != weaponZoom)
                     {
                         isZoomOn = true;
                         zoomAmt = weaponZoom;
@@ -94,7 +118,7 @@ namespace WeapFuncs.ivsdk
                     }
                 }
 
-                else if (!Main.IsAimingAnimPlaying() || IS_CHAR_SITTING_IN_ANY_CAR(Main.PlayerHandle) || !Main.IsPressingAimButton())
+                else if (!WeaponHelper.IsAimingAnimPlaying() || IS_CHAR_SITTING_IN_ANY_CAR(Main.PlayerHandle) || !WeaponHelper.IsPressingAimButton())
                 {
                     isZoomOn = false;
                     isButtonPressed = false;
@@ -116,10 +140,10 @@ namespace WeapFuncs.ivsdk
             if (cam == null)
                 return;
 
-            if (Main.IsHoldingGun())
+            if (WeaponHelper.IsHoldingGun())
             {
                 //IVGame.ShowSubtitleMessage(gameCam.FOV.ToString() + "   " + zoomAmt.ToString());
-                currentFOV = Main.SmoothStep(currentFOV, zoomAmt, 15f * Main.frameTime);
+                currentFOV = GenHelp.SmoothStep(currentFOV, zoomAmt, 15f * Main.frameTime);
 
                 cam.FOV /= currentFOV;
             }

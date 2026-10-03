@@ -13,6 +13,7 @@ using System.Net.Sockets;
 using System.Numerics;
 using System.Security.Policy;
 using System.Windows.Forms;
+using WeapFuncs.ivsdk.Helpers;
 using static IVSDKDotNet.Native.Natives;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
 
@@ -66,7 +67,7 @@ namespace WeapFuncs.ivsdk
             {
                 if (!bLaunched)
                 {
-                    if (!isAiming && Main.IsPressingAimButton() && Main.IsAimingAnimPlaying())
+                    if (!isAiming && WeaponHelper.IsPressingAimButton() && WeaponHelper.IsAimingAnimPlaying())
                     {
                         timeLocked = 0;
                         targetVeh = -1;
@@ -107,7 +108,7 @@ namespace WeapFuncs.ivsdk
                 }
             }
 
-            if (!bLaunched && (!Main.IsAimingAnimPlaying() || Main.IsReloadAnimPlaying() || !Main.IsPressingAimButton()))
+            if (!bLaunched && (!WeaponHelper.IsAimingAnimPlaying() || WeaponHelper.IsReloadAnimPlaying() || !WeaponHelper.IsPressingAimButton()))
             {
                 targetVeh = -1;
                 tmpTargetVeh = -1;
@@ -243,9 +244,9 @@ namespace WeapFuncs.ivsdk
                             tmpDiv = turnStrength * 5;
 
                         GET_OBJECT_QUATERNION(rocketObj, out float objX, out float objY, out float objZ, out float objW);
-                        Vector3 objRotation = Main.QuaternionToRotation(objX, objY, objZ, objW);
+                        Vector3 objRotation = GenHelp.QuaternionToRotation(objX, objY, objZ, objW);
 
-                        Vector3 tmpRot = Main.DirectionToRotation(tmpDir, 0);
+                        Vector3 tmpRot = GenHelp.DirectionToRotation(tmpDir, 0);
                         float incValue = (Math.Abs(objRotation.X - tmpRot.X) * Main.frameTime * 100) / tmpDiv;
 
                         if (objRotation.X > tmpRot.X)

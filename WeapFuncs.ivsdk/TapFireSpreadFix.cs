@@ -22,7 +22,7 @@ namespace WeapFuncs.ivsdk
         private static float SpreadDecayRate;
         private static float MaxSpread;
 
-        private static List<eWeaponType> exceptionList = new List<eWeaponType>();
+        private static List<int> exceptionList = new List<int>();
         public static void Init(SettingsFile settings)
         {
             exceptionList.Clear();
@@ -33,7 +33,7 @@ namespace WeapFuncs.ivsdk
             string weaponsString = settings.GetValue("RECOIL & BULLETSPREAD", "TapFireFixExceptions", "");
             foreach (var weaponName in weaponsString.Split(','))
             {
-                eWeaponType weaponType = (eWeaponType)Enum.Parse(typeof(eWeaponType), weaponName.Trim(), true);
+                int weaponType = Int32.Parse(weaponName.Trim());
                 exceptionList.Add(weaponType);
             }
         }
@@ -41,7 +41,7 @@ namespace WeapFuncs.ivsdk
         public static void Tick()
         {
             bool tapFireException = false;
-            foreach (eWeaponType weaponType in exceptionList)
+            foreach (int weaponType in exceptionList)
             {
                 if (Main.currWeap == (int)weaponType)
                     tapFireException = true;

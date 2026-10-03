@@ -32,15 +32,17 @@ namespace WeapFuncs.ivsdk
 
         public static void Init(SettingsFile settings)
         {
-            flameWeapon = settings.GetInteger("OTHER", "FlameWeaponID", 19);
-            flameFxScale = settings.GetFloat("OTHER", "FlameFxScale", 2.0f);
-            flameOffset = settings.GetVector3("OTHER", "FlameOffset", Vector3.Zero);
-            maxRange = settings.GetFloat("OTHER", "FlameMaxRange", 7.5f);
-            flameExplosion = settings.GetInteger("OTHER", "FlameExplosionID", 23);
-            flameSpeed = settings.GetFloat("OTHER", "FlameSpeed", 8);
+            flameWeapon = settings.GetInteger("FLAMETHROWER", "FlameWeaponID", 19);
+            flameFxScale = settings.GetFloat("FLAMETHROWER", "FlameFxScale", 2.0f);
+            flameOffset = settings.GetVector3("FLAMETHROWER", "FlameOffset", Vector3.Zero);
+            maxRange = settings.GetFloat("FLAMETHROWER", "FlameMaxRange", 7.5f);
+            flameExplosion = settings.GetInteger("FLAMETHROWER", "FlameExplosionID", 23);
+            flameSpeed = settings.GetFloat("FLAMETHROWER", "FlameSpeed", 8);
         }
         public static void Tick()
         {
+            //GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "gun@fthrower", "fire", out float pTime);
+            //IVGame.ShowSubtitleMessage(pTime.ToString());
             foreach (var ped in PedHelper.PedHandles)
             {
                 int pedHandle = ped.Value;

@@ -31,11 +31,11 @@ namespace WeapFuncs.ivsdk
         private static bool faceExplosion = false;
         public static void Init(SettingsFile settings)
         {
-            expID = settings.GetInteger("OTHER", "StunExplosionID", 0);
-            weapID = settings.GetInteger("OTHER", "StunWeaponID", 0);
-            camIntensity = settings.GetFloat("OTHER", "CamShakeIntensity", 0);
-            blindRad = settings.GetFloat("OTHER", "FlashRadius", 0);
-            ragdollDuration = settings.GetInteger("OTHER", "StunDuration", 0);
+            expID = settings.GetInteger("FLASHBANG", "StunExplosionID", 0);
+            weapID = settings.GetInteger("FLASHBANG", "StunWeaponID", 0);
+            camIntensity = settings.GetFloat("FLASHBANG", "CamShakeIntensity", 0);
+            blindRad = settings.GetFloat("FLASHBANG", "FlashRadius", 0);
+            ragdollDuration = settings.GetInteger("FLASHBANG", "StunDuration", 0);
         }
         public static void Tick()
         {

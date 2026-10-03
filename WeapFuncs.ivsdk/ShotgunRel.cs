@@ -75,7 +75,7 @@ namespace WeapFuncs.ivsdk
                 if (Main.currWeap == (int)weaponType && !IS_CHAR_SITTING_IN_ANY_CAR(Main.PlayerHandle))
                 {
                     weapIndex = AllRoundReloads.IndexOf(weaponType);
-                    wAnim = Main.WeapAnim;
+                    wAnim = Main.wAnim;
                     GetAmmo();
                     if (!IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, wAnim, "reload") && !IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, wAnim, "reload_crouch"))
                     {
@@ -162,7 +162,7 @@ namespace WeapFuncs.ivsdk
                             if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, wAnim, "reload") && shotrel >= (Loop1End[weapIndex] - PumpDuration[weapIndex]))
                             {
                                 LoopStart = true;
-                                SET_CHAR_ANIM_SPEED(Main.PlayerHandle, wAnim, "reload", (Main.weapReload * -1));
+                                SET_CHAR_ANIM_SPEED(Main.PlayerHandle, wAnim, "reload", (Main.wReload * -1));
                                 return;
                             }
                             LoopStart = false;
@@ -247,7 +247,7 @@ namespace WeapFuncs.ivsdk
                             if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, wAnim, "reload_crouch") && shotrel >= (Loop1End[weapIndex] - PumpDuration[weapIndex]))
                             {
                                 LoopStart = true;
-                                SET_CHAR_ANIM_SPEED(Main.PlayerHandle, wAnim, "reload_crouch", (Main.weapReload * -1));
+                                SET_CHAR_ANIM_SPEED(Main.PlayerHandle, wAnim, "reload_crouch", (Main.wReload * -1));
                                 return;
                             }
                             LoopStart = false;
@@ -308,7 +308,7 @@ namespace WeapFuncs.ivsdk
                 if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, wAnim, "reload") && shotrel >= Loop2Start[weapIndex] && shotrel < 0.92 && pAmmo != mAmmo)
                 {
                     LoopStart = true;
-                    SET_CHAR_ANIM_SPEED(Main.PlayerHandle, wAnim, "reload", (Main.weapReload * -1));
+                    SET_CHAR_ANIM_SPEED(Main.PlayerHandle, wAnim, "reload", (Main.wReload * -1));
                     return;
                 }
                 LoopStart = false;
@@ -358,7 +358,7 @@ namespace WeapFuncs.ivsdk
                 if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, wAnim, "reload_crouch") && shotrel >= Loop2Start[weapIndex] && shotrel < 0.92 && pAmmo != mAmmo)
                 {
                     LoopStart = true;
-                    SET_CHAR_ANIM_SPEED(Main.PlayerHandle, wAnim, "reload_crouch", (Main.weapReload * -1));
+                    SET_CHAR_ANIM_SPEED(Main.PlayerHandle, wAnim, "reload_crouch", (Main.wReload * -1));
                     return;
                 }
                 LoopStart = false;

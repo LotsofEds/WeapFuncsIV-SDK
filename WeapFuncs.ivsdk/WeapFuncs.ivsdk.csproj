@@ -56,14 +56,17 @@
     <Compile Include="Flames.cs" />
     <Compile Include="Flashbang.cs" />
     <Compile Include="GLaunchAttachment.cs" />
+    <Compile Include="Helpers\GenHelp.cs" />
+    <Compile Include="Helpers\WeaponHelper.cs" />
+    <Compile Include="LessSuckyMiniguns.cs" />
     <Compile Include="LockOn.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="NightVision.cs" />
-    <Compile Include="PumpToSemi.cs" />
+    <Compile Include="ReloadInVeh.cs" />
     <Compile Include="ShotgunBlindfireFix.cs" />
-    <Compile Include="ObjectHelper.cs" />
+    <Compile Include="Helpers\ObjectHelper.cs" />
     <Compile Include="ObjectTest.cs" />
-    <Compile Include="PedHelper.cs" />
+    <Compile Include="Helpers\PedHelper.cs" />
     <Compile Include="Pickups.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RateOfFire.cs" />
@@ -72,11 +75,11 @@
     <Compile Include="SelectFire.cs" />
     <Compile Include="ShotgunRel.cs" />
     <Compile Include="ShottyHeadShot.cs" />
+    <Compile Include="ShoulderSwap.cs" />
     <Compile Include="Silence.cs" />
     <Compile Include="SwitchWeapNoReload.cs" />
     <Compile Include="TapFireSpreadFix.cs" />
-    <Compile Include="VehHelper.cs" />
-    <Compile Include="WeapFuncs.cs" />
+    <Compile Include="Helpers\VehHelper.cs" />
     <Compile Include="WeaponZoom.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

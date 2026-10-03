@@ -1,48 +1,47 @@
-﻿using System;
-using System.Windows.Forms;
+﻿using CCL;
+using CCL.GTAIV;
+using IVSDKDotNet;
+using IVSDKDotNet.Hooking;
+using IVSDKDotNet.Native;
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Numerics;
-using IVSDKDotNet;
+using System.Reflection;
+using System.Windows.Forms;
+using WeapFuncs.ivsdk.Helpers;
 using static IVSDKDotNet.Native.Natives;
-using CCL;
-using CCL.GTAIV;
 
 namespace WeapFuncs.ivsdk
 {
     public class Main : Script
     {
         // IniShit
-        public static bool GlobalRateOfFire;
-        public static bool ReloadInVehicles;
-        public static bool ReloadOnBikes;
-        public static bool CrouchRelFix;
-        public static bool SemiAutoShotgunBlindfire;
-        public static bool ConsistentPistolBlindfireLoop;
-        public static bool FullAutoPistol;
-        public static bool FullAutoShotgun;
-        public static bool SawnOffYeet;
-        public static bool FireMode;
-        public static bool ShowFireModeText;
-        public static bool SwitchWeaponNoReload;
-        public static bool PressToFire;
-        public static bool LoseAmmoInMag;
-        public static int ShotsPerBurst;
-        public static GameKey SelectFireCtrl;
-        public static bool AllRoundReload;
-        public static bool HeadShotty;
-        public static bool TapFireFixEnable;
-        public static bool GLaunchEnable;
         public static int numOfWeapIDs;
+        public static bool globalRateOfFire;
+        public static bool reloadSpeedEnable;
+        public static bool reloadInVehicles;
+        public static bool blindfireFixes;
+        public static bool fireMode;
+        public static bool switchWeaponNoReload;
+        public static bool LoseAmmoInMag;
+        public static bool allRoundReload;
+        public static bool headShotty;
+        public static bool tapFireFixEnable;
+        public static bool gLaunchEnable;
         public static bool flameOn;
         public static bool equipGun;
         public static bool enableStun;
         public static bool enableHeatseeker;
         public static bool recoilEnable;
+        public static bool heliMinigunEnable;
+        public static bool weaponZoomEnable;
+        public static bool aimCamShakeEnable;
+        public static bool pickupEnable;
 
         // Other variables n shit
         public static bool resetShit;
-        public static int gunModel;
         public static int Boolet;
         public static int currWeap;
         public static int pAmmo;
@@ -52,10 +51,11 @@ namespace WeapFuncs.ivsdk
         public static uint CurrEp;
         public static uint gTimer;
         public static float frameTime;
-        public static string WeapAnim = "";
-        public static string BFAnim = "";
-        public static float weapReload = 1.0f;
-        public static Vector3 WeapOffset = new Vector3(0, 0, 0);
+
+        public static string wAnim = "";
+        public static string bfAnim = "";
+        public static float wReload = 1.0f;
+        public static Vector3 wOffset = new Vector3(0, 0, 0);
         public static IVPed PlayerPed { get; set; }
         public static uint PlayerIndex { get; set; }
         public static int PlayerHandle { get; set; }
@@ -66,30 +66,27 @@ namespace WeapFuncs.ivsdk
         public static SettingsFile wfConfig;
         public static SettingsFile attachmentConfig;
         public static SettingsFile wfAttachConfig;
+
+        public static List<WeaponData> weaponData = new List<WeaponData>();
         public Main()
         {
             Uninitialize += Main_Uninitialize;
             Initialized += Main_Initialized;
             IngameStartup += Main_IngameStartup;
-            GameLoad += Main_GameLoad;
+            //GameLoad += Main_GameLoad;
             Tick += Main_Tick;
             ProcessCamera += Main_ProcessCamera;
+            GameHooks.OnDoPickupGlow += new GameHooks.OnDoPickupGlowDelegate(OnDoPickupGlow);
             //TheWeaponHandler = new WeaponHandling();
         }
-
-        private void Main_GameLoad(object sender, EventArgs e)
-        {
-            Pickups.GameLoad();
-        }
+        private HookCallback<int> OnDoPickupGlow() => new HookCallback<int>(pickupEnable? true : false);
         private void Main_IngameStartup(object sender, EventArgs e)
         {
             resetShit = false;
             currWeap = 0;
-            WeapAnim = "";
-            BFAnim = "";
+            wAnim = "";
+            bfAnim = "";
 
-            if (DOES_OBJECT_EXIST(gunModel))
-                DELETE_OBJECT(ref gunModel);
             GLaunchAttachment.IngameStart();
             WeaponZoom.IngameStart();
             Pickups.IngameStart();
@@ -97,12 +94,13 @@ namespace WeapFuncs.ivsdk
         }
         private void Main_Uninitialize(object sender, EventArgs e)
         {
-            WeapFuncs.UnInit();
+            ReloadInVeh.UnInit();
             GLaunchAttachment.UnInit();
             EquipGun.UnInit();
             Pickups.UnInit();
             SwitchWeapNoReload.UnInit();
             SelectFire.UnInit();
+            //ShoulderSwap.UnInit();
             //Silence.UnInit();
         }
         private void Main_Initialized(object sender, EventArgs e)
@@ -122,24 +120,23 @@ namespace WeapFuncs.ivsdk
             attachmentConfig.Load();
 
             LoadSettings(Settings);
-            if (GlobalRateOfFire)
+            GetWeaponData();
+
+            if (globalRateOfFire)
                 RateOfFire.Init(Settings);
-            BlindFireFixes.Init(Settings);
-            if (SemiAutoShotgunBlindfire)
-                ShotgunBlindfireFix.Init(Settings);
-            BlindFireFixes.Init(Settings);
-            if (AllRoundReload)
+            if (blindfireFixes)
+                BlindFireFixes.Init(Settings);
+            if (allRoundReload)
                 ShotgunRel.Init(Settings);
-            SwitchWeapNoReload.Init(Settings);
-            if (HeadShotty)
+            if (switchWeaponNoReload)
+                SwitchWeapNoReload.Init(Settings);
+            if (headShotty)
                 ShottyHeadShot.Init(Settings);
-            WeaponZoom.Init(Settings);
-            if (FireMode)
-            {
+            if (weaponZoomEnable)
+                WeaponZoom.Init(Settings);
+            if (fireMode)
                 SelectFire.Init(Settings);
-                PumpToSemi.Init(Settings);
-            }
-            if (GLaunchEnable)
+            if (gLaunchEnable)
                 GLaunchAttachment.Init(Settings);
             if (flameOn)
                 Flames.Init(Settings);
@@ -150,25 +147,20 @@ namespace WeapFuncs.ivsdk
                 Flashbang.Init(Settings);
             if (recoilEnable)
                 Recoil.Init(Settings);
-            if (TapFireFixEnable)
+            if (tapFireFixEnable)
                 TapFireSpreadFix.Init(Settings);
             if (enableHeatseeker)
                 LockOn.Init(Settings);
-
-            AimCamShake.Init(Settings);
+            if (aimCamShakeEnable)
+                AimCamShake.Init(Settings);
+            if (heliMinigunEnable)
+                LessSuckyMiniguns.Init(Settings);
         }
         public static bool InitialChecks()
         {
             if (IS_SCREEN_FADED_OUT()) return false;
             if (IS_PAUSE_MENU_ACTIVE()) return false;
             return true;
-        }
-        public static bool IsHoldingGun()
-        {
-            if (IVWeaponInfo.GetWeaponInfo((uint)Main.currWeap).WeaponFlags.Gun == true)
-                return true;
-            else
-                return false;
         }
         private void Main_Tick(object sender, EventArgs e)
         {
@@ -189,14 +181,15 @@ namespace WeapFuncs.ivsdk
             if (!resetShit)
             {
                 currWeap = 0;
-                WeapAnim = "";
-                BFAnim = "";
+                wAnim = "";
+                bfAnim = "";
 
-                if (DOES_OBJECT_EXIST(gunModel))
-                    DELETE_OBJECT(ref gunModel);
+                ReloadInVeh.IngameStart();
                 GLaunchAttachment.IngameStart();
                 WeaponZoom.IngameStart();
                 Pickups.IngameStart();
+                //ShoulderSwap.UnInit();
+
                 resetShit = true;
             }
 
@@ -212,243 +205,164 @@ namespace WeapFuncs.ivsdk
 
             PedHelper.GrabAllPeds();
             ObjectHelper.GrabAllObjs();
-            if (GlobalRateOfFire)
+
+            if (globalRateOfFire)
                 RateOfFire.Tick();
-            ReloadSpeed.Tick();
-            BlindFireFixes.Tick();
-            if (SemiAutoShotgunBlindfire)
-                ShotgunBlindfireFix.Tick();
-            WeapFuncs.Tick();
-            if (SwitchWeaponNoReload)
+            if (reloadSpeedEnable)
+                ReloadSpeed.Tick();
+            if (reloadInVehicles)
+                ReloadInVeh.Tick();
+            if (blindfireFixes)
+                BlindFireFixes.Tick();
+            if (switchWeaponNoReload)
                 SwitchWeapNoReload.Tick();
-            if (AllRoundReload)
+            if (allRoundReload)
                 ShotgunRel.Tick();
-            if (HeadShotty)
+            if (headShotty)
                 ShottyHeadShot.Tick();
-            if (FireMode)
-            {
+            if (fireMode)
                 SelectFire.Tick();
-                PumpToSemi.Tick();
-            }
-            if (GLaunchEnable)
+            if (gLaunchEnable)
                 GLaunchAttachment.Tick();
             if (flameOn)
                 Flames.Tick();
             if (equipGun)
                 EquipGun.Tick();
 
-            Pickups.Tick();
             if (enableStun)
                 Flashbang.Tick();
             if (recoilEnable)
                 Recoil.Tick();
-            if (TapFireFixEnable)
+            if (tapFireFixEnable)
                 TapFireSpreadFix.Tick();
             if (enableHeatseeker)
                 LockOn.Tick();
+            if (heliMinigunEnable)
+                LessSuckyMiniguns.Tick();
 
-            WeaponZoom.Tick();
-            AimCamShake.Tick();
+            Pickups.Tick();
+            if (weaponZoomEnable)
+                WeaponZoom.Tick();
+            if (aimCamShakeEnable)
+                AimCamShake.Tick();
             //NightVision.Tick();
 
             //Silence.Tick();
             //ObjectTest.Tick();
-        }
-        public static void WriteBooleanToINI(SettingsFile settings, string name, bool booleShit)
-        {
-            if (!settings.DoesSectionExists(IVGenericGameStorage.ValidSaveName))
-                settings.AddSection(IVGenericGameStorage.ValidSaveName);
-            if (!settings.DoesKeyExists(IVGenericGameStorage.ValidSaveName, name))
-                settings.AddKeyToSection(IVGenericGameStorage.ValidSaveName, name);
-            settings.SetBoolean(IVGenericGameStorage.ValidSaveName, name, booleShit);
-        }
-        public static void WriteIntToINI(SettingsFile settings, string name, int integerShit)
-        {
-            if (!settings.DoesSectionExists(IVGenericGameStorage.ValidSaveName))
-                settings.AddSection(IVGenericGameStorage.ValidSaveName);
-            if (!settings.DoesKeyExists(IVGenericGameStorage.ValidSaveName, name))
-                settings.AddKeyToSection(IVGenericGameStorage.ValidSaveName, name);
-            settings.SetInteger(IVGenericGameStorage.ValidSaveName, name, integerShit);
-        }
-        // Credits to catsmackaroo for these helpers, couldn't be assed to make my own from scratch.
-        public static float Clamp(float value, float min, float max)
-        {
-            if (value < min) return min;
-            if (value > max) return max;
-            return value;
-        }
-        public static float SmoothStep(float start, float end, float amount)
-        {
-            amount = Clamp(amount, 0, 1);
-            amount = amount * amount * (3 - 2 * amount);
-            return start + (end - start) * amount;
-        }
-        public static bool TwoHanded(int weapon)
-        {
-            if (IVWeaponInfo.GetWeaponInfo((uint)weapon).WeaponFlags.TreatAsTwoHandedInCover || IVWeaponInfo.GetWeaponInfo((uint)weapon).WeaponFlags.TwoHanded)
-                return true;
-            else
-                return false;
-        }
-        public static bool IsAimingAnimPlaying()
-        {
-            if (IS_CHAR_PLAYING_ANIM(PlayerHandle, WeapAnim, "fire") || IS_CHAR_PLAYING_ANIM(PlayerHandle, WeapAnim, "fire_crouch") || IS_CHAR_PLAYING_ANIM(PlayerHandle, WeapAnim, "fire_alt") || IS_CHAR_PLAYING_ANIM(PlayerHandle, WeapAnim, "fire_crouch_alt") || IS_CHAR_PLAYING_ANIM(PlayerHandle, WeapAnim, "fire_up") || IS_CHAR_PLAYING_ANIM(PlayerHandle, WeapAnim, "fire_down"))
-                return true;
-            else
-                return false;
-        }
-        public static bool IsReloadAnimPlaying()
-        {
-            if (IS_CHAR_PLAYING_ANIM(PlayerHandle, WeapAnim, "reload") || IS_CHAR_PLAYING_ANIM(PlayerHandle, WeapAnim, "p_load") || IS_CHAR_PLAYING_ANIM(PlayerHandle, WeapAnim, "reload_crouch"))
-                return true;
-            else
-                return false;
-        }
-        public static Vector3 QuaternionToRotation(float X, float Y, float Z, float W)
-        {
-            double num = W;
-            double num2 = X;
-            double num3 = Y;
-            double num4 = Z;
-            double y = ((double)Z * (double)Y + (double)X * (double)W) * 2.0;
-            double num5 = num;
-            double num6 = num5 * num5;
-            double num7 = num2;
-            double num8 = num6 - num7 * num7;
-            double num9 = num3;
-            double num10 = num8 - num9 * num9;
-            double num11 = num4;
-            float radians = (float)Math.Atan2(y, num10 + num11 * num11);
-            num2 = X;
-            num = W;
-            num3 = Y;
-            num4 = Z;
-            double y2 = ((double)Y * (double)X + (double)Z * (double)W) * 2.0;
-            double num12 = num2;
-            double num13 = num12 * num12;
-            double num14 = num;
-            double num15 = num13 + num14 * num14;
-            double num16 = num3;
-            double num17 = num15 - num16 * num16;
-            double num18 = num4;
-            float radians2 = (float)Math.Atan2(y2, num17 - num18 * num18);
-            float radians3 = (float)Math.Asin(((double)Z * (double)X - (double)Y * (double)W) * -2.0);
-            return new Vector3(Helper.RadianToDegree(radians), Helper.RadianToDegree(radians3), Helper.RadianToDegree(radians2));
-        }
-        public static Vector3 DirectionToRotation(Vector3 dir, float roll)
-        {
-            dir = Vector3.Normalize(dir);
-            Vector3 result = default(Vector3);
-            result.Z = (float)(Math.Atan2(dir.X, dir.Y) * (-180.0 / Math.PI));
-            Vector3 vector = new Vector3(dir.X, dir.Y, 0f);
-            Vector3 vector2 = new Vector3(dir.Z, vector.Length(), 0f);
-            Vector3 vector3 = Vector3.Normalize(vector2);
-            result.X = (float)(Math.Atan2(vector3.X, vector3.Y) * (180.0 / Math.PI));
-            result.Y = roll;
-            return result;
+            //ShoulderSwap.Tick();
         }
         private void Main_ProcessCamera(object sender, EventArgs e)
         {
             if (!InitialChecks())
                 return;
             WeaponZoom.ProcessCam();
-        }
-        public static bool IsAimKeyPressedOnController()
-        {
-            uint standard = 0;
-            var settings = IVMenuManager.GetSetting(IVSDKDotNet.Enums.eSettings.SETTING_CONFIGURATION);
-            ControllerButton button;
-
-            if (settings == standard
-                && !IS_CHAR_IN_ANY_CAR(Main.PlayerPed.GetHandle()))
-                button = ControllerButton.BUTTON_TRIGGER_LEFT;
-            else
-                button = ControllerButton.BUTTON_BUMPER_LEFT;
-
-
-            if (NativeControls.IsControllerButtonPressed(2, button))
-                return true;
-
-            return false;
-        }
-        public static bool IsPressingAimButton()
-        {
-            if ((IsAimKeyPressedOnController() && IS_USING_CONTROLLER()) || NativeControls.IsGameKeyPressed(0, GameKey.Aim) || NativeControls.IsGameKeyPressed(2, GameKey.Aim))
-                return true;
-            else
-                return false;
-        }
-        public static int PlayerAmmo()
-        {
-            GET_AMMO_IN_CLIP(PlayerHandle, currWeap, out int currAmmo);
-            return currAmmo;
+            //ShoulderSwap.ProcessCam();
         }
         public static void LoadWeaponConfig(int weapon)
         {
-            if (wConfFile.DoesSectionExists(weapon.ToString()))
+            int wIndex = Main.weaponData.FindIndex(w => w.ID == currWeap);
+            if (wIndex >= 0)
             {
-                WeapAnim = wConfFile.GetValue(weapon.ToString(), "Anim", "");
-                weapReload = wConfFile.GetFloat(weapon.ToString(), "Reload", 1);
-                WeapOffset = wConfFile.GetVector3(weapon.ToString(), "Offset", Vector3.Zero);
-                switch (IVWeaponInfo.GetWeaponInfo((uint)weapon).WeaponSlot)
+                WeaponData weapData = Main.weaponData[wIndex];
+
+                wAnim = weapData.Anim;
+                bfAnim = weapData.BFAnim;
+                wReload = weapData.ReloadSpd;
+                wOffset = weapData.Offset;
+            }
+        }
+        public static void GetWeaponData()
+        {
+            string[] weaponDatas = wConfFile.GetSectionNames();
+
+            for (int i = 0; i < weaponDatas.Count(); i++)
+            {
+                weaponData.Add(new WeaponData());
+
+                int weapID = Int32.Parse(weaponDatas[i].Trim());
+
+                weaponData[i].ID = weapID;
+                weaponData[i].Anim = Main.wConfFile.GetValue(weapID.ToString(), "Anim", "");
+
+                string bfAnim = "";
+                switch (IVWeaponInfo.GetWeaponInfo((uint)weapID).WeaponSlot)
                 {
                     case 2:
-                        if (TwoHanded(weapon))
-                            BFAnim = "ak47_blindfire";
+                        if (WeaponHelper.TwoHanded(weapID))
+                            bfAnim = "ak47_blindfire";
                         else
-                            BFAnim = "pistol_blindfire";
+                            bfAnim = "pistol_blindfire";
                         break;
                     case 3:
-                        BFAnim = "shotgun_blindfire";
+                        bfAnim = "shotgun_blindfire";
                         break;
                     case 4:
-                        if (TwoHanded(weapon))
-                            BFAnim = "ak47_blindfire";
+                        if (WeaponHelper.TwoHanded(weapID))
+                            bfAnim = "ak47_blindfire";
                         else
-                            BFAnim = "uzi_blindfire";
+                            bfAnim = "uzi_blindfire";
                         break;
                     case 5:
-                        BFAnim = "ak47_blindfire";
+                        bfAnim = "ak47_blindfire";
                         break;
                     case 6:
-                        BFAnim = "rifle_blindfire";
+                        bfAnim = "rifle_blindfire";
                         break;
                     case 7:
-                        BFAnim = "rocket_blindfire";
+                        bfAnim = "rocket_blindfire";
                         break;
                 }
+
+                weaponData[i].BFAnim = bfAnim;
+                weaponData[i].FireRate = Main.wConfFile.GetFloat(weapID.ToString(), "NormalROF", 1);
+                weaponData[i].DBFireRate = Main.wConfFile.GetFloat(weapID.ToString(), "DrivebyROF", 1);
+                weaponData[i].BFFireRate = Main.wConfFile.GetFloat(weapID.ToString(), "InCoverROF", 1);
+                weaponData[i].ReloadSpd = Main.wConfFile.GetFloat(weapID.ToString(), "Reload", 1.0f);
+                weaponData[i].Offset = Main.wConfFile.GetVector3(weapID.ToString(), "Offset", Vector3.Zero);
+                weaponData[i].PickupSound = Main.wConfFile.GetValue(weapID.ToString(), "PickupSound", "");
+                weaponData[i].Weight = Main.wConfFile.GetInteger(weapID.ToString(), "WeaponSpace", 0);
+                weaponData[i].Color = Main.wConfFile.GetValue(weapID.ToString(), "GlowColor", "");
+                weaponData[i].Zoom = Main.wConfFile.GetFloat(weapID.ToString(), "Zoom", 1.0f);
+
+                weaponData[i].RecoilAmpMin = Main.wConfFile.GetFloat(weapID.ToString(), "RecoilAmpMin", 0.0f);
+                weaponData[i].RecoilAmpMax = Main.wConfFile.GetFloat(weapID.ToString(), "RecoilAmpMax", 0.0f);
+                weaponData[i].RecoilTime = Main.wConfFile.GetInteger(weapID.ToString(), "RecoilTime", 0);
+
+                weaponData[i].RecoilAdd = Main.wConfFile.GetFloat(weapID.ToString(), "AdditionalRecoil", 0.0f);
+                weaponData[i].RecoilDecay = Main.wConfFile.GetFloat(weapID.ToString(), "DecayRate", 0.0f);
+                weaponData[i].MaxRecoil = Main.wConfFile.GetFloat(weapID.ToString(), "MaximumRecoil", 0.0f);
+                weaponData[i].RecoilCrouch = Main.wConfFile.GetFloat(weapID.ToString(), "CrouchMultiplier", 0.0f);
+
+                if (weaponData[i].ID >= numOfWeapIDs)
+                    numOfWeapIDs = weaponData[i].ID;
             }
         }
         private void LoadSettings(SettingsFile settings)
         {
             wConfFile = new SettingsFile(string.Format("{0}\\IVSDKDotNet\\scripts\\WeapFuncs\\WeaponConfigs.ini", IVGame.GameStartupPath));
             wConfFile.Load();
-            numOfWeapIDs = settings.GetInteger("MAIN", "NumOfWeaponIDs", 60);
-            GlobalRateOfFire = settings.GetBoolean("MAIN", "GlobalROF", false);
-            ReloadInVehicles = settings.GetBoolean("RELOADS", "ReloadInVehicles", false);
-            ReloadOnBikes = settings.GetBoolean("RELOADS", "ReloadOnBikes", false);
-            CrouchRelFix = settings.GetBoolean("RELOADS", "MP5ReloadCrouchFix", false);
-            SemiAutoShotgunBlindfire = settings.GetBoolean("BLINDFIRING", "SemiAutoShotgunBlindfire", false);
-            ConsistentPistolBlindfireLoop = settings.GetBoolean("BLINDFIRING", "ConsistentPistolBlindfireLoop", false);
-            FullAutoPistol = settings.GetBoolean("BLINDFIRING", "FullAutoPistolBlindfire", false);
-            FullAutoShotgun = settings.GetBoolean("BLINDFIRING", "FullAutoShotgunBlindfire", false);
-            SawnOffYeet = settings.GetBoolean("OTHER", "SawnOffFiresSecondShellImmediately", false);
-            FireMode = settings.GetBoolean("SELECT FIRE", "SelectFire", false);
-            ShowFireModeText = settings.GetBoolean("SELECT FIRE", "ShowFireModeText", false);
-            ShotsPerBurst = settings.GetInteger("SELECT FIRE", "ShotsPerBurst", 3);
-            SwitchWeaponNoReload = settings.GetBoolean("RELOADS", "SwitchWeaponNoReload", false);
-            PressToFire = settings.GetBoolean("SELECT FIRE", "PressToFire", false);
+            //numOfWeapIDs = settings.GetInteger("MAIN", "NumOfWeaponIDs", 60);
+            globalRateOfFire = settings.GetBoolean("MAIN", "GlobalROF", false);
+            reloadSpeedEnable = settings.GetBoolean("RELOADS", "CustomReloadSpeed", false);
+            reloadInVehicles = settings.GetBoolean("RELOADS", "ReloadInVehicles", false);
+            blindfireFixes = settings.GetBoolean("BLINDFIRING", "Enable", false);
+            switchWeaponNoReload = settings.GetBoolean("RELOADS", "SwitchWeaponNoReload", false);
+
+            fireMode = settings.GetBoolean("SELECT FIRE", "SelectFire", false);
             LoseAmmoInMag = settings.GetBoolean("RELOADS", "LoseAmmoInMag", false);
-            SelectFireCtrl = (GameKey)settings.GetInteger("SELECT FIRE", "SelectFireControl", 23);
-            AllRoundReload = settings.GetBoolean("RELOADS", "AllRoundReload", false);
-            HeadShotty = settings.GetBoolean("OTHER", "LethalShotgunHeadshot", false);
-            TapFireFixEnable = settings.GetBoolean("RECOIL & BULLETSPREAD", "TapFireBulletspreadFix", false);
-            GLaunchEnable = settings.GetBoolean("ATTACHMENTS", "GrenadeLauncherAttachment", false);
-            flameOn = settings.GetBoolean("OTHER", "FlameEnable", false);
+            allRoundReload = settings.GetBoolean("RELOADS", "AllRoundReload", false);
+            headShotty = settings.GetBoolean("OTHER", "LethalShotgunHeadshot", false);
+            tapFireFixEnable = settings.GetBoolean("RECOIL & BULLETSPREAD", "TapFireBulletspreadFix", false);
+            gLaunchEnable = settings.GetBoolean("ATTACHMENTS", "GrenadeLauncherAttachment", false);
+            flameOn = settings.GetBoolean("FLAMETHROWER", "FlameEnable", false);
             equipGun = settings.GetBoolean("OTHER", "HolsteredWeaponsOnPlayer", false);
-            enableStun = settings.GetBoolean("OTHER", "StunGrenadeEnable", false);
+            enableStun = settings.GetBoolean("FLASHBANG", "StunGrenadeEnable", false);
             enableHeatseeker = settings.GetBoolean("HEATSEEKER", "HeatseekerEnable", false);
             recoilEnable = settings.GetBoolean("RECOIL & BULLETSPREAD", "WeaponRecoil", false);
+            heliMinigunEnable = settings.GetBoolean("CUSTOM VEHICLE GUN", "Enable", false);
+            weaponZoomEnable = settings.GetBoolean("OTHER", "WeaponZoom", false);
+            aimCamShakeEnable = settings.GetBoolean("AIM CAMERA SHAKE", "Enable", false);
+            pickupEnable = settings.GetBoolean("PICKUPS", "RevampedPickups", false);
         }
     }
 }

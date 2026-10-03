@@ -19,6 +19,8 @@ namespace WeapFuncs.ivsdk
 {
     internal class EquipGun
     {
+        private static bool hideInCar;
+
         private static int weapSlot;
         private static Vector3 weapOff;
         private static Vector3 weapRot;
@@ -47,6 +49,7 @@ namespace WeapFuncs.ivsdk
         private static SettingsFile holsterConfig;
         public static void Init(SettingsFile settings)
         {
+            hideInCar = settings.GetBoolean("OTHER", "HideWeaponsInCar", true);
             holsterConfig = new SettingsFile(string.Format("{0}\\IVSDKDotNet\\scripts\\WeapFuncs\\WeaponHolster.ini", IVGame.GameStartupPath));
             holsterConfig.Load();
         }
@@ -82,141 +85,170 @@ namespace WeapFuncs.ivsdk
             {
                 if (!holsterConfig.DoesSectionExists(i.ToString()))
                     continue;
-                
-                if (HAS_CHAR_GOT_WEAPON(Main.PlayerHandle, i))
+
+                if (hideInCar && IS_CHAR_SITTING_IN_ANY_CAR(Main.PlayerHandle))
                 {
-                    if (Main.currWeap == i)
-                    {
-                        LoadConfig(i);
-                        //IVGame.ShowSubtitleMessage(weapIDA.ToString() + "  " + weapIDB.ToString() + "  " + weapIDC.ToString() + "  " + weapIDD.ToString() + "  " + weapSlot.ToString());
-                        switch (weapSlot)
-                        {
-                            case 1:
-                                if (weapIDA == i)
-                                    DELETE_OBJECT(ref weapObjA);
-                                break;
-                            case 2:
-                                if (weapIDB == i)
-                                    DELETE_OBJECT(ref weapObjB);
-                                break;
-                            case 3:
-                                if (weapIDC == i)
-                                    DELETE_OBJECT(ref weapObjC);
-                                break;
-                            case 4:
-                                if (weapIDD == i)
-                                    DELETE_OBJECT(ref weapObjD);
-                                break;
-                            case 5:
-                                if (weapIDE == i)
-                                    DELETE_OBJECT(ref weapObjE);
-                                break;
-                            case 6:
-                                if (weapIDF == i)
-                                    DELETE_OBJECT(ref weapObjF);
-                                break;
-                            case 7:
-                                if (weapIDG == i)
-                                    DELETE_OBJECT(ref weapObjG);
-                                break;
-                            case 8:
-                                if (weapIDH == i)
-                                    DELETE_OBJECT(ref weapObjH);
-                                break;
-                        }
-                    }
-                    else
-                    {
-                        LoadConfig(i);
-                        LoadBone(weapSlot);
-                        weapModel = (int)IVWeaponInfo.GetWeaponInfo((uint)i).ModelHash;
-                        switch (weapSlot)
-                        {
-                            case 1:
-                                if (!DOES_OBJECT_EXIST(weapObjA) && weapModel != 0)
-                                {
-                                    CREATE_OBJECT((int)weapModel, Main.PlayerPos.X, Main.PlayerPos.Y, Main.PlayerPos.Z + 10f, out weapObjA, true);
-                                    ATTACH_OBJECT_TO_PED(weapObjA, Main.PlayerHandle, (uint)boneAttach, weapOff.X, weapOff.Y, weapOff.Z, weapRot.X, weapRot.Y, weapRot.Z, 0);
-                                    weapIDA = i;
-                                }
-                                break;
-                            case 2:
-                                if (!DOES_OBJECT_EXIST(weapObjB) && weapModel != 0)
-                                {
-                                    CREATE_OBJECT(weapModel, Main.PlayerPos.X, Main.PlayerPos.Y, Main.PlayerPos.Z + 10f, out weapObjB, true);
-                                    ATTACH_OBJECT_TO_PED(weapObjB, Main.PlayerHandle, (uint)boneAttach, weapOff.X, weapOff.Y, weapOff.Z, weapRot.X, weapRot.Y, weapRot.Z, 0);
-                                    weapIDB = i;
-                                }
-                                break;
-                            case 3:
-                                if (!DOES_OBJECT_EXIST(weapObjC) && weapModel != 0)
-                                {
-                                    CREATE_OBJECT(weapModel, Main.PlayerPos.X, Main.PlayerPos.Y, Main.PlayerPos.Z + 10f, out weapObjC, true);
-                                    ATTACH_OBJECT_TO_PED(weapObjC, Main.PlayerHandle, (uint)boneAttach, weapOff.X, weapOff.Y, weapOff.Z, weapRot.X, weapRot.Y, weapRot.Z, 0);
-                                    weapIDC = i;
-                                }
-                                break;
-                            case 4:
-                                if (!DOES_OBJECT_EXIST(weapObjD) && weapModel != 0)
-                                {
-                                    CREATE_OBJECT(weapModel, Main.PlayerPos.X, Main.PlayerPos.Y, Main.PlayerPos.Z + 10f, out weapObjD, true);
-                                    ATTACH_OBJECT_TO_PED(weapObjD, Main.PlayerHandle, (uint)boneAttach, weapOff.X, weapOff.Y, weapOff.Z, weapRot.X, weapRot.Y, weapRot.Z, 0);
-                                    weapIDD = i;
-                                }
-                                break;
-                            case 5:
-                                if (!DOES_OBJECT_EXIST(weapObjE) && weapModel != 0)
-                                {
-                                    CREATE_OBJECT(weapModel, Main.PlayerPos.X, Main.PlayerPos.Y, Main.PlayerPos.Z + 10f, out weapObjE, true);
-                                    ATTACH_OBJECT_TO_PED(weapObjE, Main.PlayerHandle, (uint)boneAttach, weapOff.X, weapOff.Y, weapOff.Z, weapRot.X, weapRot.Y, weapRot.Z, 0);
-                                    weapIDE = i;
-                                }
-                                break;
-                            case 6:
-                                if (!DOES_OBJECT_EXIST(weapObjF) && weapModel != 0)
-                                {
-                                    CREATE_OBJECT(weapModel, Main.PlayerPos.X, Main.PlayerPos.Y, Main.PlayerPos.Z + 10f, out weapObjF, true);
-                                    ATTACH_OBJECT_TO_PED(weapObjF, Main.PlayerHandle, (uint)boneAttach, weapOff.X, weapOff.Y, weapOff.Z, weapRot.X, weapRot.Y, weapRot.Z, 0);
-                                    weapIDF = i;
-                                }
-                                break;
-                            case 7:
-                                if (!DOES_OBJECT_EXIST(weapObjG) && weapModel != 0)
-                                {
-                                    CREATE_OBJECT(weapModel, Main.PlayerPos.X, Main.PlayerPos.Y, Main.PlayerPos.Z + 10f, out weapObjG, true);
-                                    ATTACH_OBJECT_TO_PED(weapObjG, Main.PlayerHandle, (uint)boneAttach, weapOff.X, weapOff.Y, weapOff.Z, weapRot.X, weapRot.Y, weapRot.Z, 0);
-                                    weapIDG = i;
-                                }
-                                break;
-                            case 8:
-                                if (!DOES_OBJECT_EXIST(weapObjH) && weapModel != 0)
-                                {
-                                    CREATE_OBJECT(weapModel, Main.PlayerPos.X, Main.PlayerPos.Y, Main.PlayerPos.Z + 10f, out weapObjH, true);
-                                    ATTACH_OBJECT_TO_PED(weapObjH, Main.PlayerHandle, (uint)boneAttach, weapOff.X, weapOff.Y, weapOff.Z, weapRot.X, weapRot.Y, weapRot.Z, 0);
-                                    weapIDH = i;
-                                }
-                                break;
-                        }
-                    }
-                }
-                else if (!HAS_CHAR_GOT_WEAPON(Main.PlayerHandle, i))
-                {
-                    if (i == weapIDA)
+                    if (DOES_OBJECT_EXIST(weapObjA))
                         DELETE_OBJECT(ref weapObjA);
-                    else if (i == weapIDB)
+
+                    if (DOES_OBJECT_EXIST(weapObjB))
                         DELETE_OBJECT(ref weapObjB);
-                    else if (i == weapIDC)
+
+                    if (DOES_OBJECT_EXIST(weapObjC))
                         DELETE_OBJECT(ref weapObjC);
-                    else if (i == weapIDD)
+                    
+                    if (DOES_OBJECT_EXIST(weapObjD))
                         DELETE_OBJECT(ref weapObjD);
-                    else if (i == weapIDE)
+                    
+                    if (DOES_OBJECT_EXIST(weapObjE))
                         DELETE_OBJECT(ref weapObjE);
-                    else if (i == weapIDF)
+                    
+                    if (DOES_OBJECT_EXIST(weapObjF))
                         DELETE_OBJECT(ref weapObjF);
-                    else if (i == weapIDG)
+                    
+                    if (DOES_OBJECT_EXIST(weapObjG))
                         DELETE_OBJECT(ref weapObjG);
-                    else if (i == weapIDH)
+                    
+                    if (DOES_OBJECT_EXIST(weapObjH))
                         DELETE_OBJECT(ref weapObjH);
+                }
+                else
+                {
+                    if (HAS_CHAR_GOT_WEAPON(Main.PlayerHandle, i))
+                    {
+                        if (Main.currWeap == i)
+                        {
+                            LoadConfig(i);
+                            //IVGame.ShowSubtitleMessage(weapIDA.ToString() + "  " + weapIDB.ToString() + "  " + weapIDC.ToString() + "  " + weapIDD.ToString() + "  " + weapSlot.ToString());
+                            switch (weapSlot)
+                            {
+                                case 1:
+                                    if (weapIDA == i)
+                                        DELETE_OBJECT(ref weapObjA);
+                                    break;
+                                case 2:
+                                    if (weapIDB == i)
+                                        DELETE_OBJECT(ref weapObjB);
+                                    break;
+                                case 3:
+                                    if (weapIDC == i)
+                                        DELETE_OBJECT(ref weapObjC);
+                                    break;
+                                case 4:
+                                    if (weapIDD == i)
+                                        DELETE_OBJECT(ref weapObjD);
+                                    break;
+                                case 5:
+                                    if (weapIDE == i)
+                                        DELETE_OBJECT(ref weapObjE);
+                                    break;
+                                case 6:
+                                    if (weapIDF == i)
+                                        DELETE_OBJECT(ref weapObjF);
+                                    break;
+                                case 7:
+                                    if (weapIDG == i)
+                                        DELETE_OBJECT(ref weapObjG);
+                                    break;
+                                case 8:
+                                    if (weapIDH == i)
+                                        DELETE_OBJECT(ref weapObjH);
+                                    break;
+                            }
+                        }
+                        else
+                        {
+                            LoadConfig(i);
+                            LoadBone(weapSlot);
+                            weapModel = (int)IVWeaponInfo.GetWeaponInfo((uint)i).ModelHash;
+                            switch (weapSlot)
+                            {
+                                case 1:
+                                    if (!DOES_OBJECT_EXIST(weapObjA) && weapModel != 0)
+                                    {
+                                        CREATE_OBJECT((int)weapModel, Main.PlayerPos.X, Main.PlayerPos.Y, Main.PlayerPos.Z + 10f, out weapObjA, true);
+                                        ATTACH_OBJECT_TO_PED(weapObjA, Main.PlayerHandle, (uint)boneAttach, weapOff.X, weapOff.Y, weapOff.Z, weapRot.X, weapRot.Y, weapRot.Z, 0);
+                                        weapIDA = i;
+                                    }
+                                    break;
+                                case 2:
+                                    if (!DOES_OBJECT_EXIST(weapObjB) && weapModel != 0)
+                                    {
+                                        CREATE_OBJECT(weapModel, Main.PlayerPos.X, Main.PlayerPos.Y, Main.PlayerPos.Z + 10f, out weapObjB, true);
+                                        ATTACH_OBJECT_TO_PED(weapObjB, Main.PlayerHandle, (uint)boneAttach, weapOff.X, weapOff.Y, weapOff.Z, weapRot.X, weapRot.Y, weapRot.Z, 0);
+                                        weapIDB = i;
+                                    }
+                                    break;
+                                case 3:
+                                    if (!DOES_OBJECT_EXIST(weapObjC) && weapModel != 0)
+                                    {
+                                        CREATE_OBJECT(weapModel, Main.PlayerPos.X, Main.PlayerPos.Y, Main.PlayerPos.Z + 10f, out weapObjC, true);
+                                        ATTACH_OBJECT_TO_PED(weapObjC, Main.PlayerHandle, (uint)boneAttach, weapOff.X, weapOff.Y, weapOff.Z, weapRot.X, weapRot.Y, weapRot.Z, 0);
+                                        weapIDC = i;
+                                    }
+                                    break;
+                                case 4:
+                                    if (!DOES_OBJECT_EXIST(weapObjD) && weapModel != 0)
+                                    {
+                                        CREATE_OBJECT(weapModel, Main.PlayerPos.X, Main.PlayerPos.Y, Main.PlayerPos.Z + 10f, out weapObjD, true);
+                                        ATTACH_OBJECT_TO_PED(weapObjD, Main.PlayerHandle, (uint)boneAttach, weapOff.X, weapOff.Y, weapOff.Z, weapRot.X, weapRot.Y, weapRot.Z, 0);
+                                        weapIDD = i;
+                                    }
+                                    break;
+                                case 5:
+                                    if (!DOES_OBJECT_EXIST(weapObjE) && weapModel != 0)
+                                    {
+                                        CREATE_OBJECT(weapModel, Main.PlayerPos.X, Main.PlayerPos.Y, Main.PlayerPos.Z + 10f, out weapObjE, true);
+                                        ATTACH_OBJECT_TO_PED(weapObjE, Main.PlayerHandle, (uint)boneAttach, weapOff.X, weapOff.Y, weapOff.Z, weapRot.X, weapRot.Y, weapRot.Z, 0);
+                                        weapIDE = i;
+                                    }
+                                    break;
+                                case 6:
+                                    if (!DOES_OBJECT_EXIST(weapObjF) && weapModel != 0)
+                                    {
+                                        CREATE_OBJECT(weapModel, Main.PlayerPos.X, Main.PlayerPos.Y, Main.PlayerPos.Z + 10f, out weapObjF, true);
+                                        ATTACH_OBJECT_TO_PED(weapObjF, Main.PlayerHandle, (uint)boneAttach, weapOff.X, weapOff.Y, weapOff.Z, weapRot.X, weapRot.Y, weapRot.Z, 0);
+                                        weapIDF = i;
+                                    }
+                                    break;
+                                case 7:
+                                    if (!DOES_OBJECT_EXIST(weapObjG) && weapModel != 0)
+                                    {
+                                        CREATE_OBJECT(weapModel, Main.PlayerPos.X, Main.PlayerPos.Y, Main.PlayerPos.Z + 10f, out weapObjG, true);
+                                        ATTACH_OBJECT_TO_PED(weapObjG, Main.PlayerHandle, (uint)boneAttach, weapOff.X, weapOff.Y, weapOff.Z, weapRot.X, weapRot.Y, weapRot.Z, 0);
+                                        weapIDG = i;
+                                    }
+                                    break;
+                                case 8:
+                                    if (!DOES_OBJECT_EXIST(weapObjH) && weapModel != 0)
+                                    {
+                                        CREATE_OBJECT(weapModel, Main.PlayerPos.X, Main.PlayerPos.Y, Main.PlayerPos.Z + 10f, out weapObjH, true);
+                                        ATTACH_OBJECT_TO_PED(weapObjH, Main.PlayerHandle, (uint)boneAttach, weapOff.X, weapOff.Y, weapOff.Z, weapRot.X, weapRot.Y, weapRot.Z, 0);
+                                        weapIDH = i;
+                                    }
+                                    break;
+                            }
+                        }
+                    }
+                    else if (!HAS_CHAR_GOT_WEAPON(Main.PlayerHandle, i))
+                    {
+                        if (i == weapIDA)
+                            DELETE_OBJECT(ref weapObjA);
+                        else if (i == weapIDB)
+                            DELETE_OBJECT(ref weapObjB);
+                        else if (i == weapIDC)
+                            DELETE_OBJECT(ref weapObjC);
+                        else if (i == weapIDD)
+                            DELETE_OBJECT(ref weapObjD);
+                        else if (i == weapIDE)
+                            DELETE_OBJECT(ref weapObjE);
+                        else if (i == weapIDF)
+                            DELETE_OBJECT(ref weapObjF);
+                        else if (i == weapIDG)
+                            DELETE_OBJECT(ref weapObjG);
+                        else if (i == weapIDH)
+                            DELETE_OBJECT(ref weapObjH);
+                    }
                 }
             }
         }

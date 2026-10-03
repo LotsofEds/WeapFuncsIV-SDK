@@ -34,16 +34,17 @@ namespace WeapFuncs.ivsdk
 
         private static void LoadRecoilConf(int weapon)
         {
-            if (Main.wConfFile.DoesSectionExists(weapon.ToString()))
+            int weapIndex = Main.weaponData.FindIndex(w => w.ID == weapon);
+            if (weapIndex >= 0)
             {
-                RecoilAmplitudeMin = Main.wConfFile.GetFloat(weapon.ToString(), "RecoilAmpMin", 0.0f);
-                RecoilAmplitudeMax = Main.wConfFile.GetFloat(weapon.ToString(), "RecoilAmpMax", 0.0f);
-                RecoilTime = Main.wConfFile.GetInteger(weapon.ToString(), "RecoilTime", 0);
+                RecoilAmplitudeMin = Main.weaponData[weapIndex].RecoilAmpMin;
+                RecoilAmplitudeMax = Main.weaponData[weapIndex].RecoilAmpMax;
+                RecoilTime = Main.weaponData[weapIndex].RecoilTime;
 
-                AdditionalRecoil = Main.wConfFile.GetFloat(weapon.ToString(), "AdditionalRecoil", 0.0f);
-                DecayRate = Main.wConfFile.GetFloat(weapon.ToString(), "DecayRate", 0.0f);
-                MaximumRecoil = Main.wConfFile.GetFloat(weapon.ToString(), "MaximumRecoil", 0.0f);
-                CrouchMultiplier = Main.wConfFile.GetFloat(weapon.ToString(), "CrouchMultiplier", 0.0f);
+                AdditionalRecoil = Main.weaponData[weapIndex].RecoilAdd;
+                DecayRate = Main.weaponData[weapIndex].RecoilDecay;
+                MaximumRecoil = Main.weaponData[weapIndex].MaxRecoil;
+                CrouchMultiplier = Main.weaponData[weapIndex].RecoilCrouch;
             }
         }
         public static void Tick()

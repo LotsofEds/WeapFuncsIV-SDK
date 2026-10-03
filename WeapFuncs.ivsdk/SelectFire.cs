@@ -1,24 +1,41 @@
-﻿using System;
-using System.Windows.Forms;
+﻿using CCL;
+using CCL.GTAIV;
+using IVSDKDotNet;
+using IVSDKDotNet.Enums;
+using System;
 using System.Collections.Generic;
 using System.IO;
-using IVSDKDotNet;
-using static IVSDKDotNet.Native.Natives;
-using CCL;
-using IVSDKDotNet.Enums;
-using CCL.GTAIV;
-using System.Security.Policy;
-using System.Numerics;
 using System.Linq;
+using System.Numerics;
+using System.Security.Policy;
+using System.Windows.Forms;
+using WeapFuncs.ivsdk.Helpers;
+using static IVSDKDotNet.Native.Natives;
 
 namespace WeapFuncs.ivsdk
 {
     internal class SelectFire
     {
-        private static bool CheckTime;
+        // IniShit
+        private static bool showFireModeText;
+        private static bool pressToFire;
+
+        private static int timeBetBurst;
+        private static float accuracyTimeBurstNum;
+        private static float accuracyTimeBurstMult;
+        private static float accuracyTimeSemiNum;
+        private static float accuracyTimeSemiMult;
+        private static int frameTimeSkip;
+
+        // OtherShit
+        private static int shotsPerBurst;
+        private static int selectFireCtrl;
+        private static int fireTypes;
+        private static int switchType;
+
+        private static bool checkTime;
         private static uint fTimer;
 
-        private static bool hasPressedButton;
         private static bool getAccTime;
 
         private static float totalTime;
@@ -26,28 +43,42 @@ namespace WeapFuncs.ivsdk
         private static float frameSkipTime;
 
         private static int weapIndex;
-        private static int frameTimeSkip;
 
-        private static float accuracyTimeBurstNum;
-        private static float accuracyTimeBurstMult;
-        private static float accuracyTimeSemiNum;
-        private static float accuracyTimeSemiMult;
         private static float defaultAccTime;
-        private static int timeBetBurst;
         private static int currFireType;
-        private static float NumOfBullets;
+        private static float numOfBullets;
         private static int fireType = 0;
         private static int lastAmmo;
         private static int soundID = -1;
         private static int pWeapon = 0;
         private static string pWeapAnim = "";
         private static string pBFAnim = "";
+        private static float timeBeforeShot = 0;
+        private static float animPointer;
 
-        private static readonly List<eWeaponType> BurstWeaps = new List<eWeaponType>();
+        // ListShit
+        private static readonly List<int> BurstWeaps = new List<int>();
         private static List<float> AnimLoopEnd = new List<float>();
+
+        private static readonly List<int> PumpToSemiList = new List<int>();
+        private static List<float> P2SAnimLoopStart = new List<float>();
+        private static List<float> P2SAnimLoopEnd = new List<float>();
+
+        private static readonly List<int> DTList = new List<int>();
 
         public static void Init(SettingsFile settings)
         {
+            showFireModeText = settings.GetBoolean("SELECT FIRE", "ShowFireModeText", false);
+            pressToFire = settings.GetBoolean("SELECT FIRE", "PressToFire", false);
+            selectFireCtrl = settings.GetInteger("SELECT FIRE", "SelectFireControl", 23);
+
+            BurstInit(Main.wfConfig);
+            Pump2SemiInit(Main.wfConfig);
+            DoubleTriggerInit(Main.wfConfig);
+        }
+        private static void BurstInit(SettingsFile settings)
+        {
+            shotsPerBurst = settings.GetInteger("SELECT FIRE", "ShotsPerBurst", 3);
             timeBetBurst = settings.GetInteger("SELECT FIRE", "TimeBetweenShots", 250);
             accuracyTimeBurstNum = settings.GetFloat("SELECT FIRE", "BurstAccuracyTime", 0);
             accuracyTimeBurstMult = settings.GetFloat("SELECT FIRE", "BurstAccuracyMult", 8);
@@ -59,14 +90,41 @@ namespace WeapFuncs.ivsdk
             BurstWeaps.Clear();
             foreach (var weaponName in weaponString.Split(','))
             {
-                eWeaponType weaponType = (eWeaponType)Enum.Parse(typeof(eWeaponType), weaponName.Trim(), true);
-                BurstWeaps.Add(weaponType);
+                int weaponID = Int32.Parse(weaponName.Trim());
+                BurstWeaps.Add(weaponID);
             }
 
             AnimLoopEnd.Clear();
             string wLoop = settings.GetValue("SELECT FIRE", "BurstSemiAnimEnd", "");
             AnimLoopEnd = wLoop.Split(',').Select(float.Parse).ToList();
+        }
+        private static void Pump2SemiInit(SettingsFile settings)
+        {
+            string weaponString = settings.GetValue("SELECT FIRE", "PumpSemiWeapons", "");
+            PumpToSemiList.Clear();
+            foreach (var weaponName in weaponString.Split(','))
+            {
+                int weaponID = Int32.Parse(weaponName.Trim());
+                PumpToSemiList.Add(weaponID);
+            }
 
+            P2SAnimLoopStart.Clear();
+            string sLoop = settings.GetValue("SELECT FIRE", "PumpSemiAnimStart", "");
+            P2SAnimLoopStart = sLoop.Split(',').Select(float.Parse).ToList();
+
+            P2SAnimLoopEnd.Clear();
+            string eLoop = settings.GetValue("SELECT FIRE", "PumpSemiAnimEnd", "");
+            P2SAnimLoopEnd = eLoop.Split(',').Select(float.Parse).ToList();
+        }
+        private static void DoubleTriggerInit(SettingsFile settings)
+        {
+            string weaponString = settings.GetValue("SELECT FIRE", "DoubleTriggerWeapons", "");
+            DTList.Clear();
+            foreach (var weaponName in weaponString.Split(','))
+            {
+                int weaponID = Int32.Parse(weaponName.Trim());
+                DTList.Add(weaponID);
+            }
         }
         public static void UnInit()
         {
@@ -74,232 +132,342 @@ namespace WeapFuncs.ivsdk
         }
         public static void Tick()
         {
-            pWeapAnim = Main.WeapAnim;
-            pBFAnim = Main.BFAnim;
+            pWeapAnim = Main.wAnim;
+            pBFAnim = Main.bfAnim;
 
-            if (Main.FireMode)
+            BurstSemiAuto();
+            PumpToSemi();
+            DoubleTrigger();
+        }
+        private static void BurstSemiAuto()
+        {
+            foreach (int weaponType in BurstWeaps)
             {
-                foreach (eWeaponType weaponType in BurstWeaps)
+                if (Main.currWeap == (int)weaponType)
                 {
-                    if (Main.currWeap == (int)weaponType)
+                    fireTypes = 2;
+                    weapIndex = BurstWeaps.IndexOf(weaponType);
+
+                    switchType = 1;
+                    SwitchModes();
+                    if (pWeapon == Main.currWeap)
                     {
-                        weapIndex = BurstWeaps.IndexOf(weaponType);
-
-                        GET_MAX_AMMO_IN_CLIP(Main.PlayerHandle, Main.currWeap, out int pMaxAmmo);
-                        if (Main.IsPressingAimButton() && (NativeControls.IsGameKeyPressed(0, Main.SelectFireCtrl) || NativeControls.IsGameKeyPressed(2, Main.SelectFireCtrl)) && !NativeControls.IsGameKeyPressed(0, GameKey.Attack) && !NativeControls.IsGameKeyPressed(2, GameKey.Attack) && !hasPressedButton)
+                        if (currFireType > 0)
                         {
-                            if (fireType < 2)
-                                fireType += 1;
+                            if (currFireType == 1)
+                            {
+                                if (!getAccTime)
+                                {
+                                    defaultAccTime = IVWeaponInfo.GetWeaponInfo((uint)pWeapon).AimingAccuracyTime;
+                                    if (accuracyTimeBurstNum > 0)
+                                        IVWeaponInfo.GetWeaponInfo((uint)pWeapon).AimingAccuracyTime = accuracyTimeBurstNum;
+                                    else
+                                        IVWeaponInfo.GetWeaponInfo((uint)pWeapon).AimingAccuracyTime = defaultAccTime * accuracyTimeBurstMult;
+                                    getAccTime = true;
+                                }
+                                numOfBullets = shotsPerBurst;
+                            }
+
                             else
-                                fireType = 0;
-
-                            hasPressedButton = true;
-                            PLAY_SOUND_FRONTEND(soundID, "GENERAL_GUNS_AK47_DRY_CLICK");
-                            if (Main.ShowFireModeText)
                             {
-                                if (fireType == 0)
-                                    IVGame.ShowSubtitleMessage("Full-Auto");
-                                else if (fireType == 1)
-                                    IVGame.ShowSubtitleMessage("Burst");
-                                else if (fireType == 2)
-                                    IVGame.ShowSubtitleMessage("Semi-Auto");
+                                if (!getAccTime)
+                                {
+                                    defaultAccTime = IVWeaponInfo.GetWeaponInfo((uint)pWeapon).AimingAccuracyTime;
+                                    if (accuracyTimeSemiNum > 0)
+                                        IVWeaponInfo.GetWeaponInfo((uint)pWeapon).AimingAccuracyTime = accuracyTimeSemiNum;
+                                    else
+                                        IVWeaponInfo.GetWeaponInfo((uint)pWeapon).AimingAccuracyTime = defaultAccTime * accuracyTimeSemiMult;
+                                    getAccTime = true;
+                                }
+                                numOfBullets = 1;
                             }
-                        }
-                        else if (!NativeControls.IsGameKeyPressed(0, Main.SelectFireCtrl) && !NativeControls.IsGameKeyPressed(2, Main.SelectFireCtrl) && hasPressedButton)
-                            hasPressedButton = false;
 
-                        if (pWeapon == Main.currWeap)
-                        {
-                            if (currFireType > 0)
+                            if (NativeControls.IsGameKeyPressed(0, GameKey.Attack) && Main.pAmmo > 0)
                             {
-                                if (currFireType == 1)
+                                if (IS_CHAR_SHOOTING(Main.PlayerHandle) && animTime == -1)
                                 {
-                                    if (!getAccTime)
+                                    if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, pWeapAnim, "fire"))
                                     {
-                                        defaultAccTime = IVWeaponInfo.GetWeaponInfo((uint)pWeapon).AimingAccuracyTime;
-                                        if (accuracyTimeBurstNum > 0)
-                                            IVWeaponInfo.GetWeaponInfo((uint)pWeapon).AimingAccuracyTime = accuracyTimeBurstNum;
-                                        else
-                                            IVWeaponInfo.GetWeaponInfo((uint)pWeapon).AimingAccuracyTime = defaultAccTime * accuracyTimeBurstMult;
-                                        getAccTime = true;
+                                        GET_CHAR_ANIM_TOTAL_TIME(Main.PlayerHandle, pWeapAnim, "fire", out totalTime);
+                                        GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire", out animTime);
                                     }
-                                    NumOfBullets = Main.ShotsPerBurst;
+                                    else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, pWeapAnim, "fire_alt"))
+                                    {
+                                        GET_CHAR_ANIM_TOTAL_TIME(Main.PlayerHandle, pWeapAnim, "fire_alt", out totalTime);
+                                        GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_alt", out animTime);
+                                    }
+                                    else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, pWeapAnim, "fire_up"))
+                                    {
+                                        GET_CHAR_ANIM_TOTAL_TIME(Main.PlayerHandle, pWeapAnim, "fire_up", out totalTime);
+                                        GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_up", out animTime);
+                                    }
+                                    else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, pWeapAnim, "fire_down"))
+                                    {
+                                        GET_CHAR_ANIM_TOTAL_TIME(Main.PlayerHandle, pWeapAnim, "fire_down", out totalTime);
+                                        GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_down", out animTime);
+                                    }
+                                    else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, pWeapAnim, "fire_crouch"))
+                                    {
+                                        GET_CHAR_ANIM_TOTAL_TIME(Main.PlayerHandle, pWeapAnim, "fire_crouch", out totalTime);
+                                        GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_crouch", out animTime);
+                                    }
+                                    else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, pWeapAnim, "fire_crouch_alt"))
+                                    {
+                                        GET_CHAR_ANIM_TOTAL_TIME(Main.PlayerHandle, pWeapAnim, "fire_crouch_alt", out totalTime);
+                                        GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_crouch_alt", out animTime);
+                                    }
+                                    else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_l_high_corner", pBFAnim))
+                                    {
+                                        GET_CHAR_ANIM_TOTAL_TIME(Main.PlayerHandle, "cover_l_high_corner", pBFAnim, out totalTime);
+                                        GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_l_high_corner", pBFAnim, out animTime);
+                                    }
+                                    else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_l_low_centre", pBFAnim))
+                                    {
+                                        GET_CHAR_ANIM_TOTAL_TIME(Main.PlayerHandle, "cover_l_low_centre", pBFAnim, out totalTime);
+                                        GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_l_low_centre", pBFAnim, out animTime);
+                                    }
+                                    else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_l_low_corner", pBFAnim))
+                                    {
+                                        GET_CHAR_ANIM_TOTAL_TIME(Main.PlayerHandle, "cover_l_low_corner", pBFAnim, out totalTime);
+                                        GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_l_low_corner", pBFAnim, out animTime);
+                                    }
+                                    else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_r_high_corner", pBFAnim))
+                                    {
+                                        GET_CHAR_ANIM_TOTAL_TIME(Main.PlayerHandle, "cover_r_high_corner", pBFAnim, out totalTime);
+                                        GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_high_corner", pBFAnim, out animTime);
+                                    }
+                                    else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_r_low_centre", pBFAnim))
+                                    {
+                                        GET_CHAR_ANIM_TOTAL_TIME(Main.PlayerHandle, "cover_r_low_centre", pBFAnim, out totalTime);
+                                        GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_low_centre", pBFAnim, out animTime);
+                                    }
+                                    else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_r_low_corner", pBFAnim))
+                                    {
+                                        GET_CHAR_ANIM_TOTAL_TIME(Main.PlayerHandle, "cover_r_low_corner", pBFAnim, out totalTime);
+                                        GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_low_corner", pBFAnim, out animTime);
+                                    }
+                                    lastAmmo = Main.pAmmo + 1;
+
+                                    checkTime = false;
                                 }
-
-                                else
+                                if ((lastAmmo - Main.pAmmo) == numOfBullets)
                                 {
-                                    if (!getAccTime)
-                                    {
-                                        defaultAccTime = IVWeaponInfo.GetWeaponInfo((uint)pWeapon).AimingAccuracyTime;
-                                        if (accuracyTimeSemiNum > 0)
-                                            IVWeaponInfo.GetWeaponInfo((uint)pWeapon).AimingAccuracyTime = accuracyTimeSemiNum;
-                                        else
-                                            IVWeaponInfo.GetWeaponInfo((uint)pWeapon).AimingAccuracyTime = defaultAccTime * accuracyTimeSemiMult;
-                                        getAccTime = true;
-                                    }
-                                    NumOfBullets = 1;
-                                }
+                                    if ((frameTimeSkip * Main.frameTime) < 4)
+                                        frameSkipTime = ((int)Math.Floor(totalTime * 0.03f * animTime) - 4) / (totalTime * 0.03f);
+                                    else
+                                        frameSkipTime = ((int)Math.Floor(totalTime * 0.03f * animTime) - (int)Math.Ceiling(frameTimeSkip * Main.frameTime)) / (totalTime * 0.03f);
 
-                                if ((NativeControls.IsGameKeyPressed(0, GameKey.Attack) || NativeControls.IsGameKeyPressed(2, GameKey.Attack)) && Main.pAmmo > 0)
-                                {
-                                    if (IS_CHAR_SHOOTING(Main.PlayerHandle) && animTime == -1)
-                                    {
-                                        if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, pWeapAnim, "fire"))
-                                        {
-                                            GET_CHAR_ANIM_TOTAL_TIME(Main.PlayerHandle, pWeapAnim, "fire", out totalTime);
-                                            GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire", out animTime);
-                                        }
-                                        else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, pWeapAnim, "fire_alt"))
-                                        {
-                                            GET_CHAR_ANIM_TOTAL_TIME(Main.PlayerHandle, pWeapAnim, "fire_alt", out totalTime);
-                                            GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_alt", out animTime);
-                                        }
-                                        else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, pWeapAnim, "fire_up"))
-                                        {
-                                            GET_CHAR_ANIM_TOTAL_TIME(Main.PlayerHandle, pWeapAnim, "fire_up", out totalTime);
-                                            GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_up", out animTime);
-                                        }
-                                        else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, pWeapAnim, "fire_down"))
-                                        {
-                                            GET_CHAR_ANIM_TOTAL_TIME(Main.PlayerHandle, pWeapAnim, "fire_down", out totalTime);
-                                            GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_down", out animTime);
-                                        }
-                                        else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, pWeapAnim, "fire_crouch"))
-                                        {
-                                            GET_CHAR_ANIM_TOTAL_TIME(Main.PlayerHandle, pWeapAnim, "fire_crouch", out totalTime);
-                                            GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_crouch", out animTime);
-                                        }
-                                        else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, pWeapAnim, "fire_crouch_alt"))
-                                        {
-                                            GET_CHAR_ANIM_TOTAL_TIME(Main.PlayerHandle, pWeapAnim, "fire_crouch_alt", out totalTime);
-                                            GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_crouch_alt", out animTime);
-                                        }
-                                        else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_l_high_corner", pBFAnim))
-                                        {
-                                            GET_CHAR_ANIM_TOTAL_TIME(Main.PlayerHandle, "cover_l_high_corner", pBFAnim, out totalTime);
-                                            GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_l_high_corner", pBFAnim, out animTime);
-                                        }
-                                        else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_l_low_centre", pBFAnim))
-                                        {
-                                            GET_CHAR_ANIM_TOTAL_TIME(Main.PlayerHandle, "cover_l_low_centre", pBFAnim, out totalTime);
-                                            GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_l_low_centre", pBFAnim, out animTime);
-                                        }
-                                        else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_l_low_corner", pBFAnim))
-                                        {
-                                            GET_CHAR_ANIM_TOTAL_TIME(Main.PlayerHandle, "cover_l_low_corner", pBFAnim, out totalTime);
-                                            GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_l_low_corner", pBFAnim, out animTime);
-                                        }
-                                        else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_r_high_corner", pBFAnim))
-                                        {
-                                            GET_CHAR_ANIM_TOTAL_TIME(Main.PlayerHandle, "cover_r_high_corner", pBFAnim, out totalTime);
-                                            GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_high_corner", pBFAnim, out animTime);
-                                        }
-                                        else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_r_low_centre", pBFAnim))
-                                        {
-                                            GET_CHAR_ANIM_TOTAL_TIME(Main.PlayerHandle, "cover_r_low_centre", pBFAnim, out totalTime);
-                                            GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_low_centre", pBFAnim, out animTime);
-                                        }
-                                        else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, "cover_r_low_corner", pBFAnim))
-                                        {
-                                            GET_CHAR_ANIM_TOTAL_TIME(Main.PlayerHandle, "cover_r_low_corner", pBFAnim, out totalTime);
-                                            GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_low_corner", pBFAnim, out animTime);
-                                        }
-                                        lastAmmo = Main.pAmmo + 1;
-
-                                        CheckTime = false;
-                                    }
-                                    if ((lastAmmo - Main.pAmmo) == NumOfBullets)
-                                    {
-                                        if ((frameTimeSkip * Main.frameTime) < 4)
-                                            frameSkipTime = ((int)Math.Floor(totalTime * 0.03f * animTime) - 4) / (totalTime * 0.03f);
-                                        else
-                                            frameSkipTime = ((int)Math.Floor(totalTime * 0.03f * animTime) - (int)Math.Ceiling(frameTimeSkip * Main.frameTime)) / (totalTime * 0.03f);
-
-                                        if (IS_PED_IN_COVER(Main.PlayerHandle))
-                                            FREEZE_CHAR_POSITION(Main.PlayerHandle, true);
-
-                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire", frameSkipTime);
-                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_alt", frameSkipTime);
-                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_up", frameSkipTime);
-                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_down", frameSkipTime);
-                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_crouch", frameSkipTime);
-                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_crouch_alt", frameSkipTime);
-                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "dbfire", 0);
-                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "dbfire_l", 0);
-
-                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_l_high_corner", pBFAnim, frameSkipTime);
-                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_l_low_centre", pBFAnim, frameSkipTime);
-                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_l_low_corner", pBFAnim, frameSkipTime);
-                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_high_corner", pBFAnim, frameSkipTime);
-                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_low_centre", pBFAnim, frameSkipTime);
-                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_low_corner", pBFAnim, frameSkipTime);
-
-                                        if (!Main.PressToFire || IS_PED_IN_COVER(Main.PlayerHandle) || IS_CHAR_SITTING_IN_ANY_CAR(Main.PlayerHandle))
-                                        {
-                                            if (CheckTime == false)
-                                            {
-                                                GET_GAME_TIMER(out fTimer);
-                                                CheckTime = true;
-                                            }
-
-                                            //IVGame.ShowSubtitleMessage(gTimer.ToString() + "  " + fTimer.ToString());
-                                            if (Main.gTimer >= (fTimer + timeBetBurst))
-                                            {
-                                                if (IS_PED_IN_COVER(Main.PlayerHandle))
-                                                    FREEZE_CHAR_POSITION(Main.PlayerHandle, false);
-                                                CheckTime = false;
-                                                lastAmmo = Main.pAmmo;
-                                            }
-                                        }
-                                    }
-                                }
-
-                                else
-                                {
                                     if (IS_PED_IN_COVER(Main.PlayerHandle))
-                                        FREEZE_CHAR_POSITION(Main.PlayerHandle, false);
-                                    if (lastAmmo != Main.pAmmo)
+                                        FREEZE_CHAR_POSITION(Main.PlayerHandle, true);
+
+                                    SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire", frameSkipTime);
+                                    SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_alt", frameSkipTime);
+                                    SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_up", frameSkipTime);
+                                    SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_down", frameSkipTime);
+                                    SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_crouch", frameSkipTime);
+                                    SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_crouch_alt", frameSkipTime);
+                                    SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "dbfire", 0);
+                                    SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "dbfire_l", 0);
+
+                                    SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_l_high_corner", pBFAnim, frameSkipTime);
+                                    SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_l_low_centre", pBFAnim, frameSkipTime);
+                                    SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_l_low_corner", pBFAnim, frameSkipTime);
+                                    SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_high_corner", pBFAnim, frameSkipTime);
+                                    SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_low_centre", pBFAnim, frameSkipTime);
+                                    SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, "cover_r_low_corner", pBFAnim, frameSkipTime);
+
+                                    if (!pressToFire || IS_PED_IN_COVER(Main.PlayerHandle) || IS_CHAR_SITTING_IN_ANY_CAR(Main.PlayerHandle))
                                     {
-                                        animTime = -1;
-                                        CheckTime = false;
-                                        lastAmmo = Main.pAmmo;
+                                        if (checkTime == false)
+                                        {
+                                            GET_GAME_TIMER(out fTimer);
+                                            checkTime = true;
+                                        }
 
-                                        //IVGame.ShowSubtitleMessage(animTime.ToString() + "  " + totalTime.ToString() + "  " + ((totalTime * 0.03f * animTime) - 3) / (totalTime * 0.03f) + "  " + (frameTimeSkip * Main.frameTime).ToString());
-
-                                        //CLEAR_CHAR_TASKS(Main.PlayerHandle);
-                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire", AnimLoopEnd[weapIndex]);
-                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_alt", AnimLoopEnd[weapIndex]);
-                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_up", AnimLoopEnd[weapIndex]);
-                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_down", AnimLoopEnd[weapIndex]);
-                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_crouch", AnimLoopEnd[weapIndex]);
-                                        SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_crouch_alt", AnimLoopEnd[weapIndex]);
+                                        if (Main.gTimer >= (fTimer + timeBetBurst))
+                                        {
+                                            if (IS_PED_IN_COVER(Main.PlayerHandle))
+                                                FREEZE_CHAR_POSITION(Main.PlayerHandle, false);
+                                            checkTime = false;
+                                            lastAmmo = Main.pAmmo;
+                                        }
                                     }
                                 }
-                                // This almost works if anim time is changed, just needs tweaking.
-                                //else
-                                //{
-                                //}
                             }
-                            if (currFireType != fireType)
+
+                            else
                             {
-                                if (getAccTime)
+                                if (IS_PED_IN_COVER(Main.PlayerHandle))
+                                    FREEZE_CHAR_POSITION(Main.PlayerHandle, false);
+                                if (lastAmmo != Main.pAmmo)
                                 {
-                                    IVWeaponInfo.GetWeaponInfo((uint)pWeapon).AimingAccuracyTime = defaultAccTime;
-                                    getAccTime = false;
+                                    animTime = -1;
+                                    checkTime = false;
+                                    lastAmmo = Main.pAmmo;
+
+                                    SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire", AnimLoopEnd[weapIndex]);
+                                    SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_alt", AnimLoopEnd[weapIndex]);
+                                    SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_up", AnimLoopEnd[weapIndex]);
+                                    SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_down", AnimLoopEnd[weapIndex]);
+                                    SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_crouch", AnimLoopEnd[weapIndex]);
+                                    SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_crouch_alt", AnimLoopEnd[weapIndex]);
                                 }
-                                currFireType = fireType;
                             }
                         }
-                        else if (pWeapon != Main.currWeap)
+                        if (currFireType != fireType)
                         {
                             if (getAccTime)
                             {
                                 IVWeaponInfo.GetWeaponInfo((uint)pWeapon).AimingAccuracyTime = defaultAccTime;
-                                defaultAccTime = IVWeaponInfo.GetWeaponInfo((uint)Main.currWeap).AimingAccuracyTime;
                                 getAccTime = false;
                             }
-                            pWeapon = Main.currWeap;
+                            currFireType = fireType;
                         }
+                    }
+                    else if (pWeapon != Main.currWeap)
+                    {
+                        if (getAccTime)
+                        {
+                            IVWeaponInfo.GetWeaponInfo((uint)pWeapon).AimingAccuracyTime = defaultAccTime;
+                            defaultAccTime = IVWeaponInfo.GetWeaponInfo((uint)Main.currWeap).AimingAccuracyTime;
+                            getAccTime = false;
+                        }
+                        pWeapon = Main.currWeap;
+                    }
+                }
+            }
+        }
+        private static void PumpToSemi()
+        {
+            foreach (int weaponType in PumpToSemiList)
+            {
+                if (Main.currWeap == weaponType)
+                {
+                    fireTypes = 1;
+
+                    if (pWeapon == Main.currWeap)
+                    {
+                        switchType = 2;
+                        SwitchModes();
+                        if (currFireType > 0)
+                        {
+                            if (IS_CHAR_SHOOTING(Main.PlayerHandle) && P2SAnimLoopStart[PumpToSemiList.IndexOf(weaponType)] < 0)
+                            {
+                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire", P2SAnimLoopEnd[PumpToSemiList.IndexOf(weaponType)]);
+                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_alt", P2SAnimLoopEnd[PumpToSemiList.IndexOf(weaponType)]);
+                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_up", P2SAnimLoopEnd[PumpToSemiList.IndexOf(weaponType)]);
+                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_down", P2SAnimLoopEnd[PumpToSemiList.IndexOf(weaponType)]);
+                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_crouch", P2SAnimLoopEnd[PumpToSemiList.IndexOf(weaponType)]);
+                                SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_crouch_alt", P2SAnimLoopEnd[PumpToSemiList.IndexOf(weaponType)]);
+                            }
+
+                            else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, pWeapAnim, "fire"))
+                            {
+                                GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire", out float animTime);
+                                if (animTime > P2SAnimLoopStart[PumpToSemiList.IndexOf(weaponType)] && animTime < P2SAnimLoopEnd[PumpToSemiList.IndexOf(weaponType)])
+                                    SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire", P2SAnimLoopEnd[PumpToSemiList.IndexOf(weaponType)]);
+                            }
+                            ShotgunBlindfireFix.FixShotgunBF(Main.PlayerHandle);
+                        }
+                        if (currFireType != fireType)
+                            currFireType = fireType;
+                    }
+                    else if (pWeapon != Main.currWeap)
+                        pWeapon = Main.currWeap;
+                }
+            }
+        }
+        private static void DoubleTrigger()
+        {
+            foreach (int weaponType in DTList)
+            {
+                if (Main.currWeap == weaponType)
+                {
+                    fireTypes = 1;
+                    switchType = 3;
+                    SwitchModes();
+
+                    if (currFireType > 0)
+                    {
+                        if (Main.pAmmo > 0 && NativeControls.IsGameKeyPressed(0, GameKey.Attack))
+                        {
+                            timeBeforeShot = GenHelp.Clamp(Main.frameTime, 0.02f, 1f);
+
+                            if (IS_CHAR_SHOOTING(Main.PlayerHandle))
+                            {
+                                if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, pWeapAnim, "fire"))
+                                {
+                                    GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire", out animPointer);
+                                    SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire", animPointer - timeBeforeShot);
+                                }
+                                else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, pWeapAnim, "fire_alt"))
+                                {
+                                    GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_alt", out animPointer);
+                                    SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_alt", animPointer - timeBeforeShot);
+                                }
+                                else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, pWeapAnim, "fire_up"))
+                                {
+                                    GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_up", out animPointer);
+                                    SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_up", animPointer - timeBeforeShot);
+                                }
+                                else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, pWeapAnim, "fire_down"))
+                                {
+                                    GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_down", out animPointer);
+                                    SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_down", animPointer - timeBeforeShot);
+                                }
+                                else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, pWeapAnim, "fire_crouch"))
+                                {
+                                    GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_crouch", out animPointer);
+                                    SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_crouch", animPointer - timeBeforeShot);
+                                }
+                                else if (IS_CHAR_PLAYING_ANIM(Main.PlayerHandle, pWeapAnim, "fire_crouch_alt"))
+                                {
+                                    GET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_crouch_alt", out animPointer);
+                                    SET_CHAR_ANIM_CURRENT_TIME(Main.PlayerHandle, pWeapAnim, "fire_crouch_alt", animPointer - timeBeforeShot);
+                                }
+                            }
+                        }
+                    }
+                    if (currFireType != fireType)
+                        currFireType = fireType;
+                }
+                else if (pWeapon != Main.currWeap)
+                    pWeapon = Main.currWeap;
+            }
+        }
+        private static void SwitchModes()
+        {
+            if (WeaponHelper.IsPressingAimButton() && IS_CONTROL_JUST_PRESSED(0, selectFireCtrl) && !NativeControls.IsGameKeyPressed(0, GameKey.Attack))
+            {
+                if (fireType < fireTypes)
+                    fireType++;
+                else
+                    fireType = 0;
+
+                PLAY_SOUND_FRONTEND(soundID, "GENERAL_GUNS_AK47_DRY_CLICK");
+                if (showFireModeText)
+                {
+                    switch (fireType)
+                    {
+                        case 0:
+                            if (switchType == 1)
+                                IVGame.ShowSubtitleMessage("Full-Auto");
+                            else if (switchType == 2)
+                                IVGame.ShowSubtitleMessage("Pump");
+                            else if (switchType == 3)
+                                IVGame.ShowSubtitleMessage("Single");
+                            break;
+                        case 1:
+                            if (switchType == 1)
+                                IVGame.ShowSubtitleMessage("Burst");
+                            else if (switchType == 2)
+                                IVGame.ShowSubtitleMessage("Semi-Auto");
+                            else if (switchType == 3)
+                                IVGame.ShowSubtitleMessage("Simultaneous");
+                            break;
+                        case 2:
+                            IVGame.ShowSubtitleMessage("Semi-Auto");
+                            break;
                     }
                 }
             }

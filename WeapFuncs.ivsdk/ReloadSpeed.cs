@@ -13,9 +13,9 @@ namespace WeapFuncs.ivsdk
     {
         public static void Tick()
         {
-            SET_CHAR_ANIM_SPEED(Main.PlayerHandle, Main.WeapAnim, "reload", (Main.weapReload));
-            SET_CHAR_ANIM_SPEED(Main.PlayerHandle, Main.WeapAnim, "reload_crouch", (Main.weapReload));
-            SET_CHAR_ANIM_SPEED(Main.PlayerHandle, Main.WeapAnim, "p_load", (Main.weapReload));
+            SET_CHAR_ANIM_SPEED(Main.PlayerHandle, Main.wAnim, "reload", (Main.wReload));
+            SET_CHAR_ANIM_SPEED(Main.PlayerHandle, Main.wAnim, "reload_crouch", (Main.wReload));
+            SET_CHAR_ANIM_SPEED(Main.PlayerHandle, Main.wAnim, "p_load", (Main.wReload));
         }
     }
 }
