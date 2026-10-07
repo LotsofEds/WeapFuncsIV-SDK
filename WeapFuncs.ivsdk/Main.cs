@@ -39,6 +39,9 @@ namespace WeapFuncs.ivsdk
         public static bool weaponZoomEnable;
         public static bool aimCamShakeEnable;
         public static bool pickupEnable;
+        public static bool pickupGlowEnable;
+        public static bool combatRollEnable;
+        public static bool hideHUDBlindFireEnable;
 
         // Other variables n shit
         public static bool resetShit;
@@ -79,7 +82,7 @@ namespace WeapFuncs.ivsdk
             GameHooks.OnDoPickupGlow += new GameHooks.OnDoPickupGlowDelegate(OnDoPickupGlow);
             //TheWeaponHandler = new WeaponHandling();
         }
-        private HookCallback<int> OnDoPickupGlow() => new HookCallback<int>(pickupEnable? true : false);
+        private HookCallback<int> OnDoPickupGlow() => new HookCallback<int>(pickupGlowEnable? true : false);
         private void Main_IngameStartup(object sender, EventArgs e)
         {
             resetShit = false;
@@ -91,6 +94,7 @@ namespace WeapFuncs.ivsdk
             WeaponZoom.IngameStart();
             Pickups.IngameStart();
             SwitchWeapNoReload.IngameStart();
+            CombatRoll.IngameStart();
         }
         private void Main_Uninitialize(object sender, EventArgs e)
         {
@@ -245,6 +249,10 @@ namespace WeapFuncs.ivsdk
                 WeaponZoom.Tick();
             if (aimCamShakeEnable)
                 AimCamShake.Tick();
+            if (combatRollEnable)
+                CombatRoll.Tick();
+            if (hideHUDBlindFireEnable)
+                HideHUDBlindfire.Tick();
             //NightVision.Tick();
 
             //Silence.Tick();
@@ -363,6 +371,9 @@ namespace WeapFuncs.ivsdk
             weaponZoomEnable = settings.GetBoolean("OTHER", "WeaponZoom", false);
             aimCamShakeEnable = settings.GetBoolean("AIM CAMERA SHAKE", "Enable", false);
             pickupEnable = settings.GetBoolean("PICKUPS", "RevampedPickups", false);
+            pickupGlowEnable = settings.GetBoolean("PICKUPS", "CustomPickupGlow", false);
+            combatRollEnable = settings.GetBoolean("OTHER", "FireWhileRolling", false);
+            hideHUDBlindFireEnable = settings.GetBoolean("OTHER", "HideHUDWhileBlindFiring", false);
         }
     }
 }

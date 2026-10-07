@@ -108,7 +108,34 @@ namespace WeapFuncs.ivsdk.Helpers
 
             return false;
         }
+        public static bool IsPedBlindfiring(int ped)
+        {
+            if (!IS_PED_IN_COVER(ped))
+                return false;
 
+            string[] animGroups = new string[]
+            {
+                "cover_l_high_centre", "cover_l_high_corner", "cover_r_high_corner", "cover_r_high_centre",
+                "cover_l_low_centre", "cover_l_low_corner", "cover_r_low_corner", "cover_r_low_centre"
+            };
+
+            string[] animNames = new string[]
+            {
+                "pistol_blindfire", "rifle_blindfire", "ak47_blindfire",
+                "rocket_blindfire", "shotgun_blindfire", "uzi_blindfire"
+            };
+
+            foreach (var group in animGroups)
+            {
+                foreach (var name in animNames)
+                {
+                    if (IS_CHAR_PLAYING_ANIM(ped, group, name))
+                        return true;
+                }
+            }
+
+            return false;
+        }
     }
     public class WeaponData
     {

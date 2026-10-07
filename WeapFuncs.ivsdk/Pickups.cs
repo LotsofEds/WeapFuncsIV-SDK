@@ -41,7 +41,7 @@ namespace WeapFuncs.ivsdk
         private static string moneyColor;
         private static string armorColor;
         private static string healthColor;
-        private static string pidgeonColor;
+        private static string pigeonColor;
 
         // Lists
         private static List<int> pedList = new List<int>();
@@ -50,6 +50,7 @@ namespace WeapFuncs.ivsdk
         private static List<int> pickupList = new List<int>();
         private static List<int> pWeaponList = new List<int>();
         private static List<int> pAmmoList = new List<int>();
+        private static List<int> worldPickupList = new List<int>();
 
         // OtherShit
         private static int pWeapObj = 0;
@@ -60,6 +61,7 @@ namespace WeapFuncs.ivsdk
         private static int weaponSpace = 0;
         private static int currWeaponSpace = 0;
         private static int currLoadout = 0;
+        private static uint tickInterval = 0;
 
         // Limited Loadout
         private static int level2Stat = 0;
@@ -90,6 +92,8 @@ namespace WeapFuncs.ivsdk
 
             aTimer = 0;
             fTimer = 0;
+            dTimer = 0;
+            tickInterval = 0;
         }
         public static void IngameStart()
         {
@@ -169,7 +173,7 @@ namespace WeapFuncs.ivsdk
             moneyColor = settings.GetValue("PICKUPS", "MoneyColor", "YellowGreen");
             healthColor = settings.GetValue("PICKUPS", "HealthColor", "YellowGreen");
             armorColor = settings.GetValue("PICKUPS", "ArmorColor", "OrangeRed");
-            pidgeonColor = settings.GetValue("PICKUPS", "PidgeonColor", "OrangeRed");
+            pigeonColor = settings.GetValue("PICKUPS", "PigeonColor", "OrangeRed");
             ClearLists();
         }
         private static void ClearLists()
@@ -180,6 +184,7 @@ namespace WeapFuncs.ivsdk
             pickupList.Clear();
             pWeaponList.Clear();
             pAmmoList.Clear();
+            worldPickupList.Clear();
         }
         private static void DropCurrWeap(int weap)
         {
@@ -211,43 +216,8 @@ namespace WeapFuncs.ivsdk
         }
         public static void Tick()
         {
-            int weapPickupID = 0;
-            for (int i = 0; i < IVPickups.Pickups.Count(); i++)
-            {
-                int pickupHandle = IVPickups.ConvertIndexToHandle(i);
-                int pickObjHandle = IVObject.FromUIntPtr(IVPickups.Pickups[i].WorldObject).GetHandle();
-
-                Color colorGlow = Color.FromName("None");
-                if (DOES_OBJECT_EXIST(pickObjHandle))
-                {
-                    GET_OBJECT_MODEL(pickObjHandle, out uint objMdl);
-                    for (int w = 0; w < 65; w++)
-                    {
-                        GET_WEAPONTYPE_MODEL(w, out uint wModel);
-                        if (wModel == objMdl)
-                        {
-                            weapPickupID = w;
-                            break;
-                        }
-                    }
-
-                    int colorIndex = Main.weaponData.FindIndex(w => w.ID == weapPickupID);
-                    if (colorIndex >= 0)
-                        colorGlow = Color.FromName(Main.weaponData[colorIndex].Color);
-                    if (IVPickups.Pickups[i].Type == (byte)ePickupType.PICKUP_TYPE_MONEY || IVPickups.Pickups[i].Type == (byte)ePickupType.PICKUP_TYPE_MONEY2)
-                        colorGlow = Color.FromName(moneyColor);
-                    if (IVPickups.Pickups[i].Type == (byte)ePickupType.PICKUP_TYPE_PIGEON)
-                        colorGlow = Color.FromName(pidgeonColor);
-                    if (objMdl == GET_HASH_KEY_2("ec_bpjacket"))
-                        colorGlow = Color.FromName(armorColor);
-                    if (objMdl == GET_HASH_KEY_2("cj_first_aid_pickup"))
-                        colorGlow = Color.FromName(healthColor);
-
-                    GET_PICKUP_COORDINATES(pickupHandle, out Vector3 pickupCoords);
-
-                    LightHelper.AddPointLight(pickupCoords, colorGlow, 30.0f, 1.5f, true, UIntPtr.Zero);
-                }
-            }
+            if (Main.pickupGlowEnable)
+                ProcessPickupGlow();
 
             if (Main.pickupEnable)
                 ProcessPickups();
@@ -257,6 +227,71 @@ namespace WeapFuncs.ivsdk
 
             if (limitedLoadout)
                 ProcessLoadout();
+        }
+        private static void ProcessPickupGlow()
+        {
+            int weapPickupID = 0;
+            if (Main.gTimer >= tickInterval + 250)
+            {
+                for (int i = 0; i < IVPickups.Pickups.Count(); i++)
+                {
+                    if (Math.Abs((IVPickups.Pickups[i].Position - Main.PlayerPos).Length()) > 50)
+                        continue;
+                    if (worldPickupList.Contains(i))
+                        continue;
+
+                    worldPickupList.Add(i);
+                }
+                GET_GAME_TIMER(out tickInterval);
+            }
+
+            for (int i = 0; i < worldPickupList.Count; i++)
+            {
+                int index = worldPickupList[i];
+
+                if (Math.Abs((IVPickups.Pickups[index].Position - Main.PlayerPos).Length()) > 60)
+                    worldPickupList.RemoveAt(i);
+                else
+                {
+                    int pickupHandle = IVPickups.ConvertIndexToHandle(index);
+                    int pickObjHandle = IVObject.FromUIntPtr(IVPickups.Pickups[index].WorldObject).GetHandle();
+
+                    Color colorGlow = Color.FromName("None");
+                    if (DOES_OBJECT_EXIST(pickObjHandle))
+                    {
+                        GET_OBJECT_MODEL(pickObjHandle, out uint objMdl);
+                        for (int w = 0; w < 65; w++)
+                        {
+                            GET_WEAPONTYPE_MODEL(w, out uint wModel);
+                            if (wModel == objMdl)
+                            {
+                                weapPickupID = w;
+                                break;
+                            }
+                        }
+
+                        int colorIndex = Main.weaponData.FindIndex(w => w.ID == weapPickupID);
+                        if (colorIndex >= 0)
+                            colorGlow = Color.FromName(Main.weaponData[colorIndex].Color);
+                        if (IVPickups.Pickups[index].Type == (byte)ePickupType.PICKUP_TYPE_MONEY || IVPickups.Pickups[index].Type == (byte)ePickupType.PICKUP_TYPE_MONEY2)
+                            colorGlow = Color.FromName(moneyColor);
+                        if (IVPickups.Pickups[index].Type == (byte)ePickupType.PICKUP_TYPE_PIGEON)
+                            colorGlow = Color.FromName(pigeonColor);
+                        if (objMdl == GET_HASH_KEY_2("ec_bpjacket"))
+                            colorGlow = Color.FromName(armorColor);
+                        if (objMdl == GET_HASH_KEY_2("cj_first_aid_pickup"))
+                            colorGlow = Color.FromName(healthColor);
+
+                        GET_PICKUP_COORDINATES(pickupHandle, out Vector3 pickupCoords);
+                        GET_INTERIOR_AT_COORDS(pickupCoords, out int pRoom);
+
+                        //eLightFlags nFlags = eLightFlags.InteriorOnly | eLightFlags.ExteriorOnly | eLightFlags.Vehicle;
+                        //IVShadows.AddSceneLight(0, 0, (uint)nFlags, -Vector3.UnitZ, Vector3.UnitY, pickupCoords, colorGlow, 30, 0, 0, 1.5f, 0.0f, 0.0f, 0.0f, 0.0f, pRoom, 0U, 0U);
+
+                        LightHelper.AddPointLight(pickupCoords, colorGlow, 30.0f, 1.5f, true, UIntPtr.Zero);
+                    }
+                }
+            }
         }
         private static void ProcessLoadout()
         {
@@ -386,8 +421,12 @@ namespace WeapFuncs.ivsdk
                                 APPLY_FORCE_TO_OBJECT(objID, 3, 0, 0.001f * Main.frameTime, 0, 0, 0, 0, 0, 1, 1, 1);
 
                             int colorIndex = Main.weaponData.FindIndex(w => w.ID == pWeaponList[pickupList.IndexOf(objID)]);
-                            Color glowColor = Color.FromName(Main.weaponData[colorIndex].Color);
-                            
+                            Color glowColor;
+                            if (Main.pickupGlowEnable)
+                                glowColor = Color.FromName(Main.weaponData[colorIndex].Color);
+                            else
+                                glowColor = Color.OrangeRed;
+
                             LightHelper.AddPointLight(objPos, glowColor, 40.0f, 1.5f, false, UIntPtr.Zero);
 
                             GET_DISTANCE_BETWEEN_COORDS_3D(Main.PlayerPos.X, Main.PlayerPos.Y, Main.PlayerPos.Z, objPos.X, objPos.Y, objPos.Z, out float pDist);

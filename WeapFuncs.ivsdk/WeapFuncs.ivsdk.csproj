@@ -52,12 +52,14 @@
   <ItemGroup>
     <Compile Include="AimCamShake.cs" />
     <Compile Include="BlindFireFixes.cs" />
+    <Compile Include="CombatRoll.cs" />
     <Compile Include="EquipGun.cs" />
     <Compile Include="Flames.cs" />
     <Compile Include="Flashbang.cs" />
     <Compile Include="GLaunchAttachment.cs" />
     <Compile Include="Helpers\GenHelp.cs" />
     <Compile Include="Helpers\WeaponHelper.cs" />
+    <Compile Include="HideHUDBlindfire.cs" />
     <Compile Include="LessSuckyMiniguns.cs" />
     <Compile Include="LockOn.cs" />
     <Compile Include="Main.cs" />
